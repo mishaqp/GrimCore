@@ -462,7 +462,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('chat-app-bar-pet-button')));
     await tester.pump();
 
-    expect(find.text('petTaps:1'), findsOneWidget);
+    expect(find.text('petTaps: 1'), findsOneWidget);
   });
 
   testWidgets('pet shortcut uses theme color while showing and toggles off', (
@@ -482,7 +482,7 @@ void main() {
     await tester.tap(petButton);
     await tester.pump();
 
-    expect(find.text('petTaps:1'), findsOneWidget);
+    expect(find.text('petTaps: 1'), findsOneWidget);
     expect(find.text('petShowing:false'), findsOneWidget);
     expect(petIcon().color, Colors.grey[800]!);
   });
@@ -596,7 +596,7 @@ void main() {
 
     expect(
       pureChatIcon.colorFilter,
-      const ColorFilter.mode(Color(0xFF2C7FEB), BlendMode.srcIn),
+      ColorFilter.mode(OmniThemePalette.light.accentPrimary, BlendMode.srcIn),
     );
   });
 
@@ -604,7 +604,7 @@ void main() {
     await tester.pumpWidget(const _PureChatToggleHarness(locked: true));
 
     expect(find.text('selected:false'), findsOneWidget);
-    expect(find.text('toggles:0'), findsOneWidget);
+    expect(find.text('toggles: 0'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const ValueKey('chat-app-bar-pure-chat-button')),
@@ -612,7 +612,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('selected:false'), findsOneWidget);
-    expect(find.text('toggles:0'), findsOneWidget);
+    expect(find.text('toggles: 0'), findsOneWidget);
   });
 
   testWidgets('opens mode menu with Xiaowan and pure chat actions', (
@@ -671,7 +671,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('omniAiTaps:1'), findsOneWidget);
+    expect(find.text('omniAiTaps: 1'), findsOneWidget);
 
     await tester.tap(
       find.byKey(const ValueKey('chat-app-bar-pure-chat-button')),
@@ -683,7 +683,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('selected:true'), findsOneWidget);
-    expect(find.text('toggles:1'), findsOneWidget);
+    expect(find.text('toggles: 1'), findsOneWidget);
   });
 
   testWidgets(
@@ -1365,7 +1365,7 @@ void main() {
 
     expect(
       agentIcon.colorFilter,
-      const ColorFilter.mode(Color(0xFF2C7FEB), BlendMode.srcIn),
+      ColorFilter.mode(OmniThemePalette.light.accentPrimary, BlendMode.srcIn),
     );
     expect(agentIcon.width, 22);
     expect(agentIcon.height, 22);
@@ -1476,17 +1476,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('envTaps:1'), findsOneWidget);
+    expect(find.text('envTaps: 1'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('chat-island-terminal-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('terminalTaps:1'), findsOneWidget);
+    expect(find.text('terminalTaps: 1'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('chat-island-browser-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('browserTaps:0'), findsOneWidget);
+    expect(find.text('browserTaps: 0'), findsOneWidget);
 
     await tester.drag(
       find.byKey(const ValueKey('chat-app-bar-island')),
