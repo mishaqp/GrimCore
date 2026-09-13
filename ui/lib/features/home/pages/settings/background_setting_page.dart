@@ -292,7 +292,7 @@ class _BackgroundSettingPageState extends State<BackgroundSettingPage> {
             : importedPath;
         _draftConfig = _draftConfig.copyWith(
           enabled: true,
-          sourceType: AppBackgroundSourceType.local,
+          sourceType:  AppBackgroundSourceType.local,
           localImagePath: importedPath,
           remoteImageUrl: '',
         );
@@ -309,7 +309,7 @@ class _BackgroundSettingPageState extends State<BackgroundSettingPage> {
     _applyDraftConfig(
       _draftConfig.copyWith(
         enabled: true,
-        sourceType: sourceType,
+        sourceType:  sourceType,
         localImagePath: sourceType == AppBackgroundSourceType.local
             ? _draftConfig.localImagePath
             : '',
@@ -627,6 +627,12 @@ class _BackgroundSettingPageState extends State<BackgroundSettingPage> {
                   label: context.l10n.languageEnglish,
                   icon: LucideIcons.languages,
                   id: 'en',
+                ),
+                OmniSegmentedOption<AppLanguageMode>(
+                  value: AppLanguageMode.ru,
+                  label: context.l10n.languageRussian,
+                  icon: LucideIcons.languages,
+                  id: 'ru',
                 ),
               ],
               onChanged: (nextMode) {
@@ -1075,7 +1081,7 @@ class _BackgroundSettingPageState extends State<BackgroundSettingPage> {
     ];
     if (summaryParts.isNotEmpty) {
       return _summarizePetMetadata(
-        petType: petType,
+        petType:  petType,
         visualStyle: visualStyle,
         personality: personality,
       );

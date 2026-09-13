@@ -190,7 +190,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     final widget = MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) =>
-          AppLocalizations.of(context)?.appName ?? 'Omnibot',
+          AppLocalizations.of(context)?.appName ?? 'GrimCore',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
