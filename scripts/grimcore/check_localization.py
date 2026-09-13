@@ -77,7 +77,7 @@ def main():
         errors.append('legacy_text_localizer.dart is missing %s' % table)
     en_block = legacy_text[legacy_text.index('_exactEn'):legacy_text.index('_exactRu')]
     ru_block = legacy_text[legacy_text.index('_exactRu'):legacy_text.index('_regexEn')]
-    key_re = re.compile(r"(?m)^    '((?:[^'\\\\]|\\\\.)*)':")
+    key_re = re.compile('(?m)^    \'(.+?)\':')
     en_keys = key_re.findall(en_block)
     ru_keys = set(key_re.findall(ru_block))
     if len(en_keys) != len(ru_keys):
@@ -86,9 +86,10 @@ def main():
       missing_keys = [k for k in en_keys if k not in ru_keys]
       if missing_keys:
         errors.append('legacy localizer: no Russian for %s' % ', '.join(missing_keys[:10]))
-    ru_only = ru_block
-    if CJK.search(ru_only):
-      errors.append('legacy localizer: Chinese text left in the Russian table')
+    ru_values = re.findall(r"(?m)^    '.+?': '(.*)',", ru_block)
+    for value in ru_values:
+      if CJK.search(value):
+        errors.append('legacy localizer: Chinese left in the Russian value: %s' % value[:40])
 
   # Android resources
   default = RES / 'values/strings.xml'
