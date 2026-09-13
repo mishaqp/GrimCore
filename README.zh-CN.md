@@ -239,12 +239,4 @@ OpenOmniBot/
 - https://github.com/RohitKushvaha01/ReTerminal
 - https://github.com/OpenMinis
 
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="https://omni.1775885.xyz/community/wechat-qr" alt="WeChat Group" width="220"/><br/>
-      <b>WeChat Group</b><br/>
-      <a href="https://discord.gg/WnBvBXgykD">加入 Discord 社区</a>
-    </td>
-  </tr>
-</table>
+<p align="center"><a href="https://discord.gg/WnBvBXgykD">加入 Discord 社区</a></p>

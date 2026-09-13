@@ -4,14 +4,14 @@ import 'package:ui/services/model_provider_config_service.dart';
 import 'package:ui/widgets/conversation_model_selector.dart';
 
 void main() {
-  const officialProfile = ModelProviderProfileSummary(
-    id: 'official',
-    name: 'OmniBot 官方 AI',
+  const byokProfile = ModelProviderProfileSummary(
+    id: 'byok',
+    name: 'Provider One',
     baseUrl: '',
     apiKey: '',
     customHeaders: <String, String>{},
-    sourceType: 'omnibot_official',
-    readOnly: true,
+    sourceType: 'custom',
+    readOnly: false,
     ready: true,
     statusText: '',
     configured: true,
@@ -27,12 +27,12 @@ void main() {
           body: ConversationModelSelectorContent(
             width: 320,
             maxHeight: 360,
-            profiles: const <ModelProviderProfileSummary>[officialProfile],
+            profiles: const <ModelProviderProfileSummary>[byokProfile],
             providerModelsByProfileId: <String, List<ProviderModelOption>>{
-              officialProfile.id: <ProviderModelOption>[model],
+              byokProfile.id: <ProviderModelOption>[model],
             },
             currentSelection: ConversationModelSelection(
-              providerProfileId: officialProfile.id,
+              providerProfileId: byokProfile.id,
               modelId: model.id,
             ),
             showSearchField: false,
@@ -78,9 +78,9 @@ void main() {
           body: ConversationModelSelectorContent(
             width: 320,
             maxHeight: 360,
-            profiles: const [officialProfile],
+            profiles: const [byokProfile],
             providerModelsByProfileId: const {
-              'official': [
+              'byok': [
                 ProviderModelOption(id: 'GLM-5.2', displayName: 'GLM-5.2'),
               ],
             },
@@ -95,9 +95,9 @@ void main() {
     final model = find.bySemanticsLabel(RegExp(r'^GLM-5\.2$'));
     expect(model, findsOneWidget);
     await tester.tap(model);
-    expect(selected?.providerProfileId, 'official');
-      expect(selected?.modelId, 'GLM-5.2');
-      semantics.dispose();
+    expect(selected?.providerProfileId, 'byok');
+    expect(selected?.modelId, 'GLM-5.2');
+    semantics.dispose();
   });
 
   testWidgets('current connection is reachable before other connections', (
@@ -121,13 +121,13 @@ void main() {
           body: ConversationModelSelectorContent(
             width: 320,
             maxHeight: 360,
-            profiles: const [other, officialProfile],
+            profiles: const [other, byokProfile],
             currentSelection: const ConversationModelSelection(
-              providerProfileId: 'official',
+              providerProfileId: 'byok',
               modelId: 'model',
             ),
             providerModelsByProfileId: const {
-              'official': [
+              'byok': [
                 ProviderModelOption(id: 'model', displayName: 'Selected model'),
               ],
             },
@@ -137,7 +137,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      tester.getTopLeft(find.text('OmniBot 官方 AI')).dy,
+      tester.getTopLeft(find.text('Provider One')).dy,
       lessThan(tester.getTopLeft(find.text('Other connection')).dy),
     );
     expect(find.text('Selected model').hitTestable(), findsOneWidget);

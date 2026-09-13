@@ -1,0 +1,50 @@
+GrimCore — NOTICE
+=================
+
+GrimCore is a personal, independently versioned fork of OmniBot.
+
+Upstream project
+----------------
+ Name: OmniBot (also published as OpenOmniBot in release artifacts)
+ Owner: omnimind-ai
+ URL: https://github.com/omnimind-ai/OmniBot
+ Website: https://omnibot.omnimind.com.cn
+ Docs: https://omnimind-ai.github.io/OmniBot-Docs/
+
+Upstream baseline used to start GrimCore
+----------------------------------------
+ Tag: v0.6.2.3
+ Commit:  11a380d72bd1385422c3d8ec9e521a895d22bb8d
+ Tagged:  2026-09-10 (release published 2026-09-10T16:27:18Z)
+ Type:  latest published release tag (prerelease=true), built by the
+ upstream "Release APK" workflow (run success,2026-09-10T16:11:36Z)
+ Merged in: upstream main54aeae8046a4f3bcf0fccc1ca30713722a81d863
+ (= v0.6.2.3 +1 commit, PR #530 "perf(ui)")
+
+GrimCore is not a rewrite and is not presented as original work. All of the
+architecture, agent runtime, ACP harnesses, terminal/PRoot integration, MCP
+server, skills, memory and UI framework originate in OmniBot and remain under
+their original authorship. GrimCore adds branding, a Russian localization, an
+independent version/signing scheme and an independent CI/CD pipeline.
+
+License
+-------
+OmniBot is published under a segmented dual license (see LICENSE in this
+repository):
+
+ * GNU Affero General Public License v3.0 (AGPL-3.0) for non-commercial use
+ and for personal / educational / research use;
+ * a commercial license for any commercial use.
+
+GrimCore is used for personal, non-commercial purposes only and therefore is
+distributed under the AGPL-3.0 terms of the upstream project. The upstream
+LICENSE file is kept verbatim. Any redistribution of GrimCore or of a modified
+version must keep this NOTICE, the LICENSE and the upstream attribution.
+
+Trademarks and assets
+---------------------
+"OmniBot", "OpenOmniBot", "OmniMind", "小万" and the upstream application icons
+belong to their respective owners. GrimCore ships its own name, its own vector
+launcher mark and its own theme, and does not claim any right over upstream
+branding. No third-party logos, characters or artwork (including anything
+Berserk-related) are bundled with GrimCore.

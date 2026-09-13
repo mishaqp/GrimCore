@@ -1,0 +1,211 @@
+name: GrimCore Release
+
+# Builds the signed, arm64-v8a-only GrimCore user APK and attaches it to a
+# GitHub Release. Signing material comes exclusively from repository secrets;
+# nothing is ever written into the repository.
+
+on:
+  workflow_dispatch:
+   inputs:
+     tag:
+       description: 'Release tag, for example v0.1.0-grim.1'
+       required: true
+       type: string
+  push:
+   tags:
+    - 'v*-grim.*'
+
+permissions:
+  contents: write
+
+env:
+  JAVA_VERSION: '21'
+  FLUTTER_VERSION: '3.47.2'
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.28.0'
+  ANDROID_PLATFORM_VERSION: '37.0'
+  NDK_VERSION: '28.2.13676358'
+
+jobs:
+  release:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Resolve release tag
+      id: tag
+      shell: bash
+      run: |
+        set -euo pipefail
+        raw="${{ github.event.inputs.tag || github.ref_name }}"
+        echo "tag=${raw}" >> "$GITHUB_OUTPUT"
+        echo "GrimCore release tag: ${raw}"
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ env.JAVA_VERSION }}
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ env.PNPM_VERSION }}
+        run_install: false
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Validate Gradle wrappers
+      uses: gradle/actions/wrapper-validation@v4
+
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        validate-wrappers: false
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        cache: true
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Ensure Android SDK platform and NDK
+      shell: bash
+      run: |
+        set -euo pipefail
+        yes | sdkmanager --licenses >/dev/null || true
+        sdkmanager "platforms;android-${{ env.ANDROID_PLATFORM_VERSION }}" "ndk;${{ env.NDK_VERSION }}"
+
+    - name: Export Android NDK environment
+      shell: bash
+      run: |
+        echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}" >> "$GITHUB_ENV"
+        echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/${{ env.NDK_VERSION }}" >> "$GITHUB_ENV"
+
+    - name: Install Flutter dependencies
+      working-directory: ui
+      run: flutter pub get --enforce-lockfile
+
+    - name: Decode GrimCore keystore
+      shell: bash
+      env:
+        KEYSTORE_B64: ${{ secrets.GRIM_KEYSTORE_B64 }}
+      run: |
+        set -euo pipefail
+        if [[ -z "${KEYSTORE_B64}" ]]; then
+          echo "Missing GRIM_KEYSTORE_B64 secret; refusing to build an unsigned user APK." >&2
+          exit 1
+        fi
+        printf '%s' "${KEYSTORE_B64}" | base64 --decode > "${RUNNER_TEMP}/grimcore.jks"
+        chmod 600 "${RUNNER_TEMP}/grimcore.jks"
+
+    - name: Build arm64-v8a release APK
+      shell: bash
+      env:
+        GRADLE_OPTS: >-
+          -Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED
+        GRIM_RELEASE_STORE_FILE: ${{ runner.temp }}/grimcore.jks
+        GRIM_RELEASE_STORE_PWD: ${{ secrets.GRIM_KEYSTORE_PWD }}
+        GRIM_RELEASE_KEY_ALIAS: ${{ secrets.GRIM_KEY_ALIAS }}
+        GRIM_RELEASE_KEY_PWD: ${{ secrets.GRIM_KEY_PWD }}
+        # Gradle reads project properties from ORG_GRADLE_PROJECT_* env entries;
+        # this is exactly how the upstream release script hands over its keystore.
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_STORE_FILE: ${{ runner.temp }}/grimcore.jks
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_STORE_PWD: ${{ secrets.GRIM_KEYSTORE_PWD }}
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_KEY_ALIAS: ${{ secrets.GRIM_KEY_ALIAS }}
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_KEY_PWD: ${{ secrets.GRIM_KEY_PWD }}
+      run: |
+        set -euo pipefail
+        ./gradlew --no-daemon :app:assembleProductionStandardRelease \
+          -Ptarget=lib/main_standard.dart \
+          -PgrimAbiArm64Only=true
+
+    - name: Stage the release artifact
+      id: stage
+      shell: bash
+      run: |
+        set -euo pipefail
+        version_name="$(python3 scripts/grimcore/read_version.py versionName)"
+        version_code="$(python3 scripts/grimcore/read_version.py versionCode)"
+        out_dir="${RUNNER_TEMP}/grimcore-release"
+        mkdir -p "${out_dir}"
+        apk_src="$(find app/build/outputs/apk -name '*.apk' -path '*release*' | head -n 1)"
+        test -n "${apk_src}"
+        apk="${out_dir}/GrimCore-v${version_name}-arm64-v8a.apk"
+        cp "${apk_src}" "${apk}"
+        echo "apk=${apk}" >> "$GITHUB_OUTPUT"
+        echo "out_dir=${out_dir}" >> "$GITHUB_OUTPUT"
+        echo "version_name=${version_name}" >> "$GITHUB_OUTPUT"
+        echo "version_code=${version_code}" >> "$GITHUB_OUTPUT"
+
+    - name: Verify APK (package, version, ABI, signature)
+      shell: bash
+      env:
+        GRIM_CERT_SHA256: ${{ secrets.GRIM_CERT_SHA256 }}
+      run: |
+        set -euo pipefail
+        bash scripts/grimcore/verify_apk.sh \
+          --apk "${{ steps.stage.outputs.apk }}" \
+          --package com.mishaqp.grimcore \
+          --version-name "${{ steps.stage.outputs.version_name }}" \
+          --version-code "${{ steps.stage.outputs.version_code }}" \
+          --abi arm64-v8a
+
+    - name: Check update compatibility with the previous release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -euo pipefail
+        python3 scripts/grimcore/check_update_compat.py \
+          --apk "${{ steps.stage.outputs.apk }}" \
+          --version-code "${{ steps.stage.outputs.version_code }}"
+
+    - name: Write SHA-256
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "${{ steps.stage.outputs.out_dir }}"
+        sha256sum "$(basename "${{ steps.stage.outputs.apk }}")" > "$(basename "${{ steps.stage.outputs.apk }}").sha256"
+        cat "$(basename "${{ steps.stage.outputs.apk }}").sha256"
+
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GrimCore-${{ steps.stage.outputs.version_name }}-arm64-v8a
+        if-no-files-found: error
+        path: |
+          ${{ steps.stage.outputs.out_dir }}/*.apk
+          ${{ steps.stage.outputs.out_dir }}/*.sha256
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        target_commitish: ${{ github.sha }}
+        name: GrimCore ${{ steps.stage.outputs.version_name }}
+        draft: false
+        prerelease: false
+        body: |
+          GrimCore user APK, arm64-v8a only.
+         
+          * package: `com.mishaqp.grimcore`
+          * versionName: `${{ steps.stage.outputs.version_name }}`
+          * versionCode: `${{ steps.stage.outputs.version_code }}`
+          * built from commit `${{ github.sha }}`
+         
+          Upstream baseline: omnimind-ai/OmniBot tag v0.6.2.3 — see NOTICE.
+        files: |
+          ${{ steps.stage.outputs.out_dir }}/*.apk
+          ${{ steps.stage.outputs.out_dir }}/*.sha256

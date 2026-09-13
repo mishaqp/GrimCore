@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 浅色主题启动窗口：与 Flutter pageBackground 保持一致。 -->
+<!-- GrimCore start window: near-black, matches the Flutter pageBackground. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#F4F7FB" />
+            <solid android:color="#FF07080A" />
         </shape>
     </item>
 

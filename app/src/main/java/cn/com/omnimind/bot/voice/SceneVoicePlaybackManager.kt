@@ -8,23 +8,17 @@ import android.media.AudioTrack
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import cn.com.omnimind.baselib.account.OmniAccount
 import cn.com.omnimind.bot.agent.AgentWorkspaceManager
 import cn.com.omnimind.baselib.http.OkHttpManager
 import cn.com.omnimind.baselib.llm.ChatCompletionRequest
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
 import cn.com.omnimind.baselib.llm.SceneVoiceConfig
 import cn.com.omnimind.baselib.llm.SceneVoiceConfigStore
 import cn.com.omnimind.baselib.util.ContentEndpointSecurity
 import cn.com.omnimind.baselib.util.CredentialEndpointSecurity
 import cn.com.omnimind.baselib.util.OmniLog
-import cn.com.omnimind.bot.media.PlatformMediaGatewayExecutor
-import cn.com.omnimind.bot.media.PlatformGatewayException
-import cn.com.omnimind.bot.media.PlatformMediaProtocol
-import cn.com.omnimind.bot.media.awaitResponse
+import cn.com.omnimind.bot.http.awaitResponse
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Collections
@@ -42,7 +36,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -52,7 +45,6 @@ import okhttp3.sse.EventSourceListener
 import java.util.Base64
 
 private enum class VoiceTransport {
-    PLATFORM_SPEECH,
     BYOK_CHAT_AUDIO,
     CUSTOM_CURL,
 }
@@ -68,7 +60,6 @@ private data class VoicePlaybackQueueItem(
     val customCurlCommand: String? = null
 ) {
     val isCustomCurl: Boolean get() = transport == VoiceTransport.CUSTOM_CURL
-    val isPlatformSpeech: Boolean get() = transport == VoiceTransport.PLATFORM_SPEECH
 }
 
 private data class VoiceCacheEntry(
@@ -102,28 +93,11 @@ class SceneVoicePlaybackManager(
         encodeDefaults = false
         explicitNulls = false
     }
-    private val platformHttpClient = OkHttpClient.Builder()
+    private val voiceHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
-    private val platformExecutor = PlatformMediaGatewayExecutor(
-        executeRequest = { request ->
-            val call = OkHttpManager.sensitiveContentCall(
-                client = platformHttpClient,
-                request = request,
-                allowInsecureLoopback = CredentialEndpointSecurity.isDebugLoopbackAllowed(),
-            )
-            currentPlatformCall = call
-            try {
-                call.awaitResponse()
-            } finally {
-                if (currentPlatformCall === call) {
-                    currentPlatformCall = null
-                }
-            }
-        },
-    )
     private val lock = Any()
     private val queue = ArrayDeque<VoicePlaybackQueueItem>()
     private val replayableKeysByMessageId = mutableMapOf<String, MutableSet<String>>()
@@ -148,9 +122,6 @@ class SceneVoicePlaybackManager(
 
     @Volatile
     private var currentEventSource: EventSource? = null
-
-    @Volatile
-    private var currentPlatformCall: Call? = null
 
     @Volatile
     private var currentAudioTrack: AudioTrack? = null
@@ -304,24 +275,6 @@ class SceneVoicePlaybackManager(
                 customCurlCommand = curl
             )
         }
-        val rawBinding = SceneModelBindingStore.getBinding(SceneVoiceConfigStore.SCENE_ID)
-        if (OmniOfficialProvider.isOfficialProfile(rawBinding?.providerProfileId)) {
-            val access = OmniAccount.currentAiRequestAccess()
-            access.unavailableReason?.let { throw IllegalStateException(it) }
-            check(access.usesPlatform) { "官方 AI 账号未登录或服务暂不可用" }
-            // Resolve the catalog in processItem on the IO scope. This keeps the
-            // synchronous Flutter method call fast while avoiding stale cached
-            // TTS model and voice selections.
-            return VoicePlaybackQueueItem(
-                messageId = normalizedMessageId,
-                text = normalizedText,
-                binding = null,
-                config = config,
-                cacheKey = "",
-                preferStreaming = false,
-                transport = VoiceTransport.PLATFORM_SPEECH,
-            )
-        }
         val binding = resolveVoiceBinding()
         val stylePayload = SceneVoiceTtsProtocol.composeStylePayload(config)
         val cacheKey = SceneVoiceTtsProtocol.buildCacheKey(
@@ -383,11 +336,7 @@ class SceneVoicePlaybackManager(
                 processItem(item)
             } catch (t: Throwable) {
                 OmniLog.e(TAG, "voice playback failed type=${t.javaClass.simpleName}")
-                val safeError = if (t is PlatformGatewayException) {
-                    t.message
-                } else {
-                    "voice playback failed (${t.javaClass.simpleName})"
-                }
+                val safeError = "voice playback failed (${t.javaClass.simpleName})"
                 emitState(item.messageId, "error", error = safeError)
             } finally {
                 releaseCurrentPlaybackResources()
@@ -403,11 +352,7 @@ class SceneVoicePlaybackManager(
     }
 
     private suspend fun processItem(queuedItem: VoicePlaybackQueueItem) {
-        val item = if (queuedItem.isPlatformSpeech) {
-            resolvePlatformQueueItem(queuedItem)
-        } else {
-            queuedItem
-        }
+        val item = queuedItem
         synchronized(lock) {
             cache[item.cacheKey]
         }?.let { entry ->
@@ -426,17 +371,6 @@ class SceneVoicePlaybackManager(
                     .add(item.cacheKey)
             }
             playCachedEntry(item, custom)
-            return
-        }
-        if (item.isPlatformSpeech) {
-            val synthesized = synthesizePlatformSpeech(item)
-            synchronized(lock) {
-                cache[item.cacheKey] = synthesized
-                replayableKeysByMessageId
-                    .getOrPut(item.messageId) { linkedSetOf() }
-                    .add(item.cacheKey)
-            }
-            playCachedEntry(item, synthesized)
             return
         }
         if (item.preferStreaming) {
@@ -462,40 +396,6 @@ class SceneVoicePlaybackManager(
                 .add(item.cacheKey)
         }
         playCachedEntry(item, cached)
-    }
-
-    private suspend fun resolvePlatformQueueItem(
-        item: VoicePlaybackQueueItem,
-    ): VoicePlaybackQueueItem {
-        val status = PlatformAiProvisioner.ensureReadyStatus()
-        val modelId = status.defaultTtsModelId
-            ?: throw IllegalStateException("官方语音合成能力暂不可用")
-        val voiceAlias = item.config.voiceId.trim()
-            .takeIf(status.ttsVoiceAliases::contains)
-            ?: status.defaultTtsVoiceAlias
-                ?.trim()
-                ?.takeIf(status.ttsVoiceAliases::contains)
-            ?: throw IllegalStateException("官方语音服务当前没有可用的声音")
-        val platformConfig = item.config.copy(voiceId = voiceAlias)
-        val binding = SceneVoiceResolvedBinding(
-            providerProfileId = OmniOfficialProvider.PROFILE_ID,
-            apiBase = "",
-            apiKey = "",
-            modelId = modelId,
-        )
-        val cacheKey = SceneVoiceTtsProtocol.buildCacheKey(
-            messageId = item.messageId,
-            text = item.text,
-            providerProfileId = binding.providerProfileId,
-            modelId = binding.modelId,
-            voiceId = platformConfig.voiceId,
-            stylePayload = PlatformSpeechProtocol.buildInstructions(platformConfig),
-        )
-        return item.copy(
-            binding = binding,
-            config = platformConfig,
-            cacheKey = cacheKey,
-        )
     }
 
     private suspend fun synthesizeStreaming(item: VoicePlaybackQueueItem): VoiceCacheEntry? {
@@ -574,7 +474,7 @@ class SceneVoicePlaybackManager(
         }
 
         val source = OkHttpManager.sensitiveContentEventSource(
-            client = platformHttpClient,
+            client = voiceHttpClient,
             request = request,
             listener = listener,
             allowInsecureLoopback = CredentialEndpointSecurity.isDebugLoopbackAllowed(),
@@ -601,46 +501,6 @@ class SceneVoicePlaybackManager(
         )
     }
 
-    private suspend fun synthesizePlatformSpeech(item: VoicePlaybackQueueItem): VoiceCacheEntry {
-        val binding = item.binding
-            ?: throw IllegalStateException("官方语音模型尚未就绪")
-        val requestBody = PlatformSpeechProtocol.buildRequestBody(
-            text = item.text,
-            modelId = binding.modelId,
-            config = item.config,
-        )
-        val response = platformExecutor.execute { credentials ->
-            Request.Builder()
-                .url(PlatformMediaProtocol.endpoint(credentials, "/v1/audio/speech"))
-                .header("Authorization", "Bearer ${credentials.bearerToken}")
-                .header("Content-Type", "application/json")
-                .header("Accept", "audio/wav, audio/mpeg, audio/*")
-                .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
-                .build()
-        }
-        return response.use {
-            val contentType = it.header("Content-Type")
-            val bytes = PlatformMediaProtocol.readBodyLimited(
-                response = it,
-                maxBytes = PlatformSpeechProtocol.MAX_AUDIO_BYTES,
-            )
-            PlatformMediaProtocol.requireSuccessfulResponse(it.code, bytes)
-            if (currentStopRequested) {
-                throw CancellationException("voice playback stopped")
-            }
-            val format = PlatformSpeechProtocol.detectAudioFormat(bytes, contentType)
-                ?: throw IllegalStateException("官方语音服务返回了无效的音频数据")
-            val file = cacheFileFor(item.cacheKey, format)
-            file.parentFile?.mkdirs()
-            file.writeBytes(bytes)
-            VoiceCacheEntry(
-                key = item.cacheKey,
-                format = format,
-                wavFile = file,
-            )
-        }
-    }
-
     private suspend fun synthesizeNonStreaming(item: VoicePlaybackQueueItem): VoiceCacheEntry? {
         val binding = item.binding ?: return null
         val request = buildRequest(
@@ -655,14 +515,14 @@ class SceneVoicePlaybackManager(
             stream = false
         )
         val body = OkHttpManager.sensitiveContentCall(
-            client = platformHttpClient,
+            client = voiceHttpClient,
             request = request,
             allowInsecureLoopback = CredentialEndpointSecurity.isDebugLoopbackAllowed(),
         ).awaitResponse().use { response ->
             if (!response.isSuccessful) {
                 throw IllegalStateException("BYOK voice request failed (${response.code})")
             }
-            PlatformMediaProtocol.readBodyLimited(response, MAX_BYOK_JSON_BYTES)
+            readBodyLimited(response, MAX_BYOK_JSON_BYTES)
                 .toString(Charsets.UTF_8)
         }
         val parsed = SceneVoiceTtsProtocol.parseNonStreamingAudio(body) ?: return null
@@ -708,14 +568,14 @@ class SceneVoicePlaybackManager(
 
         val request = requestBuilder.build()
         val bytes = OkHttpManager.sensitiveContentCall(
-            client = platformHttpClient,
+            client = voiceHttpClient,
             request = request,
             allowInsecureLoopback = CredentialEndpointSecurity.isDebugLoopbackAllowed(),
         ).awaitResponse().use { response ->
             if (!response.isSuccessful) {
                 throw IllegalStateException("custom TTS request failed (${response.code})")
             }
-            PlatformMediaProtocol.readBodyLimited(response, MAX_BYOK_AUDIO_BYTES)
+            readBodyLimited(response, MAX_BYOK_AUDIO_BYTES)
         }
         if (currentStopRequested) {
             return null
@@ -734,6 +594,19 @@ class SceneVoicePlaybackManager(
             format = FALLBACK_WAV_FORMAT,
             wavFile = file
         )
+    }
+
+    private fun readBodyLimited(response: Response, maxBytes: Long): ByteArray {
+        val body = response.body ?: return ByteArray(0)
+        val declaredSize = body.contentLength()
+        require(declaredSize <= maxBytes || declaredSize < 0) {
+            "voice response exceeds ${maxBytes / (1024 * 1024)} MB"
+        }
+        return body.bytes().also { bytes ->
+            require(bytes.size.toLong() <= maxBytes) {
+                "voice response exceeds ${maxBytes / (1024 * 1024)} MB"
+            }
+        }
     }
 
     private fun looksLikeWav(bytes: ByteArray): Boolean {
@@ -895,8 +768,6 @@ class SceneVoicePlaybackManager(
         currentStopRequested = true
         currentEventSource?.cancel()
         currentEventSource = null
-        currentPlatformCall?.cancel()
-        currentPlatformCall = null
         releaseCurrentPlaybackResources()
     }
 

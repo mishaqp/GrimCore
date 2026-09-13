@@ -9,9 +9,7 @@ import com.ai.assistance.operit.terminal.setup.buildAlpinePackageInstallCommand
 import cn.com.omnimind.baselib.database.DatabaseHelper
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
@@ -96,43 +94,25 @@ internal fun resolveSharedAgentModel(
 internal fun resolveAgentProviderProfile(
     boundProviderProfileId: String?,
     configuredProfile: ModelProviderProfile?,
-    officialProfile: ModelProviderProfile?,
 ): ModelProviderProfile? {
     val normalizedId = boundProviderProfileId?.trim().orEmpty()
     return configuredProfile?.takeIf { it.id == normalizedId }
-        ?: officialProfile?.takeIf {
-            it.id == normalizedId && OmniOfficialProvider.isOfficialProfile(normalizedId)
-        }
 }
 
-internal fun resolveAgentProviderApiKey(
-    profile: ModelProviderProfile,
-    officialBearerToken: String?,
-): String? {
-    val key = if (OmniOfficialProvider.isOfficialProfile(profile.id)) {
-        officialBearerToken
-    } else {
-        profile.apiKey
-    }
-    return key?.trim()?.takeIf(String::isNotEmpty)
-}
+internal fun resolveAgentProviderApiKey(profile: ModelProviderProfile): String? =
+    profile.apiKey.trim().takeIf(String::isNotEmpty)
 
 internal suspend fun fetchAgentProviderModels(
     profile: ModelProviderProfile,
     forceRefresh: Boolean = false,
 ): List<ProviderModelOption> {
-    return if (OmniOfficialProvider.isOfficialProfile(profile.id)) {
-        if (forceRefresh) PlatformAiProvisioner.refreshAndGetModels()
-        else PlatformAiProvisioner.ensureReadyAndGetModels()
-    } else {
-        HttpController.fetchProviderModels(
-            apiBase = profile.baseUrl,
-            apiKey = profile.apiKey,
-            customHeaders = profile.customHeaders,
-            protocolType = profile.protocolType,
-            wireApi = profile.wireApi
-        )
-    }
+    return HttpController.fetchProviderModels(
+        apiBase = profile.baseUrl,
+        apiKey = profile.apiKey,
+        customHeaders = profile.customHeaders,
+        protocolType = profile.protocolType,
+        wireApi = profile.wireApi
+    )
 }
 
 /** Availability and distribution-scoped connectivity are owned by the host probe. */
@@ -3485,12 +3465,10 @@ internal fun resolveDispatchAgentProviderProfile(
     boundProviderProfileId: String?,
     configuredProfile: ModelProviderProfile?,
     editingProfile: ModelProviderProfile?,
-    officialProfile: ModelProviderProfile?,
 ): ModelProviderProfile? {
     return resolveAgentProviderProfile(
         boundProviderProfileId = boundProviderProfileId,
         configuredProfile = configuredProfile,
-        officialProfile = officialProfile,
     )?.takeIf { it.isConfigured() }
         ?: editingProfile?.takeIf { it.isConfigured() }
 }

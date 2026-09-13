@@ -17,12 +17,10 @@ class OnboardingProviderPage extends StatelessWidget {
     super.key,
     required this.controller,
     required this.scrollController,
-    required this.onOpenAccount,
   });
 
   final OnboardingProviderController controller;
   final ScrollController scrollController;
-  final VoidCallback onOpenAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -31,28 +29,11 @@ class OnboardingProviderPage extends StatelessWidget {
       title: onbTr(context, '模型配置（可选）', 'Model setup (optional)'),
       description: onbTr(
         context,
-        '小万官方内置 VLM 默认启用。GUI 任务使用当前已配置的模型；如果尚未配置，可以登录或在这里填写 API。',
-        'The built-in Omnibot VLM is enabled by default. GUI tasks use the currently configured model; sign in or configure an API here if needed.',
+        'GUI 任务使用当前已配置的模型；如果尚未配置，请在这里填写自己的 API。',
+        'GUI tasks use the currently configured model; configure your own API here if needed.',
       ),
       scrollController: scrollController,
       children: [
-        OnboardingOptionRow(
-          tapKey: const ValueKey('tutorial-provider-account-auth'),
-          leading: OnboardingOptionIcon(
-            icon: LucideIcons.logIn,
-            selected: false,
-          ),
-          title: onbTr(context, '登录与注册', 'Sign in or register'),
-          description: onbTr(
-            context,
-            '登录小万账号，使用平台 AI 服务与额度。',
-            'Sign in to use the platform AI service and quota.',
-          ),
-          selected: false,
-          showSelectionIndicator: false,
-          onTap: controller.busy ? null : onOpenAccount,
-        ),
-        const OnboardingRowDivider(),
         if (controller.loading)
           OnboardingLoadingRow(
             label: onbTr(

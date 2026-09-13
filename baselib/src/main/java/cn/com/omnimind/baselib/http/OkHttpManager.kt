@@ -1,7 +1,6 @@
 package cn.com.omnimind.baselib.http
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.annotation.VisibleForTesting
 import cn.com.omnimind.baselib.http.interceptor.CommonParamsInterceptor
 import cn.com.omnimind.baselib.http.interceptor.HeaderInterceptor
@@ -39,35 +38,6 @@ object OkHttpManager {
     @Volatile
     private var mInstance: OkHttpClient? = null
     private const val DEFAULT_TIMEOUT: Long = 60
-
-    val BASE_HTTP_URL: String
-        get() {
-            return getBaseUrl()
-        }
-
-    /**
-     * 使用反射获取BASE_HTTP_URL
-     */
-    private fun getBaseUrl(): String {
-        val baseUrl = getDefaultBaseUrl()
-        if (baseUrl.isBlank()) {
-            Log.w("OkHttpManager", "BASE_URL is empty; backend features are disabled in open-source mode")
-        } else {
-            Log.d("OkHttpManager", "Using configured base URL")
-        }
-        return baseUrl
-    }
-
-    private fun getDefaultBaseUrl(): String {
-        try {
-            // 明确指定 app 模块的 BuildConfig
-            val appBuildConfig = Class.forName("cn.com.omnimind.bot.BuildConfig")
-            val baseUrl = appBuildConfig.getField("BASE_URL").get(null) as String
-            return baseUrl.trim().trimEnd('/')
-        } catch (e: Exception) {
-            return ""
-        }
-    }
 
     fun getAppVersionHeaders(): Map<String, String> {
         val appVersionInfo = DeviceInfoService.getAppVersion(BaseApplication.instance)

@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- upstream defaults kept for compatibility -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
-    <color name="launcher_icon_background">#FFE9F0F9</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- GrimCore: near-black / graphite / white / muted red -->
+    <color name="grim_background">#FF07080A</color>
+    <color name="grim_surface">#FF121417</color>
+    <color name="grim_surface_elevated">#FF1B1E22</color>
+    <color name="grim_border">#FF2A2E33</color>
+    <color name="grim_text_primary">#FFF2F3F5</color>
+    <color name="grim_text_secondary">#FFA7ADB5</color>
+    <color name="grim_accent">#FFA83232</color>
+    <color name="grim_accent_dim">#FF6E2323</color>
+    <color name="launcher_icon_background">#FF0B0C0E</color>
 </resources>

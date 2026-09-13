@@ -37,21 +37,21 @@ class OmniThemePalette extends ThemeExtension<OmniThemePalette> {
   });
 
   static const OmniThemePalette light = OmniThemePalette(
-    pageBackground: Color(0xFFF4F7FB),
+    pageBackground: Color(0xFFF2F3F5),
     surfacePrimary: Color(0xFFFFFFFF),
-    surfaceSecondary: Color(0xFFF0F5FC),
-    surfaceElevated: Color(0xFFE9F0F9),
-    borderSubtle: Color(0xFFE2EAF4),
-    borderStrong: Color(0xFFD3DEEC),
-    textPrimary: Color(0xFF353E53),
-    textSecondary: Color(0xFF71809B),
-    textTertiary: Color(0xFF98A5BB),
-    accentPrimary: Color(0xFF2C7FEB),
-    segmentTrack: Color(0xFFE8EFF8),
+    surfaceSecondary: Color(0xFFEDEFF2),
+    surfaceElevated: Color(0xFFE4E7EB),
+    borderSubtle: Color(0xFFD8DCE1),
+    borderStrong: Color(0xFFC3C8CF),
+    textPrimary: Color(0xFF14161A),
+    textSecondary: Color(0xFF4E555E),
+    textTertiary: Color(0xFF79808A),
+    accentPrimary: Color(0xFFA83232),
+    segmentTrack: Color(0xFFE9ECEF),
     segmentThumb: Color(0xFFFFFFFF),
-    overlayScrim: Color(0x4D0B1220),
-    previewFallback: Color(0xFFF6FAFF),
-    shadowColor: Color(0x141A2433),
+    overlayScrim: Color(0x66000000),
+    previewFallback: Color(0xFFF7F8FA),
+    shadowColor: Color(0x14000000),
   );
 
   static const OmniThemePalette dark = OmniThemePalette(

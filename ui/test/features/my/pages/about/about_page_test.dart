@@ -16,8 +16,6 @@ void main() {
 
   tearDown(() async {
     AppUpdateService.betaOptInNotifier.value = false;
-    AppUpdateService.downloadSourceNotifier.value =
-        AppUpdateDownloadSource.worker;
     AppUpdateService.statusNotifier.value = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(deviceChannel, null);
@@ -37,9 +35,6 @@ void main() {
         .setMockMethodCallHandler(updateChannel, (call) async {
           if (call.method == 'getBetaOptIn') {
             return false;
-          }
-          if (call.method == 'getApkDownloadSource') {
-            return 'worker';
           }
           if (call.method == 'getCachedStatus') {
             return <String, dynamic>{
@@ -84,21 +79,8 @@ void main() {
     expect(find.text('Version 0.0.1'), findsOneWidget);
     expect(find.text('Omnibot'), findsNothing);
     expect(find.text('加入 beta 测试'), findsOneWidget);
-    expect(find.text('安装包下载源'), findsOneWidget);
-    expect(find.textContaining('同意我们的隐私政策'), findsOneWidget);
-    expect(find.text('Cloudflare R2'), findsWidgets);
     expect(find.textContaining('发现新版本'), findsOneWidget);
     expect(find.text('查看新版本'), findsOneWidget);
-
-    final downloadSourceDropdown = find.byKey(
-      const ValueKey('about-download-source-dropdown'),
-    );
-    await tester.ensureVisible(downloadSourceDropdown);
-    await tester.tap(downloadSourceDropdown);
-    await tester.pumpAndSettle();
-
-    expect(find.text('通过更新 Worker 分发'), findsOneWidget);
-    expect(find.text('官方 Release'), findsOneWidget);
   });
 
   testWidgets('shows cached beta opt-in value on the first frame', (
@@ -118,9 +100,6 @@ void main() {
         .setMockMethodCallHandler(updateChannel, (call) async {
           if (call.method == 'getBetaOptIn') {
             return betaRead.future;
-          }
-          if (call.method == 'getApkDownloadSource') {
-            return 'worker';
           }
           if (call.method == 'getCachedStatus') {
             return null;
@@ -158,9 +137,6 @@ void main() {
         .setMockMethodCallHandler(updateChannel, (call) async {
           if (call.method == 'getBetaOptIn') {
             return false;
-          }
-          if (call.method == 'getApkDownloadSource') {
-            return 'worker';
           }
           if (call.method == 'getCachedStatus') {
             return <String, dynamic>{

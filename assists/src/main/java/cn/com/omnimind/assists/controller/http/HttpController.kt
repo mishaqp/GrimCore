@@ -1,9 +1,6 @@
 package cn.com.omnimind.assists.controller.http
 
 import cn.com.omnimind.assists.api.bean.ResultBean
-import cn.com.omnimind.baselib.account.AiRequestTransportPolicy
-import cn.com.omnimind.baselib.account.AiTransportRoute
-import cn.com.omnimind.baselib.account.OmniAccount
 import cn.com.omnimind.baselib.llm.AssistantToolCall
 import cn.com.omnimind.baselib.llm.AssistantToolCallFunction
 import cn.com.omnimind.baselib.llm.AiRequestLogEntry
@@ -24,13 +21,11 @@ import cn.com.omnimind.baselib.llm.OpenAiWireApi
 import cn.com.omnimind.baselib.llm.OpenAIResponsesRequest
 import cn.com.omnimind.baselib.llm.OpenAiResponsesCallIdCodec
 import cn.com.omnimind.baselib.llm.OpenAiResponsesFunctionNameCodec
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
 import cn.com.omnimind.baselib.llm.ReasoningEffort
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
-import cn.com.omnimind.baselib.llm.SceneOperationConfigStore
+import cn.com.omnimind.baselib.llm.VlmSceneIds
 import cn.com.omnimind.baselib.llm.contentText
 import cn.com.omnimind.baselib.llm.encodeRequestToString
 import cn.com.omnimind.baselib.llm.toStreamingRequestBody
@@ -238,7 +233,7 @@ object HttpController {
         sceneDefaultModel: String?,
         sharedAgentModel: String?
     ): String? {
-        if (sceneId != SceneOperationConfigStore.SCENE_ID) {
+        if (sceneId != VlmSceneIds.PRIMARY) {
             return sceneDefaultModel?.trim()?.takeIf { it.isNotEmpty() }
         }
         return sharedAgentModel?.trim()?.takeIf { it.isNotEmpty() }
@@ -891,7 +886,7 @@ object HttpController {
         }
         val directSceneBinding = sceneProfile?.sceneId?.let(SceneModelBindingStore::getBinding)
         val sharedAgentBinding = if (
-            sceneProfile?.sceneId == SceneOperationConfigStore.SCENE_ID
+            sceneProfile?.sceneId == VlmSceneIds.PRIMARY
         ) {
             SceneModelBindingStore.getBinding("scene.dispatch.model")
         } else {
@@ -899,9 +894,7 @@ object HttpController {
         }
         fun resolveBindingProfile(binding: cn.com.omnimind.baselib.llm.SceneModelBindingEntry?) =
             binding?.providerProfileId?.let { profileId ->
-            ModelProviderConfigStore.getProfile(profileId)
-                ?: PlatformAiProvisioner.officialProfileOrNull()
-                    ?.takeIf { OmniOfficialProvider.isOfficialProfile(profileId) }
+                ModelProviderConfigStore.getProfile(profileId)
             }
         val directBoundProfile = resolveBindingProfile(directSceneBinding)
         val sharedAgentBoundProfile = resolveBindingProfile(sharedAgentBinding)
@@ -914,7 +907,7 @@ object HttpController {
                 sceneId = sceneProfile.sceneId,
                 sceneDefaultModel = sceneProfile.model,
                 sharedAgentModel = if (
-                    sceneProfile.sceneId == SceneOperationConfigStore.SCENE_ID
+                    sceneProfile.sceneId == VlmSceneIds.PRIMARY
                 ) {
                     sharedAgentModel
                 } else {
@@ -929,7 +922,7 @@ object HttpController {
         val sceneBinding = when {
             directSceneBinding != null && directBoundProfile?.isConfigured() == true ->
                 directSceneBinding
-            sceneProfile?.sceneId == SceneOperationConfigStore.SCENE_ID &&
+            sceneProfile?.sceneId == VlmSceneIds.PRIMARY &&
                 sharedAgentBinding != null && sharedAgentBoundProfile?.isConfigured() == true ->
                 sharedAgentBinding
             else -> directSceneBinding
@@ -996,37 +989,12 @@ object HttpController {
             ModelSceneRegistry.SceneTransport.OPENAI_COMPATIBLE,
             ModelSceneRegistry.SceneTransport.CONVERSATION_CHAT -> ModelSceneRegistry.ResponseParser.TEXT_CONTENT
         }
-        val aiAccess = OmniAccount.currentAiRequestAccess()
-        val explicitOfficialProvider =
-            explicitBase != null &&
-                explicitKey == null &&
-                explicitHeaders.isEmpty() &&
-                aiAccess.platformGatewayUrl?.let(::normalizeApiBase) == explicitBase
-        val officialProviderSelected =
-            (bindingApplied && OmniOfficialProvider.isOfficialProfile(boundProfile?.id)) ||
-                explicitOfficialProvider
         val routeTag = when {
-            officialProviderSelected -> AiRequestTransportPolicy.PLATFORM_ROUTE_TAG
             overrideApplied -> ROUTE_CUSTOM_OPENAI_COMPAT
             effectiveTransport == ModelSceneRegistry.SceneTransport.OPENAI_COMPATIBLE -> "openai_compatible"
             effectiveTransport == ModelSceneRegistry.SceneTransport.CONVERSATION_CHAT -> "conversation_chat"
             else -> null
         }
-
-        if (officialProviderSelected) {
-            aiAccess.unavailableReason?.let { throw IllegalStateException(it) }
-        }
-        val transportRoute = AiRequestTransportPolicy.apply(
-            access = aiAccess,
-            byokRoute = AiTransportRoute(
-                apiBase = providerBase,
-                apiKey = providerKey,
-                customHeaders = providerHeaders,
-                protocolType = protocolType,
-                wireApi = wireApi,
-                routeTag = routeTag,
-            ),
-        )
 
         return ResolvedSceneRequest(
             requestedModel = requestedModel,
@@ -1038,9 +1006,9 @@ object HttpController {
             sceneProfile = sceneProfile,
             effectiveTransport = effectiveTransport,
             responseParser = responseParser,
-            apiBase = transportRoute.apiBase,
-            apiKey = transportRoute.apiKey,
-            customHeaders = transportRoute.customHeaders,
+            apiBase = providerBase,
+            apiKey = providerKey,
+            customHeaders = providerHeaders,
             providerProfileId = when {
                 bindingApplied -> boundProfile?.id
                 else -> null
@@ -1049,14 +1017,14 @@ object HttpController {
                 bindingApplied -> boundProfile?.name
                 else -> null
             },
-            routeTag = transportRoute.routeTag,
-            customApiBaseApplied = !transportRoute.apiBase.isNullOrBlank(),
+            routeTag = routeTag,
+            customApiBaseApplied = !providerBase.isNullOrBlank(),
             bindingApplied = bindingApplied,
             bindingProfileMissing = bindingProfileMissing,
             overrideApplied = overrideApplied,
             overrideModel = overrideModel,
-            protocolType = transportRoute.protocolType,
-            wireApi = transportRoute.wireApi
+            protocolType = protocolType,
+            wireApi = wireApi
         )
     }
 

@@ -2540,54 +2540,6 @@ abstract class AppLocalizations {
   /// **'更新与测试'**
   String get aboutPreferencesSectionTitle;
 
-  /// No description provided for @aboutApkSourceTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'安装包下载源'**
-  String get aboutApkSourceTitle;
-
-  /// No description provided for @aboutApkSourceDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择安装更新时使用的下载源。'**
-  String get aboutApkSourceDescription;
-
-  /// No description provided for @aboutApkSourceDisclaimer.
-  ///
-  /// In zh, this message translates to:
-  /// **'使用本软件即表示您同意我们的隐私政策，并同意我们通过开源的更新 Worker 收集匿名使用信息，以持续改进软件。因使用本软件产生的任何损失或后果由您自行承担。'**
-  String get aboutApkSourceDisclaimer;
-
-  /// No description provided for @aboutApkSourceOptionCnb.
-  ///
-  /// In zh, this message translates to:
-  /// **'Cloudflare R2'**
-  String get aboutApkSourceOptionCnb;
-
-  /// No description provided for @aboutApkSourceOptionCnbDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'通过更新 Worker 分发'**
-  String get aboutApkSourceOptionCnbDescription;
-
-  /// No description provided for @aboutApkSourceOptionGithub.
-  ///
-  /// In zh, this message translates to:
-  /// **'GitHub'**
-  String get aboutApkSourceOptionGithub;
-
-  /// No description provided for @aboutApkSourceOptionGithubDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'官方 Release'**
-  String get aboutApkSourceOptionGithubDescription;
-
-  /// No description provided for @aboutApkSourceSwitchFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'安装包下载源切换失败'**
-  String get aboutApkSourceSwitchFailed;
-
   /// No description provided for @aboutUpdateHintDefault.
   ///
   /// In zh, this message translates to:

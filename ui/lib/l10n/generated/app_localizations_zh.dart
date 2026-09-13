@@ -1326,31 +1326,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutPreferencesSectionTitle => '更新与测试';
 
   @override
-  String get aboutApkSourceTitle => '安装包下载源';
-
-  @override
-  String get aboutApkSourceDescription => '选择安装更新时使用的下载源。';
-
-  @override
-  String get aboutApkSourceDisclaimer =>
-      '使用本软件即表示您同意我们的隐私政策，并同意我们通过开源的更新 Worker 收集匿名使用信息，以持续改进软件。因使用本软件产生的任何损失或后果由您自行承担。';
-
-  @override
-  String get aboutApkSourceOptionCnb => 'Cloudflare R2';
-
-  @override
-  String get aboutApkSourceOptionCnbDescription => '通过更新 Worker 分发';
-
-  @override
-  String get aboutApkSourceOptionGithub => 'GitHub';
-
-  @override
-  String get aboutApkSourceOptionGithubDescription => '官方 Release';
-
-  @override
-  String get aboutApkSourceSwitchFailed => '安装包下载源切换失败';
-
-  @override
   String get aboutUpdateHintDefault => '检查更新获取最新版本';
 
   @override

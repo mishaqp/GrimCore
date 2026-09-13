@@ -75,29 +75,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
   }
 
-  late Map<String, dynamic> savedOperationConfig;
   late Map<String, dynamic> codexReadConfig;
   late Map<String, dynamic>? savedCodexConfig;
   late int codexWriteCount;
   late bool providerConfigured;
   late String providerBaseUrl;
   late int providerRevision;
-  late String providerSourceType;
-  late bool providerReadOnly;
-  late bool providerReady;
-  late bool includeOfficialProvider;
   late int providerFetchCount;
   late List<Map<String, dynamic>> sceneBindings;
   late List<Map<String, dynamic>> providerFetchResponse;
-  late List<Map<String, dynamic>> officialFetchResponse;
-  late Map<String, List<Map<String, dynamic>>>
-  officialFetchResponsesByCapability;
-  late Map<String, Completer<List<Map<String, dynamic>>>>
-  officialFetchCompletersByCapability;
   late Completer<List<Map<String, dynamic>>>? providerFetchCompleter;
   late Object? providerFetchError;
   late Map<dynamic, dynamic>? lastProviderFetchArguments;
-  late List<Map<dynamic, dynamic>> providerFetchArguments;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -116,22 +105,12 @@ void main() {
     providerConfigured = true;
     providerBaseUrl = 'https://example.com/v1';
     providerRevision = 1;
-    providerSourceType = 'custom';
-    providerReadOnly = false;
-    providerReady = true;
-    includeOfficialProvider = false;
     providerFetchCount = 0;
     sceneBindings = <Map<String, dynamic>>[];
     providerFetchResponse = <Map<String, dynamic>>[];
-    officialFetchResponse = <Map<String, dynamic>>[];
-    officialFetchResponsesByCapability = <String, List<Map<String, dynamic>>>{};
-    officialFetchCompletersByCapability =
-        <String, Completer<List<Map<String, dynamic>>>>{};
     providerFetchCompleter = null;
     providerFetchError = null;
     lastProviderFetchArguments = null;
-    providerFetchArguments = <Map<dynamic, dynamic>>[];
-    savedOperationConfig = <String, dynamic>{'useOfficialService': true};
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
@@ -209,32 +188,18 @@ void main() {
                     'apiKey': 'secret',
                     'hasApiKey': true,
                     'configured': providerConfigured,
-                    'sourceType': providerSourceType,
-                    'readOnly': providerReadOnly,
-                    'ready': providerReady,
+                    'sourceType': 'custom',
+                    'readOnly': false,
+                    'ready': true,
                     'revision': providerRevision,
                     'protocolType': 'openai_compatible',
                   },
-                  if (includeOfficialProvider)
-                    <String, dynamic>{
-                      'id': 'omnibot-official-ai',
-                      'name': 'OmniBot 官方 AI',
-                      'baseUrl': 'https://official.example/ai',
-                      'configured': true,
-                      'sourceType': 'omnibot_official',
-                      'readOnly': true,
-                      'ready': true,
-                      'revision': 0,
-                      'protocolType': 'openai_compatible',
-                    },
                 ],
                 'editingProfileId': 'provider-1',
               };
             case 'fetchProviderModels':
               providerFetchCount += 1;
               lastProviderFetchArguments = call.arguments as Map?;
-              final arguments = (call.arguments as Map?) ?? const {};
-              providerFetchArguments.add(Map<dynamic, dynamic>.from(arguments));
               final error = providerFetchError;
               if (error != null) {
                 throw PlatformException(
@@ -243,31 +208,8 @@ void main() {
                 );
               }
               final pending = providerFetchCompleter;
-              final isOfficialRequest =
-                  arguments['profileId'] == 'omnibot-official-ai' ||
-                  (arguments['profileId'] == 'provider-1' &&
-                      providerSourceType == 'omnibot_official');
-              if (isOfficialRequest) {
-                final capability = arguments['capability']?.toString() ?? '';
-                final capabilityPending =
-                    officialFetchCompletersByCapability[capability];
-                if (capabilityPending != null) {
-                  return capabilityPending.future;
-                }
-                return officialFetchResponsesByCapability[capability] ??
-                    (arguments['profileId'] == 'omnibot-official-ai'
-                        ? officialFetchResponse
-                        : providerFetchResponse);
-              }
               if (pending != null) return pending.future;
               return providerFetchResponse;
-            case 'getSceneOperationConfig':
-              return savedOperationConfig;
-            case 'saveSceneOperationConfig':
-              savedOperationConfig = Map<String, dynamic>.from(
-                (call.arguments as Map).cast<String, dynamic>(),
-              );
-              return savedOperationConfig;
             default:
               return null;
           }
@@ -293,11 +235,6 @@ void main() {
     final pending = providerFetchCompleter;
     if (pending != null && !pending.isCompleted) {
       pending.complete(<Map<String, dynamic>>[]);
-    }
-    for (final pending in officialFetchCompletersByCapability.values) {
-      if (!pending.isCompleted) {
-        pending.complete(<Map<String, dynamic>>[]);
-      }
     }
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
@@ -437,177 +374,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('official catalog refreshes automatically', (tester) async {
-    providerBaseUrl = 'https://official.example/ai';
-    providerSourceType = 'omnibot_official';
-    providerReadOnly = true;
-    providerFetchResponse = <Map<String, dynamic>>[
-      <String, dynamic>{'id': 'official-model'},
-    ];
-
-    await pumpSceneSettings(tester);
-    expect(providerFetchCount, 2);
-    await tester.tap(
-      find.byKey(
-        const Key('scene-model-selector-scene.compactor.context.chat'),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('official-model'), findsOneWidget);
-  });
-
-  testWidgets('scene selector shows BYOK and official channels together', (
-    tester,
-  ) async {
-    includeOfficialProvider = true;
-    providerFetchResponse = <Map<String, dynamic>>[
-      <String, dynamic>{'id': 'byok-model'},
-    ];
-    officialFetchResponse = <Map<String, dynamic>>[
-      <String, dynamic>{'id': 'official-model'},
-    ];
-
-    await pumpSceneSettings(tester);
-    expect(providerFetchCount, 3);
-
-    await tester.tap(
-      find.byKey(
-        const Key('scene-model-selector-scene.compactor.context.chat'),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Provider One'), findsOneWidget);
-    expect(find.text('OmniBot 官方 AI'), findsOneWidget);
-    expect(find.text('byok-model'), findsOneWidget);
-
-    await tester.tap(find.text('OmniBot 官方 AI'));
-    await tester.pumpAndSettle();
-    expect(find.text('official-model'), findsOneWidget);
-  });
-
-  testWidgets(
-    'embedding scene filters official capability but keeps BYOK models open',
-    (tester) async {
-      includeOfficialProvider = true;
-      providerFetchResponse = <Map<String, dynamic>>[
-        <String, dynamic>{'id': 'unknown-byok-model'},
-      ];
-      officialFetchResponsesByCapability = <String, List<Map<String, dynamic>>>{
-        'text': <Map<String, dynamic>>[
-          <String, dynamic>{'id': 'official-text-model'},
-        ],
-        'embedding': <Map<String, dynamic>>[
-          <String, dynamic>{'id': 'official-embedding-model'},
-        ],
-      };
-
-      await pumpSceneSettings(tester);
-      expect(providerFetchCount, 3);
-      expect(
-        providerFetchArguments.any(
-          (arguments) =>
-              arguments['profileId'] == 'provider-1' &&
-              !arguments.containsKey('capability'),
-        ),
-        isTrue,
-      );
-      expect(
-        providerFetchArguments.any(
-          (arguments) =>
-              arguments['profileId'] == 'omnibot-official-ai' &&
-              arguments['capability'] == 'embedding',
-        ),
-        isTrue,
-      );
-
-      await tester.tap(
-        find.byKey(const Key('scene-model-selector-scene.memory.embedding')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('unknown-byok-model'), findsOneWidget);
-
-      await tester.tap(find.text('OmniBot 官方 AI'));
-      await tester.pumpAndSettle();
-      expect(find.text('official-embedding-model'), findsOneWidget);
-      expect(find.text('official-text-model'), findsNothing);
-    },
-  );
-
-  testWidgets('text selector does not wait for a pending embedding catalog', (
-    tester,
-  ) async {
-    includeOfficialProvider = true;
-    providerFetchResponse = <Map<String, dynamic>>[
-      <String, dynamic>{'id': 'byok-model'},
-    ];
-    officialFetchResponsesByCapability = <String, List<Map<String, dynamic>>>{
-      'text': <Map<String, dynamic>>[
-        <String, dynamic>{'id': 'official-text-model'},
-      ],
-    };
-    final embeddingPending = Completer<List<Map<String, dynamic>>>();
-    officialFetchCompletersByCapability['embedding'] = embeddingPending;
-
-    await pumpSceneSettings(tester);
-    expect(providerFetchCount, 3);
-
-    await tester.tap(
-      find.byKey(
-        const Key('scene-model-selector-scene.compactor.context.chat'),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.text('OmniBot 官方 AI'), findsOneWidget);
-    await tester.tap(find.text('OmniBot 官方 AI'));
-    await tester.pumpAndSettle();
-    expect(find.text('official-text-model'), findsOneWidget);
-
-    embeddingPending.complete(<Map<String, dynamic>>[
-      <String, dynamic>{'id': 'official-embedding-model'},
-    ]);
-    await tester.pumpAndSettle();
-  });
-
-  testWidgets('first embedding selector tap waits for official models', (
-    tester,
-  ) async {
-    includeOfficialProvider = true;
-    providerFetchResponse = <Map<String, dynamic>>[
-      <String, dynamic>{'id': 'unknown-byok-model'},
-    ];
-    officialFetchResponsesByCapability = <String, List<Map<String, dynamic>>>{
-      'text': <Map<String, dynamic>>[
-        <String, dynamic>{'id': 'official-text-model'},
-      ],
-    };
-    final embeddingPending = Completer<List<Map<String, dynamic>>>();
-    officialFetchCompletersByCapability['embedding'] = embeddingPending;
-
-    await pumpSceneSettings(tester);
-    expect(providerFetchCount, 3);
-
-    await tester.tap(
-      find.byKey(const Key('scene-model-selector-scene.memory.embedding')),
-    );
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('OmniBot 官方 AI'), findsNothing);
-
-    embeddingPending.complete(<Map<String, dynamic>>[
-      <String, dynamic>{'id': 'official-embedding-model'},
-    ]);
-    await tester.pumpAndSettle();
-
-    expect(find.text('OmniBot 官方 AI'), findsOneWidget);
-    await tester.tap(find.text('OmniBot 官方 AI'));
-    await tester.pumpAndSettle();
-    expect(find.text('official-embedding-model'), findsOneWidget);
-    expect(find.text('official-text-model'), findsNothing);
-  });
-
   testWidgets('background refresh errors do not leak endpoint details', (
     tester,
   ) async {
@@ -638,20 +404,16 @@ void main() {
   });
 
   testWidgets(
-    'GUI switches providers through the shared scene binding and restores it',
+    'GUI updates a shared BYOK scene binding and restores it',
     (tester) async {
-      includeOfficialProvider = true;
       providerFetchResponse = <Map<String, dynamic>>[
         {'id': 'custom-gui-model'},
-      ];
-      officialFetchResponse = <Map<String, dynamic>>[
-        {'id': 'official-gui-model'},
       ];
       sceneBindings = <Map<String, dynamic>>[
         {
           'sceneId': 'scene.vlm.operation.primary',
-          'providerProfileId': 'omnibot-official-ai',
-          'modelId': 'official-gui-model',
+          'providerProfileId': 'provider-1',
+          'modelId': 'old-gui-model',
         },
       ];
       await pumpSceneSettings(tester);
@@ -660,8 +422,6 @@ void main() {
           const Key('scene-model-selector-scene.vlm.operation.primary'),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Provider One'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('custom-gui-model'));
       await tester.pumpAndSettle();

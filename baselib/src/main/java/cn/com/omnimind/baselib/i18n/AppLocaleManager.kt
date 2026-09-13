@@ -9,7 +9,8 @@ import java.util.Locale
 enum class AppLanguageMode(val storageValue: String) {
     SYSTEM("system"),
     ZH_HANS("zhHans"),
-    EN("en");
+    EN("en"),
+    RU("ru");
 
     companion object {
         fun fromStorageValue(raw: String?): AppLanguageMode {
@@ -78,6 +79,10 @@ object AppLocaleManager {
         return when (mode) {
             AppLanguageMode.ZH_HANS -> PromptLocale.ZH_CN
             AppLanguageMode.EN -> PromptLocale.EN_US
+            // GrimCore: the Russian UI uses the English prompt/tool text in
+            // v0.1.0-grim.1. Translating the agent prompts and tool
+            // descriptions is tracked as a separate follow-up step.
+            AppLanguageMode.RU -> PromptLocale.EN_US
             AppLanguageMode.SYSTEM -> normalize(systemLocale)
         }
     }
@@ -111,10 +116,8 @@ object AppLocaleManager {
     }
 
     fun brandName(locale: PromptLocale): String {
-        return when (locale) {
-            PromptLocale.ZH_CN -> "小万"
-            PromptLocale.EN_US -> "Omnibot"
-        }
+        // GrimCore branding is locale independent.
+        return "GrimCore"
     }
 
     fun applyAppLocale(context: Context): Locale {

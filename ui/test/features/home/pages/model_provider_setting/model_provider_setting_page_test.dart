@@ -396,7 +396,7 @@ void main() {
     expect(saveCalls, 0);
   });
 
-  testWidgets('provider page filters the runtime OmniBot official channel', (
+  testWidgets('provider page shows every editable BYOK provider', (
     tester,
   ) async {
     final messenger =
@@ -406,11 +406,11 @@ void main() {
         final payload = profilePayload();
         (payload['profiles'] as List<Map<String, dynamic>>)
             .add(<String, dynamic>{
-              'id': 'omnibot-official-ai',
-              'name': 'OmniBot 官方 AI',
-              'baseUrl': 'https://official.example/ai',
-              'sourceType': 'omnibot_official',
-              'readOnly': true,
+              'id': 'provider-2',
+              'name': 'Provider 2',
+              'baseUrl': 'https://second.example/v1',
+              'sourceType': 'custom',
+              'readOnly': false,
               'ready': true,
               'configured': true,
               'protocolType': 'openai_compatible',
@@ -434,7 +434,7 @@ void main() {
     expect(find.text('Provider 1'), findsWidgets);
     await tester.tap(find.byKey(const Key('provider-config-title')));
     await tester.pumpAndSettle();
-    expect(find.text('OmniBot 官方 AI'), findsNothing);
+    expect(find.text('Provider 2'), findsWidgets);
   });
 
   testWidgets('provider page does not wait for metadata refresh', (
