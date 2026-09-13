@@ -118,6 +118,12 @@ jobs:
         GRIM_RELEASE_STORE_PWD: ${{ secrets.GRIM_KEYSTORE_PWD }}
         GRIM_RELEASE_KEY_ALIAS: ${{ secrets.GRIM_KEY_ALIAS }}
         GRIM_RELEASE_KEY_PWD: ${{ secrets.GRIM_KEY_PWD }}
+        # Gradle reads project properties from ORG_GRADLE_PROJECT_* env entries;
+        # this is exactly how the upstream release script hands over its keystore.
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_STORE_FILE: ${{ runner.temp }}/grimcore.jks
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_STORE_PWD: ${{ secrets.GRIM_KEYSTORE_PWD }}
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_KEY_ALIAS: ${{ secrets.GRIM_KEY_ALIAS }}
+        ORG_GRADLE_PROJECT_GRIM_RELEASE_KEY_PWD: ${{ secrets.GRIM_KEY_PWD }}
       run: |
         set -euo pipefail
         ./gradlew --no-daemon :app:assembleProductionStandardRelease \

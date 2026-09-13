@@ -172,9 +172,9 @@ android {
         // GrimCore independent version scheme. versionCode is monotonic and
         // never decreases inside the com.mishaqp.grimcore package:
         // major *1000000 + minor *10000 + patch *100 + grim
-        //0.1.0-grim.1 ->10001
-        versionCode =10001
-        versionName = "0.1.0-grim.1"
+        // 0.1.0-grim.2 -> 10002
+        versionCode = 10002
+        versionName = "0.1.0-grim.2"
         buildConfigField("String", "IMAGE_BASE_URL", buildConfigString(omnibotImageBaseUrl))
         buildConfigField("String", "IMAGE_MODEL", buildConfigString(omnibotImageModel))
         buildConfigField("String", "IMAGE_API_KEY", buildConfigString(omnibotImageApiKey))
@@ -235,9 +235,15 @@ android {
             // The upstream OMNI_RELEASE_* names remain a fallback so that
             // unmodified upstream build flows keep working.
             fun grimSigningProperty(grimName: String, upstreamName: String): String? {
-                val grimValue = project.findProperty(grimName) as String?
+                // Gradle exposes -P properties and ORG_GRADLE_PROJECT_* environment
+                // entries through findProperty. System.getenv is the last resort so a
+                // plain environment variable also works for local release builds.
+                val grimValue = (project.findProperty(grimName) as String?)
+                    ?: System.getenv(grimName)
                 if (!grimValue.isNullOrBlank()) return grimValue
-                return (project.findProperty(upstreamName) as String?)?.takeIf { it.isNotBlank() }
+                val upstreamValue = (project.findProperty(upstreamName) as String?)
+                    ?: System.getenv(upstreamName)
+                return upstreamValue?.takeIf { it.isNotBlank() }
             }
             storeFile = grimSigningProperty("GRIM_RELEASE_STORE_FILE", "OMNI_RELEASE_STORE_FILE")
                 ?.let { file(it) }
