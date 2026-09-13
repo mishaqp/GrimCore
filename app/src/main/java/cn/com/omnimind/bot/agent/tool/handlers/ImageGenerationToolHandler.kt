@@ -12,7 +12,7 @@ import cn.com.omnimind.bot.agent.AgentToolExecutionHandle
 import cn.com.omnimind.bot.agent.AgentToolRegistry
 import cn.com.omnimind.bot.agent.AgentWorkspaceManager
 import cn.com.omnimind.bot.agent.ToolExecutionResult
-import cn.com.omnimind.bot.media.awaitResponse
+import cn.com.omnimind.bot.http.awaitResponse
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException

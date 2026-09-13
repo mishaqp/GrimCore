@@ -18,7 +18,7 @@ import cn.com.omnimind.baselib.llm.SceneVoiceConfigStore
 import cn.com.omnimind.baselib.util.ContentEndpointSecurity
 import cn.com.omnimind.baselib.util.CredentialEndpointSecurity
 import cn.com.omnimind.baselib.util.OmniLog
-import cn.com.omnimind.bot.media.awaitResponse
+import cn.com.omnimind.bot.http.awaitResponse
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Collections
