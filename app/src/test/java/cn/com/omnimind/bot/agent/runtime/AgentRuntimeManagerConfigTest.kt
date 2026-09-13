@@ -25,7 +25,6 @@ class AgentRuntimeManagerConfigTest {
     }
 
     @Test
-    @Test
     fun `Dispatch Provider falls back to the editing profile without a scene binding`() {
         val editingProfile = ModelProviderProfile(
             id = "editing-provider",
@@ -61,7 +60,6 @@ class AgentRuntimeManagerConfigTest {
         )
     }
 
-    @Test
     @Test
     fun `custom provider keeps its configured api key`() {
         val customProfile = ModelProviderProfile(
