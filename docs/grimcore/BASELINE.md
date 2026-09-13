@@ -58,6 +58,16 @@ The upstream tree contained `release.yml`, `sync-models-dev.yml`, and
 Cloudflare update Worker; GrimCore updates are served only from its GitHub
 Release assets.
 
+The CNB publishing mirror is retired as well: `.cnb.yml`, `.cnb/secrets/`, and
+`scripts/mirror_github_release_to_cnb.py` are removed, because that pipeline
+force-pushed the tree to `github.com/omnimind-ai/OpenOmniBot` and would have
+published upstream-branded artifacts from a fork that has no CNB credentials.
+
+`scripts/grimcore/check_contract.py` now enforces all of this: the removed
+paths must stay absent, no runtime source may reference a proprietary OmniMind
+endpoint or a removed account/cloud symbol, and `AppUpdateManager` may only
+resolve releases from `mishaqp/GrimCore`.
+
 `ci.yml` runs: gitleaks secret scan, Gradle wrapper validation, `flutter test`,
 `flutter analyze`, then
 `./gradlew :app:testDevelopStandardDebugUnitTest :app:lintDevelopStandardDebug

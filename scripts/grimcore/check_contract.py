@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""GrimCore app-identity contract.
+"""GrimCore app-identity and fork-independence contract.
 
 Fails the build when the fork identity is broken: wrong applicationId, wrong
 version scheme, an accidental x86_64 in the user APK, a lost manifest
 authority, a namespace rewrite, or a removed attribution file.
+
+It also pins fork independence: the upstream OmniMind account, the proprietary
+platform gateway, the Cloudflare update worker and the CNB mirroring pipeline
+must stay gone, and the fork must keep resolving models through the user's own
+BYOK provider.
 """
 import re
 import sys
@@ -99,6 +104,75 @@ def main():
     rtext = rel.read_text(encoding='utf-8')
     check('grimAbiArm64Only=true' in rtext, 'the release workflow must pass -PgrimAbiArm64Only=true')
     check('arm64-v8a' in rtext, 'the release workflow must verify the arm64-v8a ABI')
+
+  # 9. fork independence: the upstream account, the proprietary platform
+  #    gateway, the Cloudflare update worker and the CNB mirroring pipeline are
+  #    gone for good. GrimCore resolves every model call through the BYOK
+  #    provider the user configured, and updates only from mishaqp/GrimCore.
+  upstream_only_paths = (
+    'workers',
+    '.cnb.yml',
+    '.cnb',
+    '.github/workflows/sync-to-cnb.yml',
+    '.github/workflows/release.yml',
+    '.github/workflows/sync-models-dev.yml',
+    'scripts/mirror_github_release_to_cnb.py',
+    'scripts/upload_release_asset_to_worker.py',
+  )
+  for path in upstream_only_paths:
+    check(not (ROOT / path).exists(),
+      'upstream-only path must stay removed: %s' % path)
+
+  proprietary_endpoints = (
+    'account.omnimind.com.cn',
+    'model-api.omnimind.com.cn',
+    'cloud.omnimind.com.cn',
+  )
+  # Attribution keeps its upstream URLs: LICENSE, NOTICE and docs/ are the
+  # provenance record, not runtime configuration.
+  code_roots = ('app', 'baselib', 'assists', 'ui', 'webchat', 'uikit',
+    'ReTerminal', 'plugins', 'scripts', 'androidgui', 'accessibility')
+  code_suffixes = {'.kt', '.kts', '.dart', '.java', '.xml', '.json', '.yaml',
+    '.yml', '.properties', '.gradle', '.gradle.kts', '.sh', '.ts', '.tsx'}
+  removed_symbols = ('OmniAccount', 'PlatformAiProvisioner', 'OmniOfficialProvider',
+    'AiRequestTransportPolicy', 'AccountRepository', 'PlatformModelApiClient')
+  scanned_code = 0
+  for path in sorted(ROOT.rglob('*')):
+    if not path.is_file() or path.suffix.lower() not in code_suffixes:
+      continue
+    parts = path.parts
+    if parts[0] not in code_roots:
+      continue
+    if set(parts) & {'build', '.dart_tool', 'node_modules', '.git'}:
+      continue
+    try:
+      if path.stat().st_size > 2 * 1024 * 1024:
+        continue
+      text = path.read_text(encoding='utf-8', errors='ignore')
+    except OSError:
+      continue
+    scanned_code += 1
+    for endpoint in proprietary_endpoints:
+      if endpoint in text:
+        errors.append('runtime code still points at a proprietary endpoint '
+          '(%s): %s' % (endpoint, path))
+    for symbol in removed_symbols:
+      if re.search(r'\b%s\b' % symbol, text):
+        errors.append('removed account/cloud symbol %s is referenced again: %s'
+          % (symbol, path))
+
+  # The updater must read this fork's releases and nothing else.
+  updater = ROOT / 'app/src/main/java/cn/com/omnimind/bot/update/AppUpdateManager.kt'
+  if updater.is_file():
+    utext = updater.read_text(encoding='utf-8')
+    check('mishaqp/GrimCore' in utext,
+      'the updater must resolve releases from mishaqp/GrimCore')
+    for bad in ('omnimind-ai/OmniBot', 'OpenOmniBot-v', 'APP_UPDATE_WORKER_URL'):
+      check(bad not in utext, 'the updater must not reference %s' % bad)
+  else:
+    errors.append('update/AppUpdateManager.kt is missing')
+
+  notes.append('fork-independence scan covered %d source files' % scanned_code)
 
   for note in notes:
     print('note:', note)
