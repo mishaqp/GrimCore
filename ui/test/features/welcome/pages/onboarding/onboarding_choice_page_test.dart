@@ -21,7 +21,6 @@ void main() {
     'cn.com.omnimind.bot/SpecialPermissionEvent',
   );
   const assistsChannel = MethodChannel('cn.com.omnimind.bot/AssistCoreEvent');
-  const accountChannel = MethodChannel('cn.com.omnimind.bot/account');
   late String savedDistribution;
   late List<String> requestedPackageIds;
   late Map<String, dynamic> terminalSnapshot;
@@ -189,12 +188,6 @@ void main() {
       }
       return null;
     });
-    messenger.setMockMethodCallHandler(accountChannel, (call) async {
-      if (call.method == 'getSessionState') {
-        return <String, Object?>{'configured': true, 'signedIn': false};
-      }
-      return null;
-    });
   });
 
   tearDown(() {
@@ -202,7 +195,6 @@ void main() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(terminalChannel, null);
     messenger.setMockMethodCallHandler(assistsChannel, null);
-    messenger.setMockMethodCallHandler(accountChannel, null);
   });
 
   testWidgets(
@@ -518,7 +510,7 @@ void main() {
   });
 
   testWidgets(
-    'later setup pages use pagination back and provider brand icons',
+    'later setup pages use BYOK provider icons and pagination back',
     (tester) async {
       tester.view.physicalSize = const Size(430, 900);
       tester.view.devicePixelRatio = 1;
@@ -531,44 +523,23 @@ void main() {
       await openProviderPage(tester);
 
       expect(find.text('模型配置（可选）'), findsOneWidget);
-      final accountEntry = find.byKey(
-        const ValueKey('tutorial-provider-account-auth'),
+      expect(
+        find.byKey(const ValueKey('tutorial-provider-account-auth')),
+        findsNothing,
       );
-      expect(accountEntry, findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('standalone-account-auth-page')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('account-auth-only-surface')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('submit-auth')), findsNothing);
       expect(
         find.byKey(const ValueKey('tutorial-provider-deepseek')),
         findsOne,
       );
-      expect(
-        tester.getTopLeft(accountEntry).dy,
-        lessThan(
-          tester
-              .getTopLeft(
-                find.byKey(const ValueKey('tutorial-provider-deepseek')),
-              )
-              .dy,
-        ),
-      );
-      await tester.tap(accountEntry);
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('standalone-account-auth-page')),
-        findsOneWidget,
-      );
-      expect(find.text('登录与注册'), findsOneWidget);
-      expect(find.text('账号与 AI 服务'), findsNothing);
-      expect(
-        find.byKey(const ValueKey('account-auth-only-surface')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('submit-auth')), findsOneWidget);
-      Navigator.of(
-        tester.element(
-          find.byKey(const ValueKey('standalone-account-auth-page')),
-        ),
-      ).pop();
-      await tester.pumpAndSettle();
-      expect(find.text('模型配置（可选）'), findsOneWidget);
       expect(find.byKey(const ValueKey('tutorial-back-button')), findsNothing);
       expect(
         find.byKey(const ValueKey('tutorial-bottom-back')),
