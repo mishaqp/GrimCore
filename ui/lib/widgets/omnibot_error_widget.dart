@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 
 /// Installs the app-wide rendering fallback.
 ///
@@ -36,7 +36,11 @@ class OmnibotSafeErrorWidget extends StatelessWidget {
       alignment: Alignment.center,
       padding: const EdgeInsets.all(16),
       child: Text(
-        '内容暂时无法显示',
+        LegacyTextLocalizer.pick(
+          'Content is temporarily unavailable',
+          '内容暂时无法显示',
+          ru: 'Содержимое временно недоступно',
+        ),
         textAlign: TextAlign.center,
         style: const TextStyle(color: Color(0xFF667085), fontSize: 14),
       ),

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { LanguageSwitcher, useI18n } from "../i18n/I18nProvider";
 
 interface LoginViewProps {
   initialToken: string;
@@ -8,6 +9,7 @@ interface LoginViewProps {
 }
 
 export function LoginView({ initialToken, busy, error, onLogin }: LoginViewProps) {
+  const { messages } = useI18n();
   const [token, setToken] = useState(initialToken);
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -18,9 +20,10 @@ export function LoginView({ initialToken, busy, error, onLogin }: LoginViewProps
 
   return (
     <main className="login-view">
-      <section className="login-panel" aria-label="登录">
+      <section className="login-panel" aria-label={messages.login}>
+        <LanguageSwitcher className="login-language-select" />
         <form className="login-form" onSubmit={submit}>
-          <label htmlFor="token-input">Server Token</label>
+          <label htmlFor="token-input">{messages.serverToken}</label>
           <input
             id="token-input"
             name="token"
@@ -32,7 +35,7 @@ export function LoginView({ initialToken, busy, error, onLogin }: LoginViewProps
             required
           />
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? "正在连接…" : "连接"}
+            {busy ? messages.connecting : messages.connect}
           </button>
         </form>
         <p className="form-error" role="alert">{error}</p>

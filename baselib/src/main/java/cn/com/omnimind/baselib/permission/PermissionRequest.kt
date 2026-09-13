@@ -12,7 +12,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import cn.com.omnimind.baselib.R
 
-
 /**
  * 透明Activity方式实现权限请求工具类
  * 通过启动一个透明的Activity来处理权限请求，避免在业务Activity中处理复杂的权限逻辑。
@@ -27,24 +26,73 @@ class PermissionRequest : Activity() {
         private val requestCallbacks = SparseArray<(Map<String, Boolean>) -> Unit>()
         private var requestCode = 0
 
+        internal data class PermissionDisclosureResources(
+            val labelResId: Int,
+            val purposeResId: Int
+        )
+
         /**
-         * 敏感权限使用目的说明（与华为「同步告知权限申请目的」要求一致）
+         * String resources for sensitive-permission disclosures. Keeping
+         * resource IDs here lets Android select the active UI locale while
+         * preserving a single permission-to-disclosure mapping.
          */
-        private val PERMISSION_PURPOSES: Map<String, String> = mapOf(
-            android.Manifest.permission.POST_NOTIFICATIONS to "为及时向您推送消息通知",
-            android.Manifest.permission.BLUETOOTH_CONNECT to "为连接蓝牙设备以提供相关服务",
-            android.Manifest.permission.BLUETOOTH_SCAN to "为扫描并发现蓝牙设备",
-            android.Manifest.permission.RECORD_AUDIO to "用于在您主动使用语音输入、语音唤醒或语音转文字功能时采集声音",
-            android.Manifest.permission.READ_MEDIA_IMAGES to "为读取图片以实现图片识别、截屏检测等功能",
-            android.Manifest.permission.READ_MEDIA_AUDIO to "用于读取您主动选择的本地 MP3，作为提醒闹钟铃声",
-            android.Manifest.permission.READ_EXTERNAL_STORAGE to "用于在 Android 12 及以下读取您主动选择的本地 MP3",
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE to "为保存文件、下载安装包等",
-            android.Manifest.permission.WRITE_SETTINGS to "用于问题排查与系统设置相关功能",
-            android.Manifest.permission.ACCESS_COARSE_LOCATION to "为获取大致位置信息以提供位置相关服务",
-            android.Manifest.permission.ACCESS_FINE_LOCATION to "为获取精确位置信息以提供位置相关服务",
-            android.Manifest.permission.CAMERA to "为实现扫码、图片转文字等功能",
-            android.Manifest.permission.READ_CALENDAR to "用于在您主动调用日历功能时读取日历和日程",
-            android.Manifest.permission.WRITE_CALENDAR to "用于在您主动调用日历功能时创建或修改日程",
+        private val PERMISSION_DISCLOSURES = mapOf(
+            android.Manifest.permission.POST_NOTIFICATIONS to PermissionDisclosureResources(
+                R.string.permission_label_notifications,
+                R.string.permission_purpose_notifications
+            ),
+            android.Manifest.permission.BLUETOOTH_CONNECT to PermissionDisclosureResources(
+                R.string.permission_label_bluetooth_connect,
+                R.string.permission_purpose_bluetooth_connect
+            ),
+            android.Manifest.permission.BLUETOOTH_SCAN to PermissionDisclosureResources(
+                R.string.permission_label_bluetooth_scan,
+                R.string.permission_purpose_bluetooth_scan
+            ),
+            android.Manifest.permission.RECORD_AUDIO to PermissionDisclosureResources(
+                R.string.permission_label_microphone,
+                R.string.permission_purpose_microphone
+            ),
+            android.Manifest.permission.READ_MEDIA_IMAGES to PermissionDisclosureResources(
+                R.string.permission_label_read_images,
+                R.string.permission_purpose_read_images
+            ),
+            android.Manifest.permission.READ_MEDIA_AUDIO to PermissionDisclosureResources(
+                R.string.permission_label_read_audio,
+                R.string.permission_purpose_read_audio
+            ),
+            android.Manifest.permission.READ_EXTERNAL_STORAGE to PermissionDisclosureResources(
+                R.string.permission_label_read_storage,
+                R.string.permission_purpose_read_storage
+            ),
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE to PermissionDisclosureResources(
+                R.string.permission_label_write_storage,
+                R.string.permission_purpose_write_storage
+            ),
+            android.Manifest.permission.WRITE_SETTINGS to PermissionDisclosureResources(
+                R.string.permission_label_write_settings,
+                R.string.permission_purpose_write_settings
+            ),
+            android.Manifest.permission.ACCESS_COARSE_LOCATION to PermissionDisclosureResources(
+                R.string.permission_label_coarse_location,
+                R.string.permission_purpose_coarse_location
+            ),
+            android.Manifest.permission.ACCESS_FINE_LOCATION to PermissionDisclosureResources(
+                R.string.permission_label_fine_location,
+                R.string.permission_purpose_fine_location
+            ),
+            android.Manifest.permission.CAMERA to PermissionDisclosureResources(
+                R.string.permission_label_camera,
+                R.string.permission_purpose_camera
+            ),
+            android.Manifest.permission.READ_CALENDAR to PermissionDisclosureResources(
+                R.string.permission_label_read_calendar,
+                R.string.permission_purpose_read_calendar
+            ),
+            android.Manifest.permission.WRITE_CALENDAR to PermissionDisclosureResources(
+                R.string.permission_label_write_calendar,
+                R.string.permission_purpose_write_calendar
+            )
         )
 
         /**
@@ -80,7 +128,9 @@ class PermissionRequest : Activity() {
             ) == PackageManager.PERMISSION_GRANTED
         }
 
-        internal fun getPurposeForPermission(permission: String): String? = PERMISSION_PURPOSES[permission]
+        internal fun getDisclosureResourcesForPermission(
+            permission: String
+        ): PermissionDisclosureResources? = PERMISSION_DISCLOSURES[permission]
     }
 
     private var currentRequestCode = 0
@@ -119,8 +169,12 @@ class PermissionRequest : Activity() {
      */
     private fun showPermissionPurposeDialogThenRequest(permissionsToRequest: Array<String>) {
         val purposeLines = permissionsToRequest.mapNotNull { permission ->
-            getPurposeForPermission(permission)?.let { purpose ->
-                "${getPermissionLabelShort(permission)}$purpose"
+            getDisclosureResourcesForPermission(permission)?.let { disclosure ->
+                getString(
+                    R.string.permission_disclosure_template,
+                    getString(disclosure.labelResId),
+                    getString(disclosure.purposeResId)
+                )
             }
         }
         if (purposeLines.isNotEmpty()) {
@@ -133,27 +187,6 @@ class PermissionRequest : Activity() {
 
     private fun doRequestPermissions(permissions: Array<String>) {
         ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
-    }
-
-    /** 权限对应的简短标签（带冒号），用于「XXX权限使用说明：」 */
-    private fun getPermissionLabelShort(permission: String): String {
-        return when (permission) {
-            android.Manifest.permission.POST_NOTIFICATIONS -> "通知权限使用说明："
-            android.Manifest.permission.BLUETOOTH_CONNECT -> "蓝牙连接权限使用说明："
-            android.Manifest.permission.BLUETOOTH_SCAN -> "蓝牙扫描权限使用说明："
-            android.Manifest.permission.RECORD_AUDIO -> "麦克风权限使用说明："
-            android.Manifest.permission.READ_MEDIA_IMAGES -> "读取图片权限使用说明："
-            android.Manifest.permission.READ_MEDIA_AUDIO -> "音频权限使用说明："
-            android.Manifest.permission.READ_EXTERNAL_STORAGE -> "读取存储权限使用说明："
-            android.Manifest.permission.WRITE_EXTERNAL_STORAGE -> "写入存储权限使用说明："
-            android.Manifest.permission.WRITE_SETTINGS -> "写设置权限使用说明："
-            android.Manifest.permission.ACCESS_COARSE_LOCATION -> "大致位置权限使用说明："
-            android.Manifest.permission.ACCESS_FINE_LOCATION -> "精确位置权限使用说明："
-            android.Manifest.permission.CAMERA -> "相机权限使用说明："
-            android.Manifest.permission.READ_CALENDAR -> "日历读取权限使用说明："
-            android.Manifest.permission.WRITE_CALENDAR -> "日历写入权限使用说明："
-            else -> "权限使用说明："
-        }
     }
 
     override fun onRequestPermissionsResult(

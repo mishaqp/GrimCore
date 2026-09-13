@@ -426,6 +426,64 @@ class LegacyTextLocalizer {
     '工具': 'Tool',
     '[更早记录已省略]': '[Earlier records omitted]',
     '等待龙虾烹饪': 'Waiting for OpenClaw processing',
+    // Legacy call sites that still pass one Chinese source string rather than
+    // an ARB key. Keep this block paired with [_exactRu] until those surfaces
+    // are migrated to generated localization getters.
+    '1 个文件': '1 file',
+    'Agent 配置': 'Agent configuration',
+    'GUI 任务已完成': 'GUI task completed',
+    'GUI 任务未完成': 'GUI task incomplete',
+    '加载中': 'Loading',
+    '取消归档失败': 'Failed to unarchive',
+    '取消置顶失败': 'Failed to unpin',
+    '图像': 'Image',
+    '复制失败': 'Copy failed',
+    '完成思考': 'Thinking complete',
+    '审阅': 'Review',
+    '审阅中': 'Reviewing',
+    '展开全部分组': 'Expand all groups',
+    '已取消归档': 'Unarchived',
+    '已取消置顶': 'Unpinned',
+    '已复制对话': 'Conversation copied',
+    '已恢复场景默认模型': 'Restored the default scene model',
+    '已置顶': 'Pinned',
+    '已载入': 'Loaded',
+    '开启后，助手回复会在当前消息旁显示播放按钮，并可自动朗读。': 'When enabled, assistant replies show a play button and can be read aloud automatically.',
+    '归档失败': 'Failed to archive',
+    '快速开始': 'Quick start',
+    '扫描 Codex Bridge': 'Scan Codex Bridge',
+    '折叠全部分组': 'Collapse all groups',
+    '搜索': 'Search',
+    '搜索中': 'Searching',
+    '暂无模型分组': 'No model groups yet',
+    '查看 RunLog': 'View RunLog',
+    '查看中': 'Viewing',
+    '查看复用指令': 'View Function',
+    '注册为复用指令': 'Register as Function',
+    '活动中': 'Active',
+    '状态': 'Status',
+    '空闲': 'Idle',
+    '等待确认': 'Waiting for approval',
+    '统一由 ACP 语音场景提供播放和自动朗读。': 'Playback and automatic reading are provided by the shared ACP voice scene.',
+    '缓存': 'Cached',
+    '编辑消息': 'Edit message',
+    '置顶失败': 'Failed to pin',
+    '计划': 'Plan',
+    '设置权限': 'Set permissions',
+    '语音回复': 'Voice replies',
+    '语音能力': 'Voice capabilities',
+    '语音设置已保存': 'Voice settings saved',
+    '请先使用 /openclaw 配置 OpenClaw': 'Configure OpenClaw with /openclaw first',
+    '请先在上方“语音合成”中绑定 Provider 和模型，绑定后即可播放。':
+        'Bind a provider and model under Text-to-Speech above before playback.',
+    '请放心，这些权限你随时可以收回': 'You can revoke these permissions at any time',
+    '请等待当前 Agent 任务完成后再切换模型。':
+        'Wait for the current Agent task to finish before switching models.',
+    '账户': 'Account',
+    '选择此目录': 'Select this directory',
+    '配置模型连接': 'Configure model connection',
+    '重命名失败': 'Rename failed',
+    '重新查看基础配置与可选插件说明': 'Review the basic setup and optional plugin information',
     // Onboarding
     '配置你的 AI 助手': 'Configure Your AI Assistant',
     '选择一种方式开始使用小万': 'Choose a way to start using the assistant',
@@ -881,6 +939,61 @@ class LegacyTextLocalizer {
     '工具': 'Инструмент',
     '[更早记录已省略]': '[Ранние записи опущены]',
     '等待龙虾烹饪': 'Ожидание обработки OpenClaw',
+    '1 个文件': '1 файл',
+    'Agent 配置': 'Настройки агента',
+    'GUI 任务已完成': 'Задача GUI завершена',
+    'GUI 任务未完成': 'Задача GUI не завершена',
+    '加载中': 'Загрузка',
+    '取消归档失败': 'Не удалось извлечь из архива',
+    '取消置顶失败': 'Не удалось открепить',
+    '图像': 'Изображение',
+    '复制失败': 'Не удалось скопировать',
+    '完成思考': 'Размышление завершено',
+    '审阅': 'Проверка',
+    '审阅中': 'Проверка…',
+    '展开全部分组': 'Развернуть все группы',
+    '已取消归档': 'Извлечено из архива',
+    '已取消置顶': 'Откреплено',
+    '已复制对话': 'Диалог скопирован',
+    '已恢复场景默认模型': 'Восстановлена модель сцены по умолчанию',
+    '已置顶': 'Закреплено',
+    '已载入': 'Загружено',
+    '开启后，助手回复会在当前消息旁显示播放按钮，并可自动朗读。': 'После включения рядом с ответами ассистента появится кнопка воспроизведения, а текст можно будет озвучивать автоматически.',
+    '归档失败': 'Не удалось архивировать',
+    '快速开始': 'Быстрый старт',
+    '扫描 Codex Bridge': 'Сканировать Codex Bridge',
+    '折叠全部分组': 'Свернуть все группы',
+    '搜索': 'Поиск',
+    '搜索中': 'Поиск…',
+    '暂无模型分组': 'Групп моделей пока нет',
+    '查看 RunLog': 'Открыть RunLog',
+    '查看中': 'Просмотр…',
+    '查看复用指令': 'Открыть функцию',
+    '注册为复用指令': 'Зарегистрировать как функцию',
+    '活动中': 'Активно',
+    '状态': 'Статус',
+    '空闲': 'Ожидание',
+    '等待确认': 'Ожидание подтверждения',
+    '统一由 ACP 语音场景提供播放和自动朗读。': 'Воспроизведение и автоматическое озвучивание обеспечиваются общей голосовой сценой ACP.',
+    '缓存': 'Кэш',
+    '编辑消息': 'Изменить сообщение',
+    '置顶失败': 'Не удалось закрепить',
+    '计划': 'План',
+    '设置权限': 'Настроить разрешения',
+    '语音回复': 'Голосовые ответы',
+    '语音能力': 'Голосовые возможности',
+    '语音设置已保存': 'Настройки голоса сохранены',
+    '请先使用 /openclaw 配置 OpenClaw':
+        'Сначала настройте OpenClaw командой /openclaw',
+    '请先在上方“语音合成”中绑定 Provider 和模型，绑定后即可播放。':
+        'Сначала выберите провайдера и модель в разделе «Синтез речи» выше.',
+    '请放心，这些权限你随时可以收回': 'Эти разрешения можно отозвать в любой момент',
+    '请等待当前 Agent 任务完成后再切换模型。': 'Дождитесь завершения текущей задачи агента, прежде чем переключать модель.',
+    '账户': 'Учётная запись',
+    '选择此目录': 'Выбрать эту папку',
+    '配置模型连接': 'Настроить подключение к модели',
+    '重命名失败': 'Не удалось переименовать',
+    '重新查看基础配置与可选插件说明': 'Повторно открыть базовую настройку и сведения о необязательных плагинах',
     '配置你的 AI 助手': 'Настройте своего ИИ-ассистента',
     '选择一种方式开始使用小万': 'Выберите способ начать работу',
     '云 AI 服务': 'Облачный ИИ-сервис',
@@ -931,6 +1044,15 @@ class LegacyTextLocalizer {
     (
       RegExp(r'^自动保存失败：(.+)$'),
       (match) => 'Auto-save failed: ${match.group(1)!}',
+    ),
+    (RegExp(r'^(\d+) 个文件$'), (match) => '${match.group(1)!} files'),
+    (
+      RegExp(r'^语音设置保存失败：(.+)$'),
+      (match) => 'Failed to save voice settings: ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^声音：(.+?)\s*·\s*风格：(.+)$'),
+      (match) => 'Voice: ${match.group(1)!} · Style: ${match.group(2)!}',
     ),
     (
       RegExp(r'^已拉取 (\d+) 个模型$'),
@@ -1038,11 +1160,28 @@ class LegacyTextLocalizer {
       RegExp(r'^自动保存失败：(.+)$'),
       (match) => 'Ошибка автосохранения: ${match.group(1)!}',
     ),
+    (RegExp(r'^(\d+) 个文件$'), (match) => _russianFileCount(match.group(1)!)),
+    (
+      RegExp(r'^语音设置保存失败：(.+)$'),
+      (match) => 'Не удалось сохранить настройки голоса: ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^声音：(.+?)\s*·\s*风格：(.+)$'),
+      (match) => 'Голос: ${match.group(1)!} · Стиль: ${match.group(2)!}',
+    ),
     (
       RegExp(r'^已拉取 (\d+) 个模型$'),
       (match) => 'Получено моделей: ${match.group(1)!}',
     ),
-    (RegExp(r'^暂时无法生成回复，请重试。(.*)$'), (match) => match.group(1)!),
+    (
+      RegExp(r'^暂时无法生成回复，请重试。(.*)$'),
+      (match) {
+        final extra = match.group(1)?.trim() ?? '';
+        const message =
+            'Сейчас не удаётся сформировать ответ, попробуйте ещё раз.';
+        return extra.isEmpty ? message : '$message $extra';
+      },
+    ),
     (
       RegExp(r'^执行任务前，请先开启：(.+)$'),
       (match) => 'Перед выполнением задач включите: ${match.group(1)!}',
@@ -1119,6 +1258,23 @@ class LegacyTextLocalizer {
     ),
     (RegExp(r'^正在打开(.+)$'), (match) => 'Открытие ${match.group(1)!}'),
   ];
+
+  static String _russianFileCount(String rawCount) {
+    final count = int.tryParse(rawCount);
+    if (count == null) {
+      return '$rawCount файлов';
+    }
+    final lastTwoDigits = count % 100;
+    final lastDigit = count % 10;
+    final noun = lastTwoDigits >= 11 && lastTwoDigits <= 14
+        ? 'файлов'
+        : switch (lastDigit) {
+            1 => 'файл',
+            2 || 3 || 4 => 'файла',
+            _ => 'файлов',
+          };
+    return '$rawCount $noun';
+  }
 
   static void setResolvedLocale(Locale locale) {
     _activeLocale = locale;

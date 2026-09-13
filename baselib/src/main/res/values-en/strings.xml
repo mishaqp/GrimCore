@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_request_purpose_title">Permission usage</string>
+    <string name="permission_request_purpose_continue">Continue</string>
+    <string name="permission_btn_deny_text">Deny</string>
+    <string name="permission_btn_allow_text">Allow</string>
+    <string name="permission_prompt_template">Allow %1$s to &quot;%2$s&quot;?</string>
+    <string name="permission_disclosure_template">%1$s: %2$s</string>
+    <string name="permission_label_notifications">Notification permission</string>
+    <string name="permission_label_bluetooth_connect">Bluetooth connection permission</string>
+    <string name="permission_label_bluetooth_scan">Bluetooth scan permission</string>
+    <string name="permission_label_microphone">Microphone permission</string>
+    <string name="permission_label_read_images">Image access permission</string>
+    <string name="permission_label_read_audio">Audio access permission</string>
+    <string name="permission_label_read_storage">Storage read permission</string>
+    <string name="permission_label_write_storage">Storage write permission</string>
+    <string name="permission_label_write_settings">System settings permission</string>
+    <string name="permission_label_coarse_location">Approximate location permission</string>
+    <string name="permission_label_fine_location">Precise location permission</string>
+    <string name="permission_label_camera">Camera permission</string>
+    <string name="permission_label_read_calendar">Calendar read permission</string>
+    <string name="permission_label_write_calendar">Calendar write permission</string>
+    <string name="permission_purpose_notifications">Send you timely notifications.</string>
+    <string name="permission_purpose_bluetooth_connect">Connect to Bluetooth devices for related features.</string>
+    <string name="permission_purpose_bluetooth_scan">Scan for and discover Bluetooth devices.</string>
+    <string name="permission_purpose_microphone">Capture audio when you explicitly use voice input, voice wake-up, or speech-to-text.</string>
+    <string name="permission_purpose_read_images">Read images for image recognition, screenshot detection, and related features.</string>
+    <string name="permission_purpose_read_audio">Read a local MP3 you select and use it as an alarm sound.</string>
+    <string name="permission_purpose_read_storage">Read a local MP3 you select on Android 12 or earlier.</string>
+    <string name="permission_purpose_write_storage">Save files and download installation packages.</string>
+    <string name="permission_purpose_write_settings">Support troubleshooting and features involving system settings.</string>
+    <string name="permission_purpose_coarse_location">Access your approximate location for location-based features.</string>
+    <string name="permission_purpose_fine_location">Access your precise location for location-based features.</string>
+    <string name="permission_purpose_camera">Scan QR codes and convert images to text.</string>
+    <string name="permission_purpose_read_calendar">Read calendars and events when you explicitly use calendar features.</string>
+    <string name="permission_purpose_write_calendar">Create or edit events when you explicitly use calendar features.</string>
+</resources>

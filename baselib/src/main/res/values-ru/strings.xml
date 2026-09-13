@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_request_purpose_title">Использование разрешений</string>
+    <string name="permission_request_purpose_continue">Продолжить</string>
+    <string name="permission_btn_deny_text">Запретить</string>
+    <string name="permission_btn_allow_text">Разрешить</string>
+    <string name="permission_prompt_template">Разрешить приложению %1$s «%2$s»?</string>
+    <string name="permission_disclosure_template">%1$s: %2$s</string>
+    <string name="permission_label_notifications">Разрешение на уведомления</string>
+    <string name="permission_label_bluetooth_connect">Разрешение на подключение по Bluetooth</string>
+    <string name="permission_label_bluetooth_scan">Разрешение на сканирование Bluetooth</string>
+    <string name="permission_label_microphone">Разрешение на использование микрофона</string>
+    <string name="permission_label_read_images">Разрешение на доступ к изображениям</string>
+    <string name="permission_label_read_audio">Разрешение на доступ к аудиофайлам</string>
+    <string name="permission_label_read_storage">Разрешение на чтение хранилища</string>
+    <string name="permission_label_write_storage">Разрешение на запись в хранилище</string>
+    <string name="permission_label_write_settings">Разрешение на изменение системных настроек</string>
+    <string name="permission_label_coarse_location">Разрешение на приблизительное местоположение</string>
+    <string name="permission_label_fine_location">Разрешение на точное местоположение</string>
+    <string name="permission_label_camera">Разрешение на использование камеры</string>
+    <string name="permission_label_read_calendar">Разрешение на чтение календаря</string>
+    <string name="permission_label_write_calendar">Разрешение на изменение календаря</string>
+    <string name="permission_purpose_notifications">Чтобы своевременно отправлять вам уведомления.</string>
+    <string name="permission_purpose_bluetooth_connect">Чтобы подключаться к устройствам Bluetooth.</string>
+    <string name="permission_purpose_bluetooth_scan">Чтобы находить устройства Bluetooth поблизости.</string>
+    <string name="permission_purpose_microphone">Чтобы записывать звук, когда вы используете голосовой ввод, голосовую активацию или распознавание речи.</string>
+    <string name="permission_purpose_read_images">Чтобы читать изображения для распознавания содержимого, обнаружения снимков экрана и других связанных функций.</string>
+    <string name="permission_purpose_read_audio">Чтобы читать выбранный вами MP3-файл и использовать его как мелодию будильника.</string>
+    <string name="permission_purpose_read_storage">Чтобы читать выбранный вами MP3-файл на Android 12 и более ранних версиях.</string>
+    <string name="permission_purpose_write_storage">Чтобы сохранять файлы и скачивать установочные пакеты.</string>
+    <string name="permission_purpose_write_settings">Для диагностики проблем и функций, связанных с системными настройками.</string>
+    <string name="permission_purpose_coarse_location">Чтобы использовать приблизительное местоположение в функциях, которым оно необходимо.</string>
+    <string name="permission_purpose_fine_location">Чтобы использовать точное местоположение в функциях, которым оно необходимо.</string>
+    <string name="permission_purpose_camera">Чтобы сканировать QR-коды и распознавать текст на изображениях.</string>
+    <string name="permission_purpose_read_calendar">Чтобы читать календари и события, когда вы используете функции календаря.</string>
+    <string name="permission_purpose_write_calendar">Чтобы создавать и изменять события, когда вы используете функции календаря.</string>
+</resources>

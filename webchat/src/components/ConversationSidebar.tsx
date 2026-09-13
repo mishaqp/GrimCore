@@ -14,7 +14,9 @@ import {
   type MouseEvent as ReactMouseEvent,
   type RefObject,
 } from "react";
-import { conversationKey, modeLabel, relativeDate } from "../format";
+import { conversationKey, modeLabel } from "../format";
+import { LanguageSwitcher, useI18n } from "../i18n/I18nProvider";
+import { relativeDate } from "../i18n/relativeDate";
 import type {
   AgentProfile,
   ConnectionStatus,
@@ -45,12 +47,6 @@ interface ContextMenuState {
   y: number;
 }
 
-const STATUS_LABELS: Record<ConnectionStatus, string> = {
-  online: "实时连接正常",
-  offline: "连接中断，正在重试",
-  connecting: "正在连接实时事件",
-};
-
 const SECTION_ORDER = [
   "pinned",
   "codex",
@@ -63,17 +59,6 @@ const SECTION_ORDER = [
 ] as const;
 
 type ConversationSection = typeof SECTION_ORDER[number];
-
-const SECTION_LABELS: Record<ConversationSection, string> = {
-  pinned: "置顶会话",
-  codex: "Codex",
-  deepseek: "DeepSeek Harness",
-  claude: "Claude Code",
-  opencode: "OpenCode",
-  acp: "Agent",
-  omni: "小万",
-  chat: "纯聊天",
-};
 
 const SECTION_ICONS: Record<Exclude<ConversationSection, "pinned">, IconName> = {
   codex: "codex",
@@ -133,6 +118,7 @@ export function ConversationSidebar({
   onSetPinned,
   onDelete,
 }: ConversationSidebarProps) {
+  const { locale, messages } = useI18n();
   const [search, setSearch] = useState("");
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
@@ -147,13 +133,28 @@ export function ConversationSidebar({
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const contextMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const query = search.trim().toLowerCase();
+  const statusLabels: Record<ConnectionStatus, string> = {
+    online: messages.connectionOnline,
+    offline: messages.connectionOffline,
+    connecting: messages.connectionConnecting,
+  };
+  const sectionLabels: Record<ConversationSection, string> = {
+    pinned: messages.pinnedConversations,
+    codex: "Codex",
+    deepseek: "DeepSeek Harness",
+    claude: "Claude Code",
+    opencode: "OpenCode",
+    acp: "Agent",
+    omni: messages.assistant,
+    chat: messages.chatOnly,
+  };
   const createOptions = useMemo(() => {
     const profiles = agentProfiles.length ? agentProfiles : FALLBACK_AGENT_PROFILES;
     return [
       {
         key: "omni",
         target: { mode: "normal" } as ConversationCreateTarget,
-        label: "小万",
+        label: messages.assistant,
         icon: "agent" as IconName,
       },
       ...profiles
@@ -170,11 +171,11 @@ export function ConversationSidebar({
       {
         key: "chat",
         target: { mode: "chat_only" } as ConversationCreateTarget,
-        label: "纯聊天模式",
+        label: messages.chatOnlyMode,
         icon: "chat" as IconName,
       },
     ];
-  }, [agentProfiles]);
+  }, [agentProfiles, messages]);
 
   useEffect(() => {
     if (!createMenuOpen) return undefined;
@@ -383,13 +384,13 @@ export function ConversationSidebar({
           <Icon name="search" size={17} />
           <input
             type="search"
-            aria-label="搜索对话"
-            placeholder="搜索对话"
+            aria-label={messages.searchConversations}
+            placeholder={messages.searchConversations}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
           {search && (
-            <button className="search-clear" type="button" aria-label="清除搜索" onClick={() => setSearch("")}>
+            <button className="search-clear" type="button" aria-label={messages.clearSearch} onClick={() => setSearch("")}>
               <Icon name="x" size={14} />
             </button>
           )}
@@ -401,11 +402,11 @@ export function ConversationSidebar({
           <button
             className={`sidebar-round-button${archivePanelOpen ? " active" : ""}`}
             type="button"
-            aria-label="查看归档对话"
+            aria-label={messages.viewArchivedConversations}
             aria-haspopup="dialog"
             aria-expanded={archivePanelOpen}
             aria-controls={archivePanelOpen ? "archived-conversation-card" : undefined}
-            title="查看归档对话"
+            title={messages.viewArchivedConversations}
             ref={archiveButtonRef}
             onClick={toggleArchivePanel}
           >
@@ -420,12 +421,12 @@ export function ConversationSidebar({
             >
               <header className="archive-popover-header">
                 <span>
-                  <strong id="archived-conversation-title">已归档</strong>
+                  <strong id="archived-conversation-title">{messages.archivedConversations}</strong>
                   <small>{archivedConversations.length}</small>
                 </span>
                 <button
                   type="button"
-                  aria-label="关闭归档会话"
+                  aria-label={messages.closeArchivedConversations}
                   onClick={() => {
                     setArchivePanelOpen(false);
                     archiveButtonRef.current?.focus();
@@ -436,7 +437,7 @@ export function ConversationSidebar({
               </header>
               <div className="archive-popover-list" aria-busy={archivedLoading} aria-live="polite">
                 {archivedLoading ? (
-                  <div className="archive-popover-status">正在加载归档会话…</div>
+                  <div className="archive-popover-status">{messages.loadingArchivedConversations}</div>
                 ) : archivedConversations.length ? (
                   archivedConversations.map((conversation) => {
                     const key = conversationKey(conversation);
@@ -444,15 +445,17 @@ export function ConversationSidebar({
                     return (
                       <article className="archive-conversation-item" key={key}>
                         <span className="archive-conversation-copy">
-                          <strong>{conversation.title || "新对话"}</strong>
-                          <time>{relativeDate(conversation.updatedAt)}</time>
+                          <strong>{conversation.title || messages.newConversation}</strong>
+                          <time>{relativeDate(conversation.updatedAt, locale, messages)}</time>
                         </span>
                         <span className="archive-conversation-actions">
                           <button
                             className="archive-item-action restore"
                             type="button"
-                            aria-label={`恢复“${conversation.title || "新对话"}”`}
-                            title="恢复会话"
+                            aria-label={messages.restoreNamedConversation(
+                              conversation.title || messages.newConversation,
+                            )}
+                            title={messages.restoreConversation}
                             disabled={busy}
                             onClick={() => void runConversationAction(
                               conversation,
@@ -464,8 +467,10 @@ export function ConversationSidebar({
                           <button
                             className="archive-item-action delete"
                             type="button"
-                            aria-label={`删除“${conversation.title || "新对话"}”`}
-                            title="删除会话"
+                            aria-label={messages.deleteNamedConversation(
+                              conversation.title || messages.newConversation,
+                            )}
+                            title={messages.deleteConversation}
                             disabled={busy}
                             onClick={() => void runConversationAction(
                               conversation,
@@ -481,7 +486,7 @@ export function ConversationSidebar({
                 ) : (
                   <div className="archive-popover-status empty">
                     <Archive aria-hidden="true" size={20} strokeWidth={1.7} />
-                    <span>暂无归档会话</span>
+                    <span>{messages.noArchivedConversations}</span>
                   </div>
                 )}
               </div>
@@ -500,11 +505,11 @@ export function ConversationSidebar({
           <button
             className="sidebar-round-button primary"
             type="button"
-            aria-label="新建对话"
+            aria-label={messages.createConversation}
             aria-haspopup="menu"
             aria-expanded={createMenuOpen}
             aria-controls={createMenuOpen ? "new-conversation-menu" : undefined}
-            title="新建对话"
+            title={messages.createConversation}
             ref={createButtonRef}
             onClick={toggleCreateMenu}
           >
@@ -515,7 +520,7 @@ export function ConversationSidebar({
               className="new-conversation-menu"
               id="new-conversation-menu"
               role="menu"
-              aria-label="选择新对话模式"
+              aria-label={messages.chooseConversationMode}
               ref={createMenuRef}
               onKeyDown={(event) => handleMenuKeyDown(event, createMenuRef)}
             >
@@ -541,15 +546,15 @@ export function ConversationSidebar({
       <div className="conversation-list" aria-live="polite">
         {query && resultCount > 0 && (
           <div className="search-summary">
-            <span>搜索结果</span>
+            <span>{messages.searchResults}</span>
             <span>{resultCount}</span>
           </div>
         )}
         {!resultCount && (
           <div className="list-empty">
             <Icon name={query ? "search" : "agent"} size={24} />
-            <strong>{query ? "没有找到相关对话" : "还没有对话"}</strong>
-            <span>{query ? "换个关键词试试" : "点击右上角开始新对话"}</span>
+            <strong>{query ? messages.noSearchResults : messages.noConversations}</strong>
+            <span>{query ? messages.tryAnotherSearch : messages.createFirstConversation}</span>
           </div>
         )}
         {sections.map((section) => {
@@ -567,7 +572,7 @@ export function ConversationSidebar({
                 ) : (
                   <Icon name={SECTION_ICONS[section.id]} size={14} />
                 )}
-                <span>{SECTION_LABELS[section.id]}</span>
+                <span>{sectionLabels[section.id]}</span>
                 <small>{section.items.length}</small>
                 <Icon
                   name="chevron-down"
@@ -580,7 +585,7 @@ export function ConversationSidebar({
                   const active = conversationKey(conversation) === conversationKey(selected);
                   const preview = conversation.summary
                     || conversation.lastMessage
-                    || modeLabel(conversation.mode, conversation.agentId);
+                    || modeLabel(conversation.mode, conversation.agentId, messages);
                   return (
                     <button
                       key={conversationKey(conversation)}
@@ -595,8 +600,8 @@ export function ConversationSidebar({
                       onKeyDown={(event) => handleConversationKeyDown(event, conversation)}
                     >
                       <span className="conversation-item-heading">
-                        <strong>{conversation.title || "新对话"}</strong>
-                        <time>{relativeDate(conversation.updatedAt)}</time>
+                        <strong>{conversation.title || messages.newConversation}</strong>
+                        <time>{relativeDate(conversation.updatedAt, locale, messages)}</time>
                       </span>
                       {query && <p>{preview}</p>}
                     </button>
@@ -610,14 +615,17 @@ export function ConversationSidebar({
 
       <footer className="connection-footer">
         <span className={`connection-dot ${connectionStatus === "connecting" ? "" : connectionStatus}`} />
-        <span>{STATUS_LABELS[connectionStatus]}</span>
+        <span>{statusLabels[connectionStatus]}</span>
+        <LanguageSwitcher />
       </footer>
 
       {contextMenu && (
         <div
           className="conversation-context-menu"
           role="menu"
-          aria-label={`“${contextMenu.conversation.title || "新对话"}”操作`}
+          aria-label={messages.conversationActions(
+            contextMenu.conversation.title || messages.newConversation,
+          )}
           ref={contextMenuRef}
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onKeyDown={(event) => handleMenuKeyDown(event, contextMenuRef)}
@@ -628,7 +636,7 @@ export function ConversationSidebar({
             onClick={() => runContextMenuAction(onArchive)}
           >
             <Archive aria-hidden="true" size={16} strokeWidth={1.8} />
-            <span>归档</span>
+            <span>{messages.archive}</span>
           </button>
           <button
             type="button"
@@ -642,7 +650,7 @@ export function ConversationSidebar({
             ) : (
               <Pin aria-hidden="true" size={16} strokeWidth={1.8} />
             )}
-            <span>{contextMenu.conversation.isPinned ? "取消置顶" : "置顶"}</span>
+            <span>{contextMenu.conversation.isPinned ? messages.unpin : messages.pin}</span>
           </button>
           <div className="conversation-context-menu-separator" role="separator" />
           <button
@@ -652,7 +660,7 @@ export function ConversationSidebar({
             onClick={() => runContextMenuAction(onDelete)}
           >
             <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
-            <span>删除</span>
+            <span>{messages.delete}</span>
           </button>
         </div>
       )}

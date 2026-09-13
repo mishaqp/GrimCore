@@ -637,16 +637,28 @@ class _ConversationModelSelectorContentState
               children: [
                 if (widget.header != null) widget.header!,
                 if (widget.loadLiveProviders)
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text('服务商 / 模型'),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(
+                      LegacyTextLocalizer.pick(
+                        'Providers / Models',
+                        '服务商 / 模型',
+                        ru: 'Провайдеры / модели',
+                      ),
+                    ),
                   ),
                 if (widget.showSearchField) _buildSearchRow(),
                 if (_loadingProfiles) const LinearProgressIndicator(),
                 if (_profilesFailed)
                   TextButton(
                     onPressed: _loadProfiles,
-                    child: const Text('服务商加载失败，重试'),
+                    child: Text(
+                      LegacyTextLocalizer.pick(
+                        'Failed to load providers. Retry',
+                        '服务商加载失败，重试',
+                        ru: 'Не удалось загрузить провайдеров. Повторить',
+                      ),
+                    ),
                   ),
                 if (choices != null)
                   Flexible(
@@ -657,7 +669,12 @@ class _ConversationModelSelectorContentState
                       children: [
                         if (choices.isEmpty)
                           _buildMutedMessage(
-                            widget.emptyMatchesLabel ?? '没有匹配的选项',
+                            widget.emptyMatchesLabel ??
+                                LegacyTextLocalizer.pick(
+                                  'No matching options',
+                                  '没有匹配的选项',
+                                  ru: 'Нет подходящих вариантов',
+                                ),
                           ),
                         for (final model in choices)
                           _buildModelRow(model: model),
@@ -723,7 +740,13 @@ class _ConversationModelSelectorContentState
                               if (_failedProviders.contains(profile.id))
                                 TextButton(
                                   onPressed: () => _loadProvider(profile),
-                                  child: const Text('模型加载失败，重试'),
+                                  child: Text(
+                                    LegacyTextLocalizer.pick(
+                                      'Failed to load models. Retry',
+                                      '模型加载失败，重试',
+                                      ru: 'Не удалось загрузить модели. Повторить',
+                                    ),
+                                  ),
                                 ),
                               if (_failedProviders.contains(profile.id))
                                 _buildMutedMessage(_providerErrors[profile.id]),

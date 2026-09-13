@@ -11,6 +11,7 @@ import cn.com.omnimind.bot.agent.AgentTextSanitizer
 import cn.com.omnimind.bot.agent.runtime.AcpAgentProfileStore
 
 private const val WEB_CONVERSATION_TITLE_LIMIT = 20
+private const val DEFAULT_WEB_CONVERSATION_TITLE = "New conversation"
 
 /**
  * Resolves the immutable Harness owner of one durable conversation.
@@ -48,8 +49,14 @@ internal fun deriveWebConversationTitle(firstUserMessage: String?): String? {
     }
 }
 
-private fun isDefaultWebConversationTitle(title: String): Boolean {
-    return title.trim().lowercase() in setOf("", "新对话", "new chat", "new conversation")
+internal fun isDefaultWebConversationTitle(title: String): Boolean {
+    return title.trim().lowercase() in setOf(
+        "",
+        "新对话",
+        "new chat",
+        "new conversation",
+        "новый чат",
+    )
 }
 
 class ConversationDomainService(
@@ -180,7 +187,7 @@ class ConversationDomainService(
         )
         val conversation = Conversation(
             id = 0,
-            title = title.ifBlank { "新对话" },
+            title = title.ifBlank { DEFAULT_WEB_CONVERSATION_TITLE },
             mode = normalizedMode,
             parentConversationId = parentConversationId?.takeIf { it > 0L },
             parentConversationMode = parentConversationMode

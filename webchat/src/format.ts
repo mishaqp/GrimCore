@@ -1,4 +1,5 @@
 import { isRecord } from "./api";
+import type { MessageCatalog } from "./i18n/catalog";
 import type { ChatMessage, Conversation } from "./types";
 
 export function escapeHtml(value: unknown): string {
@@ -142,7 +143,11 @@ export function markdownToHtml(value: unknown): string {
   }).join("");
 }
 
-export function modeLabel(mode?: string, agentId?: string): string {
+export function modeLabel(
+  mode: string | undefined,
+  agentId: string | undefined,
+  messages: MessageCatalog,
+): string {
   if (mode === "codex") {
     return ({
       "codex-acp": "Codex",
@@ -152,22 +157,11 @@ export function modeLabel(mode?: string, agentId?: string): string {
     } as Record<string, string>)[agentId ?? ""] ?? "Agent";
   }
   return ({
-    normal: "小万",
-    chat_only: "纯聊天",
+    normal: messages.assistant,
+    chat_only: messages.chatOnly,
     openclaw: "OpenClaw",
     subagent: "SubAgent",
-  } as Record<string, string>)[mode ?? "normal"] ?? "普通";
-}
-
-export function relativeDate(raw?: number): string {
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value <= 0) return "";
-  const date = new Date(value);
-  const diff = Date.now() - value;
-  if (diff < 60_000) return "刚刚";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时`;
-  return `${date.getMonth() + 1}-${date.getDate()}`;
+  } as Record<string, string>)[mode ?? "normal"] ?? messages.modeNormal;
 }
 
 export function conversationKey(conversation: Conversation | null | undefined): string {

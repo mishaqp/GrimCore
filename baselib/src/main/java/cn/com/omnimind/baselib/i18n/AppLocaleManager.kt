@@ -2,6 +2,7 @@ package cn.com.omnimind.baselib.i18n
 
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import java.util.Locale
@@ -56,6 +57,7 @@ data class LocalizedText(
 object AppLocaleManager {
     private const val FLUTTER_PREFS_NAME = "FlutterSharedPreferences"
     private const val FLUTTER_LANGUAGE_KEY = "flutter.language_option"
+    private val RUSSIAN_LOCALE: Locale = Locale.forLanguageTag("ru")
 
     fun readStoredLanguageMode(context: Context): AppLanguageMode {
         val prefs = context.applicationContext.getSharedPreferences(
@@ -68,7 +70,7 @@ object AppLocaleManager {
     fun resolvePromptLocale(context: Context): PromptLocale {
         return resolvePromptLocale(
             mode = readStoredLanguageMode(context),
-            systemLocale = systemLocale(context)
+            systemLocale = systemLocale()
         )
     }
 
@@ -79,11 +81,30 @@ object AppLocaleManager {
         return when (mode) {
             AppLanguageMode.ZH_HANS -> PromptLocale.ZH_CN
             AppLanguageMode.EN -> PromptLocale.EN_US
-            // GrimCore: the Russian UI uses the English prompt/tool text in
-            // v0.1.0-grim.1. Translating the agent prompts and tool
-            // descriptions is tracked as a separate follow-up step.
+            // The Russian UI uses the reviewed English prompt/tool text.
+            // Translating agent prompts and tool descriptions is tracked as
+            // a separate follow-up step.
             AppLanguageMode.RU -> PromptLocale.EN_US
             AppLanguageMode.SYSTEM -> normalize(systemLocale)
+        }
+    }
+
+    /**
+     * Resolves the locale used by Android resources and native UI.
+     *
+     * Prompt locale is intentionally resolved separately: Russian UI still
+     * uses the reviewed English model prompts until Russian prompt support is
+     * implemented as its own change.
+     */
+    fun resolveUiLocale(
+        mode: AppLanguageMode,
+        systemLocale: Locale
+    ): Locale {
+        return when (mode) {
+            AppLanguageMode.ZH_HANS -> Locale.SIMPLIFIED_CHINESE
+            AppLanguageMode.EN -> Locale.US
+            AppLanguageMode.RU -> RUSSIAN_LOCALE
+            AppLanguageMode.SYSTEM -> normalizeUiLocale(systemLocale)
         }
     }
 
@@ -92,11 +113,14 @@ object AppLocaleManager {
     }
 
     fun currentLocale(context: Context): Locale {
-        return resolvePromptLocale(context).locale
+        return resolveUiLocale(
+            mode = readStoredLanguageMode(context),
+            systemLocale = systemLocale()
+        )
     }
 
     fun currentLocale(): Locale {
-        return currentPromptLocale().locale
+        return normalizeUiLocale(Locale.getDefault())
     }
 
     fun isEnglish(context: Context): Boolean {
@@ -144,8 +168,11 @@ object AppLocaleManager {
         return context.createConfigurationContext(configuration)
     }
 
-    private fun systemLocale(context: Context): Locale {
-        val configuration = context.applicationContext.resources.configuration
+    private fun systemLocale(): Locale {
+        // Application resources are overwritten by applyAppLocale(). Reading
+        // them here would make switching back to SYSTEM retain the previous
+        // explicit app language instead of following the device language.
+        val configuration = Resources.getSystem().configuration
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             configuration.locales.takeIf { !it.isEmpty }?.get(0) ?: Locale.getDefault()
         } else {
@@ -154,11 +181,19 @@ object AppLocaleManager {
         }
     }
 
-    private fun normalize(locale: Locale): PromptLocale {                 
-        return if (locale.language.lowercase() == "zh") {  
+    private fun normalize(locale: Locale): PromptLocale {
+        return if (locale.language.lowercase() == "zh") {
             PromptLocale.ZH_CN
         } else {
             PromptLocale.EN_US
-        }                                                                 
+        }
+    }
+
+    private fun normalizeUiLocale(locale: Locale): Locale {
+        return when (locale.language.lowercase()) {
+            "zh" -> Locale.SIMPLIFIED_CHINESE
+            "ru" -> RUSSIAN_LOCALE
+            else -> Locale.US
+        }
     }
 }

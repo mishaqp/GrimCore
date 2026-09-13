@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/model_provider_config_service.dart';
 import 'package:ui/services/models_dev_catalog_service.dart';
 import 'package:ui/services/storage_service.dart';
@@ -17,6 +19,7 @@ void main() {
   late Future<List<dynamic>> Function(String) fetch;
   var includeUnconfiguredPreset = false;
   setUp(() async {
+    LegacyTextLocalizer.setResolvedLocale(const Locale('zh'));
     calls.clear();
     includeUnconfiguredPreset = false;
     SharedPreferences.setMockInitialValues({
@@ -67,6 +70,7 @@ void main() {
     });
   });
   tearDown(() {
+    LegacyTextLocalizer.clearResolvedLocale();
     messenger.setMockMethodCallHandler(channel, null);
     ModelsDevCatalogService.resetForTesting();
   });

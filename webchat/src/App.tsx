@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { request } from "./api";
+import { request, RequestError } from "./api";
 import { ChatPanel } from "./components/ChatPanel";
 import { ContextPane } from "./components/ContextPane";
 import { ConversationSidebar } from "./components/ConversationSidebar";
@@ -12,6 +12,9 @@ import {
 import { appendConversationNavigation } from "./conversationNavigation";
 import { conversationKey } from "./format";
 import { useRealtime } from "./hooks/useRealtime";
+import { useI18n } from "./i18n/I18nProvider";
+import type { AppLocale, MessageCatalog } from "./i18n/catalog";
+import { localizedRequestErrorMessage } from "./i18n/errorMessage";
 import { reconcileCodexMessages } from "./messageReconciliation";
 import type {
   Attachment,
@@ -48,8 +51,21 @@ function normalizeConversationMode(mode: string | undefined): ConversationMode {
     : "normal";
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error ?? "请求失败");
+function errorMessage(
+  error: unknown,
+  locale: AppLocale,
+  messages: MessageCatalog,
+): string {
+  if (error instanceof RequestError) {
+    return localizedRequestErrorMessage(
+      error.status,
+      error.serverMessage,
+      locale,
+      messages,
+    );
+  }
+  if (error instanceof Error) return error.message || messages.requestFailed;
+  return String(error ?? messages.requestFailed);
 }
 
 function initialToken(): string {
@@ -63,6 +79,7 @@ function createTaskId(): string {
 }
 
 export default function App() {
+  const { locale, messages: ui } = useI18n();
   const [authenticated, setAuthenticated] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -100,7 +117,7 @@ export default function App() {
   const autoLoginToken = useRef(initialToken());
 
   function showError(error: unknown) {
-    setGlobalError(errorMessage(error));
+    setGlobalError(errorMessage(error, locale, ui));
   }
 
   function showToast(message: string) {
@@ -269,7 +286,7 @@ export default function App() {
       ]);
     } catch (error) {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
-      setLoginError(errorMessage(error));
+      setLoginError(errorMessage(error, locale, ui));
       setAuthenticated(false);
     } finally {
       setAuthenticating(false);
@@ -282,6 +299,7 @@ export default function App() {
       target.mode,
       Date.now(),
       target.agentId,
+      ui.newConversation,
     );
     selectedRef.current = draftConversation;
     setSelectedConversation(draftConversation);
@@ -316,7 +334,7 @@ export default function App() {
         loadConversations(true),
         loadArchivedConversations(false),
       ]);
-      showToast(archived ? "已归档" : "已恢复到会话列表");
+      showToast(archived ? ui.archived : ui.restoredToConversationList);
     } catch (error) {
       showError(error);
     }
@@ -330,7 +348,7 @@ export default function App() {
         body: { isPinned: pinned },
       });
       await loadConversations(true);
-      showToast(pinned ? "已置顶" : "已取消置顶");
+      showToast(pinned ? ui.pinned : ui.unpinned);
     } catch (error) {
       showError(error);
     }
@@ -338,14 +356,16 @@ export default function App() {
 
   async function deleteConversation(conversation: Conversation | null = selectedRef.current) {
     if (!conversation || !isPersistedConversation(conversation)) return;
-    if (!window.confirm(`删除“${conversation.title || "当前对话"}”？此操作无法撤销。`)) return;
+    if (!window.confirm(ui.deleteConversationConfirm(
+      conversation.title || ui.currentConversation,
+    ))) return;
     try {
       await request(`/conversations/${conversation.id}`, { method: "DELETE" });
       await Promise.all([
         loadConversations(true),
         loadArchivedConversations(false),
       ]);
-      showToast("会话已删除");
+      showToast(ui.conversationDeleted);
     } catch (error) {
       showError(error);
     }
@@ -373,7 +393,7 @@ export default function App() {
         conversation = await request<Conversation>("/conversations", {
           method: "POST",
           body: {
-            title: "新对话",
+            title: ui.newConversation,
             mode: draftMode,
             agentId: draftAgentId,
           },
@@ -389,7 +409,7 @@ export default function App() {
         applyConversationSnapshot(conversation);
         recordConversationNavigation(conversation);
       }
-      if (!conversation) throw new Error("无法创建新对话");
+      if (!conversation) throw new Error(ui.cannotCreateConversation);
       const conversationMode = normalizeConversationMode(conversation.mode);
       const taskId = createTaskId();
       const userMessageCreatedAt = Date.now();
@@ -472,6 +492,7 @@ export default function App() {
                 normalizeConversationMode(createdConversation.mode),
                 Date.now(),
                 createdConversation.agentId,
+                ui.newConversation,
               );
               selectedRef.current = draft;
               setSelectedConversation(draft);
@@ -533,7 +554,7 @@ export default function App() {
         body: { path: workspaceFilePath, content: workspaceContent, append: false },
       });
       setWorkspaceDirty(false);
-      showToast("文件已保存");
+      showToast(ui.fileSaved);
     } catch (error) {
       showError(error);
     }
@@ -647,6 +668,14 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", guard);
   }, [workspaceDirty]);
 
+  useEffect(() => {
+    const current = selectedRef.current;
+    if (!current || isPersistedConversation(current)) return;
+    const localizedDraft = { ...current, title: ui.newConversation };
+    selectedRef.current = localizedDraft;
+    setSelectedConversation(localizedDraft);
+  }, [ui.newConversation]);
+
   if (!authenticated) {
     return (
       <LoginView
@@ -673,12 +702,12 @@ export default function App() {
         data-mobile-section={mobileSection}
       >
         <header className="desktop-navigation-bar">
-          <nav className="desktop-navigation-group" aria-label="对话导航">
+          <nav className="desktop-navigation-group" aria-label={ui.conversationNavigation}>
             <button
               className="topbar-icon"
               type="button"
-              aria-label={leftSidebarCollapsed ? "展开左侧边栏" : "收起左侧边栏"}
-              title={leftSidebarCollapsed ? "展开左侧边栏" : "收起左侧边栏"}
+              aria-label={leftSidebarCollapsed ? ui.expandLeftSidebar : ui.collapseLeftSidebar}
+              title={leftSidebarCollapsed ? ui.expandLeftSidebar : ui.collapseLeftSidebar}
               aria-pressed={!leftSidebarCollapsed}
               onClick={() => setLeftSidebarCollapsed((collapsed) => !collapsed)}
             >
@@ -687,8 +716,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label="回退到上一会话"
-              title="回退到上一会话"
+              aria-label={ui.previousConversation}
+              title={ui.previousConversation}
               disabled={!previousConversation}
               onClick={() => void navigateConversationHistory(-1)}
             >
@@ -697,8 +726,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label="前进到下一会话"
-              title="前进到下一会话"
+              aria-label={ui.nextConversation}
+              title={ui.nextConversation}
               disabled={!nextConversation}
               onClick={() => void navigateConversationHistory(1)}
             >
@@ -709,8 +738,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label={selectedConversation?.isArchived ? "取消归档" : "归档对话"}
-              title={selectedConversation?.isArchived ? "取消归档" : "归档对话"}
+              aria-label={selectedConversation?.isArchived ? ui.unarchiveConversation : ui.archiveConversation}
+              title={selectedConversation?.isArchived ? ui.unarchiveConversation : ui.archiveConversation}
               disabled={!isPersistedConversation(selectedConversation)}
               onClick={() => void updateArchiveState()}
             >
@@ -719,8 +748,8 @@ export default function App() {
             <button
               className="topbar-icon danger"
               type="button"
-              aria-label="删除对话"
-              title="删除对话"
+              aria-label={ui.deleteConversation}
+              title={ui.deleteConversation}
               disabled={!isPersistedConversation(selectedConversation)}
               onClick={() => void deleteConversation()}
             >
@@ -729,8 +758,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label={rightSidebarCollapsed ? "展开右侧边栏" : "收起右侧边栏"}
-              title={rightSidebarCollapsed ? "展开右侧边栏" : "收起右侧边栏"}
+              aria-label={rightSidebarCollapsed ? ui.expandRightSidebar : ui.collapseRightSidebar}
+              title={rightSidebarCollapsed ? ui.expandRightSidebar : ui.collapseRightSidebar}
               aria-pressed={!rightSidebarCollapsed}
               onClick={() => setRightSidebarCollapsed((collapsed) => !collapsed)}
             >
@@ -797,7 +826,7 @@ export default function App() {
           onBrowserRefresh={() => void refreshBrowser()}
         />
 
-        <nav className="mobile-nav" aria-label="Web Chat 区域">
+        <nav className="mobile-nav" aria-label={ui.webChatAreas}>
           {(["chat", "workspace", "browser"] as MobileSection[]).map((section) => (
             <button
               className={mobileSection === section ? "active" : ""}
@@ -806,14 +835,18 @@ export default function App() {
               key={section}
             >
               <Icon name={MOBILE_SECTION_ICON[section]} size={18} />
-              <span>{{ chat: "聊天", workspace: "工作区", browser: "浏览器" }[section]}</span>
+              <span>{{
+                chat: ui.chat,
+                workspace: ui.workspace,
+                browser: ui.browser,
+              }[section]}</span>
             </button>
           ))}
         </nav>
         <button
           className="conversation-scrim"
           type="button"
-          aria-label="关闭对话列表"
+          aria-label={ui.closeConversationList}
           onClick={() => setConversationsOpen(false)}
         />
       </div>

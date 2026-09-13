@@ -1,0 +1,4 @@
+<resources>
+    <string name="xiaowan_accessibility_label">GrimCore</string>
+    <string name="xiaowan_accessibility_description">Разрешить GrimCore читать содержимое экрана и выполнять нажатия, свайпы и ввод текста.</string>
+</resources>
