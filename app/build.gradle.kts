@@ -166,13 +166,15 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "cn.com.omnimind.bot"
+        applicationId = "com.mishaqp.grimcore"
         minSdk = 29
         targetSdk = 36
-        // Release 0.6.1. Keep the Android version code monotonic so the APK
-        // can be installed as an update over the previously tested build.
-        versionCode = 15
-        versionName = "0.6.2.3"
+        // GrimCore independent version scheme. versionCode is monotonic and
+        // never decreases inside the com.mishaqp.grimcore package:
+        // major *1000000 + minor *10000 + patch *100 + grim
+        //0.1.0-grim.1 ->10001
+        versionCode =10001
+        versionName = "0.1.0-grim.1"
         buildConfigField("String", "IMAGE_BASE_URL", buildConfigString(omnibotImageBaseUrl))
         buildConfigField("String", "IMAGE_MODEL", buildConfigString(omnibotImageModel))
         buildConfigField("String", "IMAGE_API_KEY", buildConfigString(omnibotImageApiKey))
@@ -191,7 +193,15 @@ android {
             preferPackagedOmniFlowRuntime.toString(),
         )
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+            // The GrimCore user APK is arm64-v8a only. x86_64 stays available
+            // only for emulator test builds that opt in with -PgrimAbiArm64Only=false.
+            val grimAbiArm64Only = (project.findProperty("grimAbiArm64Only") as String?)
+                ?.toBooleanStrictOrNull() ?: true
+            if (grimAbiArm64Only) {
+                abiFilters.add("arm64-v8a")
+            } else {
+                abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+            }
         }
 
     }
@@ -220,11 +230,20 @@ android {
     }
     signingConfigs {
         create("release") {
-            // 引用全局gradle.properties中的变量
-            storeFile = project.findProperty("OMNI_RELEASE_STORE_FILE")?.let { file(it) }
-            storePassword = project.findProperty("OMNI_RELEASE_STORE_PWD") as String?
-            keyAlias = project.findProperty("OMNI_RELEASE_KEY_ALIAS") as String?
-            keyPassword = project.findProperty("OMNI_RELEASE_KEY_PWD") as String?
+            // GrimCore signing material. Secrets are never stored in the
+            // repository: they arrive as Gradle properties / env vars from CI.
+            // The upstream OMNI_RELEASE_* names remain a fallback so that
+            // unmodified upstream build flows keep working.
+            fun grimSigningProperty(grimName: String, upstreamName: String): String? {
+                val grimValue = project.findProperty(grimName) as String?
+                if (!grimValue.isNullOrBlank()) return grimValue
+                return (project.findProperty(upstreamName) as String?)?.takeIf { it.isNotBlank() }
+            }
+            storeFile = grimSigningProperty("GRIM_RELEASE_STORE_FILE", "OMNI_RELEASE_STORE_FILE")
+                ?.let { file(it) }
+            storePassword = grimSigningProperty("GRIM_RELEASE_STORE_PWD", "OMNI_RELEASE_STORE_PWD")
+            keyAlias = grimSigningProperty("GRIM_RELEASE_KEY_ALIAS", "OMNI_RELEASE_KEY_ALIAS")
+            keyPassword = grimSigningProperty("GRIM_RELEASE_KEY_PWD", "OMNI_RELEASE_KEY_PWD")
 
             // V2/V3签名配置（minSdk=30）
             enableV1Signing = false
