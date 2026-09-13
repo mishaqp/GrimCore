@@ -468,9 +468,8 @@ class LegacyTextLocalizer {
     '重新查看应用首次启动时的引导页面': 'Replay the first-launch onboarding page',
   };
 
-
   /// Russian counterparts of the legacy Chinese literals that are still
-  /// hard-coded in widgets. Same keys, same order as [_exactEn].
+  /// hard-coded in widgets. Same keys and same order as [_exactEn].
   static final Map<String, String> _exactRu = <String, String>{
     '宠物': 'Питомец',
     '小万': 'GrimCore',
@@ -896,6 +895,112 @@ class LegacyTextLocalizer {
     '初次使用教程': 'Обучение для новых пользователей',
     '重新查看应用首次启动时的引导页面': 'Показать экран первого запуска заново',
   };
+
+  static final List<(RegExp, _TextRewriter)>
+  _regexEn = <(RegExp, _TextRewriter)>[
+    (RegExp(r'^MCP 已开启：(.+)$'), (match) => 'MCP enabled: ${match.group(1)!}'),
+    (
+      RegExp(r'^会话 (\d+) · 任务 (\d+)$'),
+      (match) => 'Sessions ${match.group(1)!} · Tasks ${match.group(2)!}',
+    ),
+    (RegExp(r'^已连接 · (.+)$'), (match) => 'Connected · ${match.group(1)!}'),
+    (
+      RegExp(r'^选择图片失败：(.+)$'),
+      (match) => 'Failed to pick image: ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^自动保存失败：(.+)$'),
+      (match) => 'Auto-save failed: ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^已拉取 (\d+) 个模型$'),
+      (match) => 'Fetched ${match.group(1)!} models',
+    ),
+    (
+      RegExp(r'^暂时无法生成回复，请重试。(.*)$'),
+      (match) {
+        final extra = match.group(1)?.trim() ?? '';
+        if (extra.isEmpty) {
+          return "I can't generate a reply right now. Please try again.";
+        }
+        return "I can't generate a reply right now. Please try again. $extra";
+      },
+    ),
+    (
+      RegExp(r'^执行任务前，请先开启：(.+)$'),
+      (match) =>
+          'Enable these permissions before running tasks: ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^执行任务前需要先开启权限$'),
+      (_) => 'Permissions must be enabled before running tasks',
+    ),
+    (RegExp(r'^用户: (.+)\n$'), (match) => 'User: ${match.group(1)!}\n'),
+    (
+      RegExp(r'^继续任务仅要求：(.+)$'),
+      (match) => 'Continue requires only: ${match.group(1)!}',
+    ),
+    (RegExp(r'^默认：(.+)$'), (match) => 'Default: ${match.group(1)!}'),
+    (
+      RegExp(r'^恢复默认（(.+)）$'),
+      (match) => 'Restore default (${match.group(1)!})',
+    ),
+    (RegExp(r'^(.+) 已清除绑定$'), (match) => '${match.group(1)!} binding cleared'),
+    (
+      RegExp(r'^(.+) 已恢复默认模型$'),
+      (match) => '${match.group(1)!} restored to default model',
+    ),
+    (RegExp(r'^已切换到 (.+)$'), (match) => 'Switched to ${match.group(1)!}'),
+    (
+      RegExp(r'^已设置思考强度为 (.+)$'),
+      (match) => 'Reasoning effort set to ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^Agent 模型已切换到 (.+)$'),
+      (match) => 'Agent model switched to ${match.group(1)!}',
+    ),
+    (
+      RegExp(r'^更新 Agent 模型失败：(.+)$'),
+      (match) => 'Failed to update Agent model: ${match.group(1)!}',
+    ),
+    (RegExp(r'^(.+)已复制$'), (match) => '${match.group(1)!} copied'),
+    (RegExp(r'^(\d+) 条消息$'), (match) => '${match.group(1)!} messages'),
+    (
+      RegExp(r'^(.+) · (\d+) 条消息$'),
+      (match) => '${match.group(1)!} · ${match.group(2)!} messages',
+    ),
+    (RegExp(r'^匹配 (\d+)%$'), (match) => 'Match ${match.group(1)!}%'),
+    (RegExp(r'^(\d+) 分钟前$'), (match) => '${match.group(1)!} min ago'),
+    (RegExp(r'^(\d+) 小时前$'), (match) => '${match.group(1)!} hr ago'),
+    (RegExp(r'^(\d+) 天前$'), (match) => '${match.group(1)!} days ago'),
+    (RegExp(r'^(\d+) 秒$'), (match) => '${match.group(1)!}s'),
+    (
+      RegExp(r'^(\d+) 分 (\d+) 秒$'),
+      (match) => '${match.group(1)!}m ${match.group(2)!}s',
+    ),
+    (
+      RegExp(r'^(\d+) 次对话 · (\d+)\/(\d+)$'),
+      (match) =>
+          '${match.group(1)!} conversations · ${match.group(2)!}/${match.group(3)!}',
+    ),
+    (
+      RegExp(r'^无对话 · (\d+)\/(\d+)$'),
+      (match) => 'No conversations · ${match.group(1)!}/${match.group(2)!}',
+    ),
+    (RegExp(r'^本地 (.+)%$'), (match) => 'Local ${match.group(1)!}%'),
+    (RegExp(r'^云端 (.+)%$'), (match) => 'Cloud ${match.group(1)!}%'),
+    (
+      RegExp(r'^本地 (.+) · 云端 (.+)$'),
+      (match) => 'Local ${match.group(1)!} · Cloud ${match.group(2)!}',
+    ),
+    (
+      RegExp(r'^正在搜索\s*(.+?)\s*技能$'),
+      (match) => 'Searching ${match.group(1)!} skill',
+    ),
+    (RegExp(r'^打开\s*(.+?)\s*应用$'), (match) => 'Opening ${match.group(1)!} app'),
+    (RegExp(r'^正在打开(.+)$'), (match) => 'Opening ${match.group(1)!}'),
+  ];
+
   /// Russian counterparts of [_regexEn].
   static final List<(RegExp, _TextRewriter)>
   _regexRu = <(RegExp, _TextRewriter)>[
@@ -1044,7 +1149,6 @@ class LegacyTextLocalizer {
       (match) => 'Открытие ${match.group(1)!}',
     ),
   ];
-
 
   static void setResolvedLocale(Locale locale) {
     _activeLocale = locale;
