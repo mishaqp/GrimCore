@@ -432,10 +432,26 @@ class _OmnibotInteractiveImageViewState
         mimeType: metadata.mimeType,
       );
       if (!shared) {
-        showToast(LegacyTextLocalizer.isEnglish ? 'Share failed, please try again later' : '分享失败，请稍后重试', type: ToastType.error);
+        showToast(
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Share failed, please try again later',
+            '分享失败，请稍后重试',
+            ru: 'Не удалось поделиться. Повторите попытку позже',
+          ),
+          type: ToastType.error,
+        );
       }
     } catch (error) {
-      showToast(LegacyTextLocalizer.isEnglish ? 'Share failed: $error' : '分享失败：$error', type: ToastType.error);
+      showToast(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Share failed: $error',
+          '分享失败：$error',
+          ru: 'Не удалось поделиться: $error',
+        ),
+        type: ToastType.error,
+      );
     }
   }
 
@@ -631,9 +647,21 @@ class _OmnibotInteractiveImageViewState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.broken_image_outlined, size: 48, color: Colors.white54),
+        const Icon(
+          Icons.broken_image_outlined,
+          size: 48,
+          color: Colors.white54,
+        ),
         const SizedBox(height: 8),
-        Text(LegacyTextLocalizer.isEnglish ? 'Unable to load image' : '无法加载图片', style: const TextStyle(color: Colors.white54, fontSize: 14)),
+        Text(
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Unable to load image',
+            '无法加载图片',
+            ru: 'Не удалось загрузить изображение',
+          ),
+          style: const TextStyle(color: Colors.white54, fontSize: 14),
+        ),
       ],
     );
   }

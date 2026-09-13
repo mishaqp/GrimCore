@@ -1672,14 +1672,22 @@ class OmnibotCodeTapHandler {
     try {
       await Clipboard.setData(ClipboardData(text: code));
       showToast(
-        LegacyTextLocalizer.isEnglish ? 'Code copied' : '代码已复制',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Code copied',
+          '代码已复制',
+          ru: 'Код скопирован',
+        ),
         type: ToastType.success,
       );
     } catch (_) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Copy failed, please try again'
-            : '复制失败，请重试',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Copy failed, please try again',
+          '复制失败，请重试',
+          ru: 'Не удалось скопировать. Повторите попытку',
+        ),
         type: ToastType.error,
       );
     }
@@ -2024,7 +2032,12 @@ String _linkifyBareOmnibotUris(String input) {
       final parsed = Uri.tryParse(trimmed);
       final label = parsed?.pathSegments.isNotEmpty == true
           ? parsed!.pathSegments.last
-          : (LegacyTextLocalizer.isEnglish ? 'Resource' : '资源');
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Resource',
+              '资源',
+              ru: 'Ресурс',
+            ));
       buffer.write('[$label]($trimmed)');
     } else {
       buffer.write(line);

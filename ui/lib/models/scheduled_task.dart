@@ -203,41 +203,89 @@ class ScheduledTask {
 
   /// 获取显示的时间文本
   String getDisplayTimeText() {
-    if (type == ScheduledTaskType.countdown) {
-      final minutes = countdownMinutes ?? 0;
-      if (minutes >= 60) {
-        final hours = minutes ~/ 60;
-        final mins = minutes % 60;
-        if (mins > 0) {
-          return '$hours小时$mins分钟后';
-        }
-        return '$hours小时后';
-      }
-      return '$minutes分钟后';
-    } else {
-      return fixedTime ?? '--:--';
+    if (type == ScheduledTaskType.fixedTime) {
+      final time = fixedTime ?? '--:--';
+      return LegacyTextLocalizer.pick('at $time', time, ru: 'в $time');
     }
+
+    final totalMinutes = countdownMinutes ?? 0;
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    final englishDuration = hours > 0
+        ? minutes > 0
+              ? '${hours}h ${minutes}m'
+              : '${hours}h'
+        : '${minutes}m';
+    final chineseDuration = hours > 0
+        ? minutes > 0
+              ? '$hours小时$minutes分钟'
+              : '$hours小时'
+        : '$minutes分钟';
+    final russianDuration = hours > 0
+        ? minutes > 0
+              ? '$hours ч $minutes мин'
+              : '$hours ч'
+        : '$minutes мин';
+    return LegacyTextLocalizer.pick(
+      'in $englishDuration',
+      '$chineseDuration后',
+      ru: 'через $russianDuration',
+    );
   }
 
   /// 获取下次执行时间的显示文本
   String getNextExecutionTimeText() {
     final en = LegacyTextLocalizer.isEnglish;
-    if (nextExecutionTime == null) return en ? 'Not set' : '未设置';
+    if (nextExecutionTime == null) {
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        'Not set',
+        '未设置',
+        ru: 'Не задано',
+      );
+    }
 
     final nextTime = DateTime.fromMillisecondsSinceEpoch(nextExecutionTime!);
     final now = DateTime.now();
     final diff = nextTime.difference(now);
 
-    if (diff.isNegative) return en ? 'Expired' : '已过期';
+    if (diff.isNegative) {
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        'Expired',
+        '已过期',
+        ru: 'Истекло',
+      );
+    }
 
     if (diff.inDays > 0) {
-      return en ? '${diff.inDays}d later' : '${diff.inDays}天后';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        '${diff.inDays}d later',
+        '${diff.inDays}天后',
+        ru: 'Через ${diff.inDays} дн.',
+      );
     } else if (diff.inHours > 0) {
-      return en ? '${diff.inHours}h later' : '${diff.inHours}小时后';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        '${diff.inHours}h later',
+        '${diff.inHours}小时后',
+        ru: 'Через ${diff.inHours} ч',
+      );
     } else if (diff.inMinutes > 0) {
-      return en ? '${diff.inMinutes}m later' : '${diff.inMinutes}分钟后';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        '${diff.inMinutes}m later',
+        '${diff.inMinutes}分钟后',
+        ru: 'Через ${diff.inMinutes} мин',
+      );
     } else {
-      return en ? 'Starting soon' : '即将执行';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        en,
+        'Starting soon',
+        '即将执行',
+        ru: 'Скоро',
+      );
     }
   }
 

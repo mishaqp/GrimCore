@@ -57,10 +57,11 @@ class _StorageUsagePageState extends State<StorageUsagePage> {
   }
 
   String _t(BuildContext context, String zh, String en) {
-    if (LegacyTextLocalizer.isEnglish) {
-      return en;
-    }
-    return context.trLegacy(zh);
+    return LegacyTextLocalizer.pick(
+      en,
+      zh,
+      locale: Localizations.localeOf(context),
+    );
   }
 
   Future<void> _loadSummary({bool silent = false}) async {

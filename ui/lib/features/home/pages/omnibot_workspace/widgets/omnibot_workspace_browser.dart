@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ui/services/omnibot_resource_service.dart';
@@ -616,9 +617,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
         children: [
           if (widget.showHeaderTitle) ...[
             Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Workspace'
-                  : '工作区',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Workspace',
+                '工作区',
+                ru: 'Рабочая область',
+              ),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -636,7 +640,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
               Expanded(
                 child: breadcrumbs.isEmpty
                     ? Text(
-                        _isEnglish ? 'Loading workspace...' : '加载工作区中...',
+                        LegacyTextLocalizer.pickForEnglishFlag(
+                          _isEnglish,
+                          'Loading workspace...',
+                          '加载工作区中...',
+                          ru: 'Загрузка рабочей области…',
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: palette.textSecondary,
@@ -686,9 +695,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
     final palette = context.omniPalette;
     final isActive = _isBulkSelectionMode;
     return Tooltip(
-      message: _isEnglish
-          ? (isActive ? 'Exit multi-select' : 'Multi-select')
-          : (isActive ? '退出批量选择' : '批量选择'),
+      message: LegacyTextLocalizer.pick(
+        isActive ? 'Exit multi-select' : 'Multi-select',
+        isActive ? '退出批量选择' : '批量选择',
+        ru: isActive ? 'Выйти из режима выбора' : 'Выбрать несколько',
+        locale: Localizations.localeOf(context),
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkResponse(
@@ -717,7 +729,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
 
   Widget _buildDeleteSelectedButton() {
     final count = _selectedEntryPaths.length;
-    final label = _isEnglish ? 'Delete ($count)' : '删除 $count 项';
+    final label = LegacyTextLocalizer.pickForEnglishFlag(
+      _isEnglish,
+      'Delete ($count)',
+      '删除 $count 项',
+      ru: 'Удалить ($count)',
+    );
     return TextButton(
       key: ValueKey<String>('workspace-delete-selected-$count'),
       onPressed: () => unawaited(_confirmAndDeleteSelectedEntries()),
@@ -885,27 +902,39 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
             onRefresh: _refresh,
             child: _isLoadingDirectory && _entries.isEmpty
                 ? _buildStatusList(
-                    message: _isEnglish ? 'Loading workspace…' : '正在加载工作区…',
+                    message: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Loading workspace…',
+                      '正在加载工作区…',
+                      ru: 'Загрузка рабочей области…',
+                    ),
                   )
                 : _directoryLoadError != null
                 ? _buildStatusList(
-                    message: _isEnglish
-                        ? 'Unable to read directory. Pull to retry.'
-                        : '无法读取目录，请下拉重试。',
+                    message: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Unable to read directory. Pull to retry.',
+                      '无法读取目录，请下拉重试。',
+                      ru: 'Не удалось прочитать папку. Потяните вниз, чтобы повторить.',
+                    ),
                   )
                 : !exists
                 ? _buildStatusList(
-                    message:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? 'Workspace not found'
-                        : '工作区不存在',
+                    message: LegacyTextLocalizer.pickForEnglishFlag(
+                      Localizations.localeOf(context).languageCode == 'en',
+                      'Workspace not found',
+                      '工作区不存在',
+                      ru: 'Рабочее пространство не найдено',
+                    ),
                   )
                 : itemCount == 0
                 ? _buildStatusList(
-                    message:
-                        Localizations.localeOf(context).languageCode == 'en'
-                        ? 'Current directory is empty'
-                        : '当前目录为空',
+                    message: LegacyTextLocalizer.pickForEnglishFlag(
+                      Localizations.localeOf(context).languageCode == 'en',
+                      'Current directory is empty',
+                      '当前目录为空',
+                      ru: 'Текущий каталог пуст',
+                    ),
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -1346,9 +1375,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
                 Text(
                   mountEntry == null
                       ? '长按左侧图标并拖动到目标文件夹可移动位置'
-                      : (Localizations.localeOf(context).languageCode == 'en'
-                            ? 'This entry is a mounted host directory'
-                            : '这是一个挂载进 /workspace 的宿主目录'),
+                      : (LegacyTextLocalizer.pickForEnglishFlag(
+                          Localizations.localeOf(context).languageCode == 'en',
+                          'This entry is a mounted host directory',
+                          '这是一个挂载进 /workspace 的宿主目录',
+                          ru: 'Этот элемент — подключённая папка хоста',
+                        )),
                   style: TextStyle(
                     fontSize: 12,
                     color: palette.textSecondary,
@@ -1374,9 +1406,9 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
                         fontFamily: 'PingFang SC',
                       ),
                     ),
-                    onTap: () => Navigator.of(
-                      sheetContext,
-                    ).pop(_WorkspaceEntryAction.edit),
+                    onTap: () =>
+                        Navigator.of(sheetContext)
+                            .pop(_WorkspaceEntryAction.edit),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -1398,9 +1430,9 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
                         fontFamily: 'PingFang SC',
                       ),
                     ),
-                    onTap: () => Navigator.of(
-                      sheetContext,
-                    ).pop(_WorkspaceEntryAction.rename),
+                    onTap: () =>
+                        Navigator.of(sheetContext)
+                            .pop(_WorkspaceEntryAction.rename),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -1607,7 +1639,14 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
   Future<void> _confirmAndDeleteSelectedEntries() async {
     final selectedPaths = _topLevelSelectedPathsForDelete();
     if (selectedPaths.isEmpty) {
-      showToast(_isEnglish ? 'No items selected' : '还没有选中文件或文件夹');
+      showToast(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'No items selected',
+          '还没有选中文件或文件夹',
+          ru: 'Ничего не выбрано',
+        ),
+      );
       return;
     }
 
@@ -1617,19 +1656,40 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
         .where((name) => name.isNotEmpty)
         .toList(growable: false);
     final content = selectedPaths.length == 1
-        ? (_isEnglish
-              ? 'Delete "${previewNames.first}"? This cannot be undone.'
-              : '确认删除“${previewNames.first}”？删除后不可恢复。')
-        : (_isEnglish
-              ? 'Delete ${selectedPaths.length} selected items? This cannot be undone.'
-              : '确认删除已选择的 ${selectedPaths.length} 项？删除后不可恢复。');
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Delete "${previewNames.first}"? This cannot be undone.',
+            '确认删除“${previewNames.first}”？删除后不可恢复。',
+            ru: 'Удалить «${previewNames.first}»? Это действие нельзя отменить.',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Delete ${selectedPaths.length} selected items? This cannot be undone.',
+            '确认删除已选择的 ${selectedPaths.length} 项？删除后不可恢复。',
+            ru: 'Удалить выбранные элементы (${selectedPaths.length})? Отменить это действие нельзя.',
+          ));
 
     final confirmed = await AppDialog.confirm(
       context,
-      title: _isEnglish ? 'Delete selected items' : '删除所选项',
+      title: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Delete selected items',
+        '删除所选项',
+        ru: 'Удалить выбранные элементы',
+      ),
       content: content,
-      cancelText: _isEnglish ? 'Cancel' : '取消',
-      confirmText: _isEnglish ? 'Delete' : '删除',
+      cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Cancel',
+        '取消',
+        ru: 'Отмена',
+      ),
+      confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Delete',
+        '删除',
+        ru: 'Удалить',
+      ),
       confirmButtonColor: const Color(0xFFE53935),
     );
     if (confirmed != true) return;
@@ -1660,9 +1720,12 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
 
     if (failedPaths.isEmpty) {
       showToast(
-        _isEnglish
-            ? 'Deleted $deletedCount item(s)'
-            : '已删除 $deletedCount 项文件或文件夹',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Deleted $deletedCount item(s)',
+          '已删除 $deletedCount 项文件或文件夹',
+          ru: 'Удалено объектов: $deletedCount',
+        ),
         type: ToastType.success,
       );
       return;
@@ -1670,16 +1733,24 @@ class OmnibotWorkspaceBrowserState extends State<OmnibotWorkspaceBrowser> {
 
     if (deletedCount > 0) {
       showToast(
-        _isEnglish
-            ? 'Deleted $deletedCount item(s), ${failedPaths.length} failed'
-            : '已删除 $deletedCount 项，${failedPaths.length} 项删除失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Deleted $deletedCount item(s), ${failedPaths.length} failed',
+          '已删除 $deletedCount 项，${failedPaths.length} 项删除失败',
+          ru: 'Удалено: $deletedCount; ошибок: ${failedPaths.length}',
+        ),
         type: ToastType.warning,
       );
       return;
     }
 
     showToast(
-      _isEnglish ? 'Failed to delete selected items' : '删除所选项失败',
+      LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Failed to delete selected items',
+        '删除所选项失败',
+        ru: 'Не удалось удалить выбранные элементы',
+      ),
       type: ToastType.error,
     );
   }
@@ -2168,16 +2239,25 @@ class _WorkspaceInlineFilePreviewState
 
   Widget _buildEditor() {
     final statusText = _loadingText && _textContent == null
-        ? (Localizations.localeOf(context).languageCode == 'en'
-              ? 'Loading original content, you can start editing first'
-              : '正在加载原始内容，可先开始编辑')
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Loading original content, you can start editing first',
+            '正在加载原始内容，可先开始编辑',
+            ru: 'Исходное содержимое загружается — можно начать редактирование',
+          ))
         : (_isDirty
-              ? (Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Editing with unsaved changes'
-                    : '编辑中，存在未保存修改')
-              : (Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Editing. Save will write back to workspace immediately'
-                    : '编辑中，保存后会立即写回 workspace'));
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Editing with unsaved changes',
+                  '编辑中，存在未保存修改',
+                  ru: 'Редактирование: изменения не сохранены',
+                ))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Editing. Save will write back to workspace immediately',
+                  '编辑中，保存后会立即写回 workspace',
+                  ru: 'Редактирование. Сохранение сразу запишет изменения в рабочую область',
+                )));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2213,9 +2293,12 @@ class _WorkspaceInlineFilePreviewState
               decoration: InputDecoration(
                 filled: true,
                 fillColor: context.omniPalette.surfacePrimary,
-                hintText: Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Enter file content'
-                    : '输入文件内容',
+                hintText: LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Enter file content',
+                  '输入文件内容',
+                  ru: 'Введите содержимое файла',
+                ),
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -2249,9 +2332,12 @@ class _WorkspaceInlineFilePreviewState
                 onPressed: _isSaving ? null : _handleCancelEditing,
                 icon: const Icon(Icons.close_rounded),
                 label: Text(
-                  Localizations.localeOf(context).languageCode == 'en'
-                      ? 'Cancel'
-                      : '取消',
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    Localizations.localeOf(context).languageCode == 'en',
+                    'Cancel',
+                    '取消',
+                    ru: 'Отмена',
+                  ),
                 ),
               ),
             if (_isEditing) const SizedBox(width: 10),
@@ -2275,12 +2361,18 @@ class _WorkspaceInlineFilePreviewState
                   : const Icon(Icons.edit_outlined),
               label: Text(
                 _isEditing
-                    ? (Localizations.localeOf(context).languageCode == 'en'
-                          ? 'Save'
-                          : '保存')
-                    : (Localizations.localeOf(context).languageCode == 'en'
-                          ? 'Edit'
-                          : '编辑'),
+                    ? (LegacyTextLocalizer.pickForEnglishFlag(
+                        Localizations.localeOf(context).languageCode == 'en',
+                        'Save',
+                        '保存',
+                        ru: 'Сохранить',
+                      ))
+                    : (LegacyTextLocalizer.pickForEnglishFlag(
+                        Localizations.localeOf(context).languageCode == 'en',
+                        'Edit',
+                        '编辑',
+                        ru: 'Редактировать',
+                      )),
               ),
             ),
           ],
@@ -2293,9 +2385,12 @@ class _WorkspaceInlineFilePreviewState
     if (!widget.metadata.exists) {
       return Center(
         child: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'File does not exist'
-              : '文件不存在',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'File does not exist',
+            '文件不存在',
+            ru: 'Файл не найден',
+          ),
         ),
       );
     }
@@ -2329,9 +2424,12 @@ class _WorkspaceInlineFilePreviewState
         if (_textContent == null) {
           return Center(
             child: Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'No content'
-                  : '暂无内容',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'No content',
+                '暂无内容',
+                ru: 'Нет содержимого',
+              ),
             ),
           );
         }

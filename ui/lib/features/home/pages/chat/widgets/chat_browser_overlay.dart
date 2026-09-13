@@ -39,9 +39,8 @@ class _ChatBrowserOverlayState extends State<ChatBrowserOverlay> {
   late final TextEditingController _promptController;
   String? _lastPromptRequestId;
 
-  bool get _isEnglish => LegacyTextLocalizer.isEnglish;
-
-  String _text(String zh, String en) => _isEnglish ? en : zh;
+  String _text(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   @override
   void initState() {
@@ -1537,8 +1536,7 @@ class _ChatBrowserOverlayState extends State<ChatBrowserOverlay> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

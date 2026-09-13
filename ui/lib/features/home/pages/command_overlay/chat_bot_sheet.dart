@@ -241,9 +241,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
   Future<void> _setOpenClawEnabled(bool enabled) async {
     if (enabled && _openClawBaseUrl.trim().isEmpty) {
       AppToast.show(
-        LegacyTextLocalizer.isEnglish
-            ? 'Please configure OpenClaw first using /openclaw'
-            : '请先使用 /openclaw 配置 OpenClaw',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Please configure OpenClaw first using /openclaw',
+          '请先使用 /openclaw 配置 OpenClaw',
+          ru: 'Сначала настройте OpenClaw командой /openclaw',
+        ),
       );
       _showOpenClawCommandPanel(expand: true);
       return;
@@ -369,9 +372,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
 
     if (!trimmed.startsWith('/openclaw')) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'Unknown command, please use /openclaw'
-            : '未知指令，请使用 /openclaw',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Unknown command, please use /openclaw',
+          '未知指令，请使用 /openclaw',
+          ru: 'Неизвестная команда. Используйте /openclaw',
+        ),
       );
       return true;
     }
@@ -379,9 +385,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
     final parts = trimmed.split(RegExp(r'\\s+'));
     if (parts.length < 2) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'Format: /openclaw <baseurl> --token <token> <userid>'
-            : '格式: /openclaw <baseurl> --token <token> <userid>',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Format: /openclaw <baseurl> --token <token> <userid>',
+          '格式: /openclaw <baseurl> --token <token> <userid>',
+          ru: 'Формат: /openclaw <baseurl> --token <token> <userid>',
+        ),
       );
       return true;
     }
@@ -390,9 +399,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
     final tokenIndex = parts.indexOf('--token');
     if (tokenIndex == -1) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'Please include --token explicitly in the command'
-            : '请在命令中显式包含 --token',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Please include --token explicitly in the command',
+          '请在命令中显式包含 --token',
+          ru: 'Явно укажите --token в команде',
+        ),
       );
       return true;
     }
@@ -410,9 +422,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
 
     if (baseUrl.trim().isEmpty) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'OpenClaw baseurl cannot be empty'
-            : 'OpenClaw baseurl 不能为空',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'OpenClaw baseurl cannot be empty',
+          'OpenClaw baseurl 不能为空',
+          ru: 'Укажите Base URL OpenClaw',
+        ),
       );
       return true;
     }
@@ -427,9 +442,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
     _inputFocusNode.unfocus();
     _hideSlashCommandPanel();
     _showSnackBar(
-      LegacyTextLocalizer.isEnglish
-          ? 'OpenClaw configured and enabled'
-          : 'OpenClaw 已配置并启用',
+      LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'OpenClaw configured and enabled',
+        'OpenClaw 已配置并启用',
+        ru: 'OpenClaw настроен и включён',
+      ),
     );
     return true;
   }
@@ -459,7 +477,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
         final text = message.content?['text'] as String? ?? '';
         if (text.isNotEmpty) {
           buffer.write(
-            LegacyTextLocalizer.isEnglish ? 'User: $text\n' : '用户: $text\n',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'User: $text\n',
+              '用户: $text\n',
+              ru: 'Пользователь: $text\n',
+            ),
           );
         }
       }
@@ -488,12 +511,22 @@ class _ChatBotSheetState extends State<ChatBotSheet>
       final firstUserMessage = _messages.firstWhere(
         (m) => m.user == 1,
         orElse: () => ChatMessageModel.userMessage(
-          LegacyTextLocalizer.isEnglish ? "New conversation" : "新对话",
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            "New conversation",
+            "新对话",
+            ru: 'Новый диалог',
+          ),
         ),
       );
       final userText =
           firstUserMessage.text ??
-          (LegacyTextLocalizer.isEnglish ? 'New conversation' : '新对话');
+          (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'New conversation',
+            '新对话',
+            ru: 'Новый диалог',
+          ));
       final title = userText.length > 20
           ? '${userText.substring(0, 20)}...'
           : userText;
@@ -767,7 +800,10 @@ class _ChatBotSheetState extends State<ChatBotSheet>
         _acpCloseStarted = false;
         debugPrint('关闭 ACP 会话失败: $error');
         if (mounted && !_closeRequested) {
-          showToast(formatAgentRuntimeErrorForUser(error), type: ToastType.error);
+          showToast(
+            formatAgentRuntimeErrorForUser(error),
+            type: ToastType.error,
+          );
         }
       }
     }
@@ -1192,9 +1228,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
         _currentDispatchTurnId == messageIds.aiMessageId) {
       _showAcpStartError(
         messageIds.aiMessageId,
-        LegacyTextLocalizer.isEnglish
-            ? 'Failed to start unified Agent. Please check model provider and scene model config.'
-            : '统一 Agent 启动失败，请检查模型提供商与场景模型配置。',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Failed to start unified Agent. Please check model provider and scene model config.',
+          '统一 Agent 启动失败，请检查模型提供商与场景模型配置。',
+          ru: 'Не удалось запустить единого агента. Проверьте провайдера модели и настройки моделей по сценам.',
+        ),
       );
     }
   }
@@ -1755,9 +1794,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
             _currentDispatchTurnId == aiMessageId) {
           _showAcpStartError(
             aiMessageId,
-            LegacyTextLocalizer.isEnglish
-                ? 'Failed to start the ACP session.'
-                : 'ACP 会话启动失败，请稍后重试。',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Failed to start the ACP session.',
+              'ACP 会话启动失败，请稍后重试。',
+              ru: 'Не удалось запустить сеанс ACP.',
+            ),
           );
         }
       }),
@@ -2134,12 +2176,18 @@ class _ChatBotSheetState extends State<ChatBotSheet>
                         TextField(
                           controller: _openClawTokenController,
                           decoration: InputDecoration(
-                            labelText: LegacyTextLocalizer.isEnglish
-                                ? 'Token (optional)'
-                                : 'Token（可选）',
-                            hintText: LegacyTextLocalizer.isEnglish
-                                ? 'Leave empty if no token required'
-                                : '为空表示无需 token',
+                            labelText: LegacyTextLocalizer.pickForEnglishFlag(
+                              LegacyTextLocalizer.isEnglish,
+                              'Token (optional)',
+                              'Token（可选）',
+                              ru: 'Токен (необязательно)',
+                            ),
+                            hintText: LegacyTextLocalizer.pickForEnglishFlag(
+                              LegacyTextLocalizer.isEnglish,
+                              'Leave empty if no token required',
+                              '为空表示无需 token',
+                              ru: 'Оставьте пустым, если токен не требуется',
+                            ),
                             isDense: true,
                           ),
                         ),
@@ -2182,9 +2230,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
                                   ),
                                 ),
                                 Text(
-                                  LegacyTextLocalizer.isEnglish
-                                      ? 'Manual recording'
-                                      : '手动录制',
+                                  LegacyTextLocalizer.pickForEnglishFlag(
+                                    LegacyTextLocalizer.isEnglish,
+                                    'Manual recording',
+                                    '手动录制',
+                                    ru: 'Ручная запись',
+                                  ),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: panelSecondaryTextColor,
@@ -2219,7 +2270,12 @@ class _ChatBotSheetState extends State<ChatBotSheet>
                                 ),
                               ),
                               Text(
-                                LegacyTextLocalizer.isEnglish ? 'Config' : '配置',
+                                LegacyTextLocalizer.pickForEnglishFlag(
+                                  LegacyTextLocalizer.isEnglish,
+                                  'Config',
+                                  '配置',
+                                  ru: 'Конфигурация',
+                                ),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: panelSecondaryTextColor,

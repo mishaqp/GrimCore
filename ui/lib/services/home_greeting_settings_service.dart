@@ -72,7 +72,7 @@ class HomeQuickPrompt {
 
   String resolveTitle(BuildContext context) {
     final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'en' && titleEn?.trim().isNotEmpty == true) {
+    if (languageCode != 'zh' && titleEn?.trim().isNotEmpty == true) {
       return titleEn!.trim();
     }
     return LegacyTextLocalizer.localize(
@@ -83,7 +83,7 @@ class HomeQuickPrompt {
 
   String resolvePrompt(BuildContext context) {
     final languageCode = Localizations.localeOf(context).languageCode;
-    if (languageCode == 'en' && promptEn?.trim().isNotEmpty == true) {
+    if (languageCode != 'zh' && promptEn?.trim().isNotEmpty == true) {
       return promptEn!.trim();
     }
     return LegacyTextLocalizer.localize(
@@ -176,8 +176,7 @@ class HomeGreetingSettingsService {
       title: '帮我查一下',
       titleEn: 'Look Up',
       prompt: '请帮我查一下下面内容，并给出可靠来源和简明结论：',
-      promptEn:
-          'Please look up the following topic, then provide reliable sources and a concise conclusion:',
+      promptEn: 'Please look up the following topic, then provide reliable sources and a concise conclusion:',
       iconKey: 'search',
       builtIn: true,
     ),
@@ -195,8 +194,7 @@ class HomeGreetingSettingsService {
       title: '探索想法',
       titleEn: 'Explore',
       prompt: '我想探索一个想法，请先帮我梳理可能方向：',
-      promptEn:
-          'I want to explore an idea. Please help map possible directions first:',
+      promptEn: 'I want to explore an idea. Please help map possible directions first:',
       iconKey: 'explore',
       builtIn: true,
     ),
@@ -205,8 +203,7 @@ class HomeGreetingSettingsService {
       title: '安装技能',
       titleEn: 'Install Skills',
       prompt: '帮我安装这些skills：https://github.com/OpenMinis/MinisSkills',
-      promptEn:
-          'Help me install these skills: https://github.com/OpenMinis/MinisSkills',
+      promptEn: 'Help me install these skills: https://github.com/OpenMinis/MinisSkills',
       iconKey: 'install',
       builtIn: true,
     ),

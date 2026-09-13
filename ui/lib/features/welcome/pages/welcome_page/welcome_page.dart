@@ -1,3 +1,4 @@
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/constants/storage_keys.dart';
 import 'package:ui/core/router/go_router_manager.dart';
@@ -140,14 +141,20 @@ class _WelcomePageState extends State<WelcomePage> {
                         width: 166,
                         height: 44,
                         text: _isLastPage
-                            ? (Localizations.localeOf(context).languageCode ==
-                                    'en'
-                                ? 'Start'
-                                : '开始体验')
-                            : (Localizations.localeOf(context).languageCode ==
-                                    'en'
-                                ? 'Next'
-                                : '下一步'),
+                            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                                Localizations.localeOf(context).languageCode ==
+                                    'en',
+                                'Start',
+                                '开始体验',
+                                ru: 'Начать',
+                              ))
+                            : (LegacyTextLocalizer.pickForEnglishFlag(
+                                Localizations.localeOf(context).languageCode ==
+                                    'en',
+                                'Next',
+                                '下一步',
+                                ru: 'Далее',
+                              )),
                         onTap: () {
                           if (_isLastPage) {
                             _handleStartExperience();

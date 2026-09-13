@@ -8,6 +8,7 @@ import 'package:ui/features/home/pages/authorize/accessibility_permission_prompt
 import 'package:ui/features/task/pages/execution_history/widgets/function_detail_sheet.dart';
 import 'package:ui/features/task/run_log/run_log_metrics.dart';
 import 'package:ui/features/task/run_log/omniflow_tool_client.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/models/conversation_model.dart';
 import 'package:ui/models/conversation_thread_target.dart';
 import 'package:ui/models/omni_plugin_item.dart';
@@ -522,15 +523,13 @@ class _OmniFlowExecutionCenterPageState
               _text(context, 'OmniFlow 操作失败', 'OmniFlow operation failed'),
         );
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(success)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(success)));
       if (reload) await _refreshActive();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_omniFlowErrorText(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_omniFlowErrorText(error))));
     }
   }
 
@@ -726,9 +725,8 @@ class _FunctionListItem extends StatelessWidget {
     final name = _string(function['name']).nullIfEmpty ?? functionId;
     final description = _string(function['description']);
     final steps = _mapList(function['steps']).length;
-    final parameters = _map(
-      _map(function['input_schema'])['properties'],
-    ).length;
+    final parameters = _map(_map(function['input_schema'])['properties'])
+        .length;
     final meta = _text(
       context,
       '$steps 个步骤 · $parameters 个参数',
@@ -750,9 +748,8 @@ class _FunctionListItem extends StatelessWidget {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     if (description.isNotEmpty && description != name) ...[
                       const SizedBox(height: 3),
@@ -940,9 +937,8 @@ class _RunLogListItem extends StatelessWidget {
                       _string(runLog['goal']).nullIfEmpty ?? runId,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   Text(
@@ -1199,7 +1195,7 @@ dynamic _parseArgument(String value, String type) => switch (type) {
 };
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
 extension on String {
   String? get nullIfEmpty => isEmpty ? null : this;

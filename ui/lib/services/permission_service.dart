@@ -19,48 +19,72 @@ class PermissionService {
         iconPath: 'assets/welcome/permission_overlay.svg',
         iconWidth: 32,
         iconHeight: 32,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Accessibility Permission'
-            : '无障碍权限',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Observe the screen and perform taps, swipes, and text input'
-            : '读取页面并执行点击、滑动和输入等 GUI 操作',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Accessibility Permission',
+          '无障碍权限',
+          ru: 'Доступ к специальным возможностям',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Observe the screen and perform taps, swipes, and text input',
+          '读取页面并执行点击、滑动和输入等 GUI 操作',
+          ru: 'Просматривать экран, нажимать, проводить пальцем и вводить текст',
+        ),
       ),
       kWorkspaceStoragePermissionId => _PermissionDisplaySpec(
         id: kWorkspaceStoragePermissionId,
         iconPath: 'assets/welcome/permission_installed_apps.svg',
         iconWidth: 32,
         iconHeight: 32,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Built-in workspace'
-            : '内置 workspace',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Omnibot maintains `/workspace` internally; public storage permission is usually unnecessary'
-            : 'Omnibot 会在应用内部维护 `/workspace`，通常无需再单独授予公共存储权限',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Built-in workspace',
+          '内置 workspace',
+          ru: 'Встроенная рабочая область',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Omnibot maintains `/workspace` internally; public storage permission is usually unnecessary',
+          'Omnibot 会在应用内部维护 `/workspace`，通常无需再单独授予公共存储权限',
+          ru: 'GrimCore управляет `/workspace` внутри приложения; доступ к общему хранилищу обычно не нужен',
+        ),
       ),
       kPublicStoragePermissionId => _PermissionDisplaySpec(
         id: kPublicStoragePermissionId,
         iconPath: 'assets/welcome/permission_installed_apps.svg',
         iconWidth: 32,
         iconHeight: 32,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Public Storage Access'
-            : '公共文件访问',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Allow agent to read/write files in public storage'
-            : '允许 agent 读取和操作安卓公共存储中的文件与文件夹',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Public Storage Access',
+          '公共文件访问',
+          ru: 'Доступ к общему хранилищу',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Allow agent to read/write files in public storage',
+          '允许 agent 读取和操作安卓公共存储中的文件与文件夹',
+          ru: 'Разрешить агенту читать и изменять файлы в общем хранилище',
+        ),
       ),
       kShizukuPermissionId => _PermissionDisplaySpec(
         id: kShizukuPermissionId,
         iconPath: 'assets/welcome/permission_installed_apps.svg',
         iconWidth: 32,
         iconHeight: 32,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Shizuku Permission'
-            : 'Shizuku 权限',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Optional advanced system actions for the agent'
-            : '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Shizuku Permission',
+          'Shizuku 权限',
+          ru: 'Разрешение Shizuku',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Optional advanced system actions for the agent',
+          '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+          ru: 'Необязательные расширенные системные возможности агента',
+        ),
       ),
       _ => null,
     };
@@ -314,12 +338,18 @@ class PermissionService {
               iconPath: 'assets/welcome/permission_overlay.svg',
               iconWidth: 32,
               iconHeight: 32,
-              name: LegacyTextLocalizer.isEnglish
-                  ? 'Overlay Permission'
-                  : '悬浮窗权限',
-              description: LegacyTextLocalizer.isEnglish
-                  ? 'Desktop overlay for quick access'
-                  : '桌面悬浮显示，快速唤起小万',
+              name: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Overlay Permission',
+                '悬浮窗权限',
+                ru: 'Показ поверх других окон',
+              ),
+              description: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Desktop overlay for quick access',
+                '桌面悬浮显示，快速唤起小万',
+                ru: 'Плавающая панель на рабочем столе для быстрого доступа',
+              ),
               onAuthorize: () async {},
               checkAuthorization: () async => false,
             ),
@@ -328,12 +358,18 @@ class PermissionService {
               iconPath: 'assets/welcome/permission_installed_apps.svg',
               iconWidth: 32,
               iconHeight: 32,
-              name: LegacyTextLocalizer.isEnglish
-                  ? 'Installed Apps Access'
-                  : '应用列表读取',
-              description: LegacyTextLocalizer.isEnglish
-                  ? 'Identify installed apps for app context'
-                  : '识别已安装应用并提供应用上下文',
+              name: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Installed Apps Access',
+                '应用列表读取',
+                ru: 'Доступ к списку приложений',
+              ),
+              description: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Identify installed apps for app context',
+                '识别已安装应用并提供应用上下文',
+                ru: 'Определять установленные приложения для контекста',
+              ),
               onAuthorize: () async {},
               checkAuthorization: () async => false,
             ),
@@ -342,12 +378,18 @@ class PermissionService {
               iconPath: 'assets/welcome/permission_installed_apps.svg',
               iconWidth: 32,
               iconHeight: 32,
-              name: LegacyTextLocalizer.isEnglish
-                  ? 'Shizuku Permission'
-                  : 'Shizuku 权限',
-              description: LegacyTextLocalizer.isEnglish
-                  ? 'Optional advanced system actions for the agent'
-                  : '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+              name: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Shizuku Permission',
+                'Shizuku 权限',
+                ru: 'Разрешение Shizuku',
+              ),
+              description: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Optional advanced system actions for the agent',
+                '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+                ru: 'Необязательные расширенные системные возможности агента',
+              ),
               onAuthorize: () async {},
               checkAuthorization: () async => false,
             ),

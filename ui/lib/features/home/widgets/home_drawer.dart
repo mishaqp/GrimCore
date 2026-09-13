@@ -294,11 +294,11 @@ class HomeDrawerState extends ConsumerState<HomeDrawer> {
   Future<void> _invokeWebQuickAction(OmniPluginActionItem action) async {
     if (_busyWebQuickActionKey != null) return;
     final key = '${action.pluginId}/${action.id}';
-    final english = Localizations.localeOf(context).languageCode == 'en';
+    final locale = Localizations.localeOf(context);
     setState(() => _busyWebQuickActionKey = key);
     _maybeCloseDrawer();
     try {
-      await AgentWebActionPresenter.invoke(action, english: english);
+      await AgentWebActionPresenter.invoke(action, locale: locale);
     } finally {
       if (mounted && _busyWebQuickActionKey == key) {
         setState(() => _busyWebQuickActionKey = null);

@@ -137,10 +137,8 @@ class OnboardingEnvironmentProgressPage extends StatelessWidget {
                               'Setup time depends on your connection and selected tools. Keep the app open.',
                             ),
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: palette.textTertiary,
-                        height: 1.5,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: palette.textTertiary, height: 1.5),
                     ),
                     if (failed) ...[
                       const SizedBox(height: 28),
@@ -209,8 +207,9 @@ class OnboardingEnvironmentProgressPage extends StatelessWidget {
         'The terminal system is ready; preparing your selected tools',
       );
     }
-    if (!onboardingIsEnglish(context)) return value;
-    const stages = <String, String>{
+    final languageCode = Localizations.localeOf(context).languageCode;
+    if (languageCode == 'zh') return value;
+    const stagesEn = <String, String>{
       '开始准备内嵌终端环境': 'Starting the local terminal environment',
       '正在准备 workspace 和运行目录': 'Preparing the workspace and runtime directories',
       '正在初始化宿主终端运行时': 'Initializing the terminal runtime',
@@ -223,6 +222,20 @@ class OnboardingEnvironmentProgressPage extends StatelessWidget {
       '开发环境配置完成': 'Development environment ready',
       '所选开发工具已就绪': 'Selected development tools are ready',
     };
+    const stagesRu = <String, String>{
+      '开始准备内嵌终端环境': 'Подготовка встроенного терминала',
+      '正在准备 workspace 和运行目录': 'Подготовка Workspace и рабочих каталогов',
+      '正在初始化宿主终端运行时': 'Инициализация среды терминала',
+      '正在校验终端环境运行资源': 'Проверка ресурсов терминальной среды',
+      '正在安装终端环境运行资源': 'Установка ресурсов терминальной среды',
+      '宿主终端环境校验完成': 'Ресурсы терминальной среды проверены',
+      '正在检查所选开发工具': 'Проверка выбранных инструментов разработки',
+      '正在安装所选开发工具': 'Установка выбранных инструментов разработки',
+      '正在验证所选开发工具': 'Проверка выбранных инструментов разработки',
+      '开发环境配置完成': 'Среда разработки настроена',
+      '所选开发工具已就绪': 'Выбранные инструменты готовы',
+    };
+    final stages = languageCode == 'ru' ? stagesRu : stagesEn;
     for (final entry in stages.entries) {
       if (value.contains(entry.key)) return entry.value;
     }

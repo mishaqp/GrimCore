@@ -601,7 +601,12 @@ class _ActivityDashboardCardState extends State<ActivityDashboardCard>
               Row(
                 children: [
                   _buildTabButton(
-                    label: LegacyTextLocalizer.isEnglish ? 'Chat' : '对话',
+                    label: LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Chat',
+                      '对话',
+                      ru: 'Чат',
+                    ),
                     tabIndex: _convTab,
                   ),
                   _buildTabButton(label: 'Token', tabIndex: _tokenTab),
@@ -829,6 +834,24 @@ class _ActivityDashboardCardState extends State<ActivityDashboardCard>
   }
 
   String _monthName(int m) {
+    if (LegacyTextLocalizer.isRussian) {
+      const names = [
+        '',
+        'янв',
+        'фев',
+        'мар',
+        'апр',
+        'май',
+        'июн',
+        'июл',
+        'авг',
+        'сен',
+        'окт',
+        'ноя',
+        'дек',
+      ];
+      return names[m];
+    }
     if (LegacyTextLocalizer.isEnglish) {
       const names = [
         '',
@@ -866,6 +889,10 @@ class _ActivityDashboardCardState extends State<ActivityDashboardCard>
   }
 
   String _dayLabel(int i) {
+    if (LegacyTextLocalizer.isRussian) {
+      const labels = ['Пн', '', 'Ср', '', 'Пт', '', 'Вс'];
+      return labels[i];
+    }
     if (LegacyTextLocalizer.isEnglish) {
       const labels = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
       return labels[i];

@@ -16,6 +16,7 @@ import 'package:ui/services/agent_tool_call_parser.dart';
 import 'package:ui/services/agent_message_kinds.dart';
 import 'package:ui/theme/theme_context.dart';
 import 'package:ui/widgets/image_preview_overlay.dart';
+
 import 'acp_audio_card.dart';
 
 class AgentToolSummaryCard extends StatefulWidget {
@@ -1479,7 +1480,7 @@ String _resolveSubagentStatusText(
     (cardData['reasoning_content'] ?? '').toString(),
   );
   if (reasoning.isNotEmpty) {
-    return '${_isEnglish ? 'Thinking' : '思考'}：$reasoning';
+    return '${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'Thinking', '思考', ru: 'Рассуждения')}$_localizedStatusSeparator$reasoning';
   }
   final progress = _compactInline((cardData['progress'] ?? '').toString());
   if (progress.isNotEmpty) {
@@ -1519,10 +1520,10 @@ String _decodeSubagentResultStatusText(String rawJson) {
   final result = _compactInline((last['result'] ?? '').toString());
   final error = _compactInline((last['error'] ?? '').toString());
   if (status == 'completed' && result.isNotEmpty) {
-    return 'SubAgent$displayIndex ${_isEnglish ? 'result' : '得到结果'}：$result';
+    return 'SubAgent$displayIndex ${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'result', '得到结果', ru: 'результат')}$_localizedStatusSeparator$result';
   }
   if (error.isNotEmpty) {
-    return 'SubAgent$displayIndex ${_isEnglish ? 'failed' : '失败'}：$error';
+    return 'SubAgent$displayIndex ${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'failed', '失败', ru: 'завершился с ошибкой')}$_localizedStatusSeparator$error';
   }
   return '';
 }
@@ -1551,7 +1552,8 @@ List<_SubagentTimelineEvent> _resolveSubagentTimelineEvents(
           sequence: 0,
           createdAt: 0,
           kind: 'thinking',
-          summary: '${_isEnglish ? 'Thinking' : '思考'}：$reasoning',
+          summary:
+              '${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'Thinking', '思考', ru: 'Рассуждения')}$_localizedStatusSeparator$reasoning',
           status: 'running',
         ),
       );
@@ -1605,7 +1607,7 @@ List<_SubagentTimelineEvent> _synthesizeSubagentResultEvents(
           createdAt: sequence,
           kind: 'tool_started',
           summary:
-              '$label ${_isEnglish ? 'called tools' : '调用工具'}：${toolCalls.join(', ')}',
+              '$label ${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'called tools', '调用工具', ru: 'вызвал инструменты')}$_localizedStatusSeparator${toolCalls.join(', ')}',
           status: 'completed',
           taskIndex: taskIndex,
         ),
@@ -1620,7 +1622,8 @@ List<_SubagentTimelineEvent> _synthesizeSubagentResultEvents(
           sequence: sequence++,
           createdAt: sequence,
           kind: 'subagent_completed',
-          summary: '$label ${_isEnglish ? 'result' : '得到结果'}：$output',
+          summary:
+              '$label ${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'result', '得到结果', ru: 'результат')}$_localizedStatusSeparator$output',
           status: 'completed',
           taskIndex: taskIndex,
         ),
@@ -1631,7 +1634,8 @@ List<_SubagentTimelineEvent> _synthesizeSubagentResultEvents(
           sequence: sequence++,
           createdAt: sequence,
           kind: 'subagent_failed',
-          summary: '$label ${_isEnglish ? 'failed' : '失败'}：$error',
+          summary:
+              '$label ${LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, 'failed', '失败', ru: 'завершился с ошибкой')}$_localizedStatusSeparator$error',
           status: 'failed',
           taskIndex: taskIndex,
         ),
@@ -1681,6 +1685,9 @@ int _asInt(dynamic value) {
 }
 
 bool get _isEnglish => LegacyTextLocalizer.isEnglish;
+
+String get _localizedStatusSeparator =>
+    LegacyTextLocalizer.pickForEnglishFlag(_isEnglish, ': ', '：', ru: ': ');
 
 class _SubagentStatusGroup {
   const _SubagentStatusGroup({

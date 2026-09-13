@@ -20,9 +20,8 @@ class _QuickLogsPageState extends State<QuickLogsPage> {
   List<QuickLogItem> _items = const [];
   int _totalCount = 0;
 
-  bool get _isEnglish => LegacyTextLocalizer.isEnglish;
-
-  String _t(String zh, String en) => _isEnglish ? en : zh;
+  String _t(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   @override
   void initState() {
@@ -221,9 +220,8 @@ class _QuickLogsPageState extends State<QuickLogsPage> {
   }
 
   String _formatTime(int millis) {
-    return DateFormat(
-      'yyyy-MM-dd HH:mm',
-    ).format(DateTime.fromMillisecondsSinceEpoch(millis));
+    return DateFormat('yyyy-MM-dd HH:mm')
+        .format(DateTime.fromMillisecondsSinceEpoch(millis));
   }
 
   String _sourceLabel(String source) {
@@ -277,9 +275,8 @@ class _QuickLogsPageState extends State<QuickLogsPage> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF0EA5E9,
-                          ).withValues(alpha: 0.12),
+                          color: const Color(0xFF0EA5E9)
+                              .withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(
@@ -551,9 +548,8 @@ class _QuickLogCard extends StatelessWidget {
             children: [
               _QuickLogTag(
                 label: sourceLabel,
-                backgroundColor: const Color(
-                  0xFF0EA5E9,
-                ).withValues(alpha: 0.12),
+                backgroundColor: const Color(0xFF0EA5E9)
+                    .withValues(alpha: 0.12),
                 textColor: const Color(0xFF0284C7),
               ),
               _QuickLogTag(

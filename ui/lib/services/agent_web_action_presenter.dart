@@ -1,4 +1,6 @@
+import 'package:flutter/widgets.dart';
 import 'package:ui/core/router/go_router_manager.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/omni_plugin_service.dart';
 import 'package:ui/utils/ui.dart';
 
@@ -11,14 +13,16 @@ class AgentWebActionPresenter {
 
   static Future<void> invoke(
     OmniPluginActionItem action, {
-    required bool english,
+    required Locale locale,
   }) async {
+    final english = locale.languageCode == 'en';
     final label = action.localizedPresentationValue(
       'label',
       english: english,
       fallback: action.displayName,
     );
-    String text(String zh, String en) => english ? en : zh;
+    String text(String zh, String en) =>
+        LegacyTextLocalizer.pick(en, zh, locale: locale);
 
     try {
       final response = await OmniPluginService.invokeAction(

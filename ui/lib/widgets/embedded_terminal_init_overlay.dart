@@ -74,9 +74,12 @@ class _EmbeddedTerminalInitToastListenerState
         return;
       }
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Preparing terminal environment'
-            : '开始准备终端环境',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Preparing terminal environment',
+          '开始准备终端环境',
+          ru: 'Подготовка среды терминала',
+        ),
         type: ToastType.info,
         duration: const Duration(seconds: 2),
       );
@@ -88,12 +91,18 @@ class _EmbeddedTerminalInitToastListenerState
     final message = snapshot.stage.isNotEmpty
         ? snapshot.stage
         : success
-        ? (LegacyTextLocalizer.isEnglish
-              ? 'Terminal environment ready'
-              : '终端环境已准备完成')
-        : (LegacyTextLocalizer.isEnglish
-              ? 'Terminal environment preparation failed'
-              : '终端环境准备失败');
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Terminal environment ready',
+            '终端环境已准备完成',
+            ru: 'Терминальное окружение готово',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Terminal environment preparation failed',
+            '终端环境准备失败',
+            ru: 'Не удалось подготовить среду терминала',
+          ));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;

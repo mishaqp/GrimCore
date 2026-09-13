@@ -178,11 +178,11 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   void _openUserGuide() {
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
     GoRouterManager.push(
       '/webview/webview_page',
       extra: <String, dynamic>{
-        'url': isEnglish ? _enUserGuideUrl : _zhUserGuideUrl,
+        'url': languageCode == 'zh' ? _zhUserGuideUrl : _enUserGuideUrl,
         'title': context.trLegacy('使用手册'),
         'appBarBackClosesPage': true,
       },

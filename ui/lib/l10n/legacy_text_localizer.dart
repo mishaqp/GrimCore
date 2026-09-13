@@ -6,6 +6,7 @@ typedef _TextRewriter = String Function(RegExpMatch match);
 
 class LegacyTextLocalizer {
   static Locale? _activeLocale;
+  static final RegExp _cjkPattern = RegExp(r'[\u3400-\u9fff]');
 
   static final Map<String, String> _exactEn = <String, String>{
     '宠物': 'Pet',
@@ -117,8 +118,7 @@ class LegacyTextLocalizer {
     '文件': 'Files',
     '复制到 workspace 并在提示词中发送文件路径':
         'Copy to workspace and send file paths in the prompt',
-    '添加到 workspace，附加到对话，并在提示词中发送文件路径':
-        'Add to workspace, attach to chat, and send the file path in the prompt',
+    '添加到 workspace，附加到对话，并在提示词中发送文件路径': 'Add to workspace, attach to chat, and send the file path in the prompt',
     '存入 workspace 并发送路径': 'Save to workspace and send path',
     '图片填入对话，其他文件走文件传输':
         'Attach images to chat; send other files through file transfer',
@@ -323,8 +323,7 @@ class LegacyTextLocalizer {
         'The latest 10 AI requests are shown in reverse chronological order.',
     '点击条目展开查看请求与响应正文。':
         'Tap an entry to expand the request and response payloads.',
-    '最近 200 条错误和崩溃日志，按时间倒序展示。':
-        'The latest 200 error and crash logs are shown in reverse chronological order.',
+    '最近 200 条错误和崩溃日志，按时间倒序展示。': 'The latest 200 error and crash logs are shown in reverse chronological order.',
     '含堆栈的条目可展开查看。': 'Entries with stack traces can be expanded for details.',
     '导出运行日志': 'Export runtime logs',
     '已复制全部运行日志': 'All runtime logs copied',
@@ -342,8 +341,7 @@ class LegacyTextLocalizer {
     '已开启': 'Enabled',
     '去开启': 'Enable',
     '清除缓存': 'Clear cache',
-    '查看并配置悬浮窗、后台运行、Shizuku 等权限':
-        'Review overlay, background operation, Shizuku, and related permissions',
+    '查看并配置悬浮窗、后台运行、Shizuku 等权限': 'Review overlay, background operation, Shizuku, and related permissions',
     '权限检查中...': 'Checking permissions...',
     '继续任务': 'Continue task',
     '继续任务仅要求': 'Continue requires only',
@@ -352,12 +350,10 @@ class LegacyTextLocalizer {
         'Optional: allow the Agent to run terminal commands via Termux',
     '可选': 'Optional',
     '让小万带你执行一次任务吧！': 'Let Omnibot walk you through one task!',
-    '其中 Termux 终端能力为可选项，未开启也不影响基础功能':
-        'Termux capability is optional; leaving it off will not affect basic features',
+    '其中 Termux 终端能力为可选项，未开启也不影响基础功能': 'Termux capability is optional; leaving it off will not affect basic features',
     '未绑定': 'Unbound',
     '恢复默认': 'Restore default',
-    '点击右侧按钮后，可按 Provider 搜索、折叠并选择模型。':
-        'After tapping the button on the right, you can search, collapse, and select models by Provider.',
+    '点击右侧按钮后，可按 Provider 搜索、折叠并选择模型。': 'After tapping the button on the right, you can search, collapse, and select models by Provider.',
     '使用内置模型服务': 'Use Built-in Model Service',
     '内置模型服务': 'Built-in Model Service',
     '内置模型服务已启用': 'Built-in model service enabled',
@@ -396,12 +392,10 @@ class LegacyTextLocalizer {
     '云端': 'Cloud',
     '无消耗': 'No usage',
     '长期记忆未就绪': 'Long-term memory is not ready',
-    '完成记忆初始化后，这里会展示跨会话沉淀的偏好与事实。':
-        'After memory initialization, cross-session preferences and facts will appear here.',
+    '完成记忆初始化后，这里会展示跨会话沉淀的偏好与事实。': 'After memory initialization, cross-session preferences and facts will appear here.',
     '长期记忆暂时不可用': 'Long-term memory is temporarily unavailable',
     '长期记忆还是空的': 'Long-term memory is still empty',
-    '当 Agent 主动写入长期偏好后，这里会逐渐丰富起来。':
-        'After the Agent writes long-term preferences, this section will gradually fill up.',
+    '当 Agent 主动写入长期偏好后，这里会逐渐丰富起来。': 'After the Agent writes long-term preferences, this section will gradually fill up.',
     '新增长期记忆': 'Add long-term memory',
     '刷新长期记忆': 'Refresh long-term memory',
     '刚刚': 'Just now',
@@ -484,13 +478,15 @@ class LegacyTextLocalizer {
     '宠物列表已刷新': 'Список питомцев обновлён',
     '选择宠物失败': 'Не удалось выбрать питомца',
     '导入 Codex 宠物包': 'Импорт пакета питомца Codex',
-    '支持 .codex-pet.zip（pet.json + spritesheet.webp）': 'Поддерживается .codex-pet.zip (pet.json + spritesheet.webp)',
+    '支持 .codex-pet.zip（pet.json + spritesheet.webp）':
+        'Поддерживается .codex-pet.zip (pet.json + spritesheet.webp)',
     '上传压缩包': 'Загрузить архив',
     '宠物已导入并选中': 'Питомец импортирован и выбран',
     '导入宠物失败': 'Не удалось импортировать питомца',
     'Codex 动态宠物 · 7 类动作': 'Анимированный питомец Codex · 7 типов действий',
     '收起宠物失败': 'Не удалось скрыть питомца',
-    '唤起宠物失败，请确认悬浮窗权限已开启': 'Не удалось показать питомца. Проверьте разрешение на наложение окон',
+    '唤起宠物失败，请确认悬浮窗权限已开启':
+        'Не удалось показать питомца. Проверьте разрешение на наложение окон',
     '设置': 'Настройки',
     '外观设置': 'Оформление',
     '主题模式': 'Тема',
@@ -498,9 +494,11 @@ class LegacyTextLocalizer {
     '地址': 'Адрес',
     'Token': 'Token',
     '防止任务运行时屏幕休眠': 'Не давать экрану засыпать во время задач',
-    '任务运行期间保持屏幕常亮，适用于小万（OmniAi）、Agent 和纯聊天': 'Держать экран включённым во время работы GrimCore, агента и чата',
+    '任务运行期间保持屏幕常亮，适用于小万（OmniAi）、Agent 和纯聊天':
+        'Держать экран включённым во время работы GrimCore, агента и чата',
     '任务完成通知': 'Уведомления о завершении задач',
-    '小万（OmniAi）、Agent 和纯聊天完成后推送提醒': 'Уведомлять о завершении ответов GrimCore, агента и чата',
+    '小万（OmniAi）、Agent 和纯聊天完成后推送提醒':
+        'Уведомлять о завершении ответов GrimCore, агента и чата',
     '需要开启通知权限': 'Требуется разрешение на уведомления',
     '未生成': 'Не сгенерирован',
     '复制地址': 'Скопировать адрес',
@@ -517,10 +515,13 @@ class LegacyTextLocalizer {
     'MCP 工具': 'Инструменты MCP',
     'Alpine 环境': 'Терминальное окружение',
     '终端环境': 'Терминальное окружение',
-    '本地 Alpine 与远程 PC Bridge': 'Локальное терминальное окружение и удалённый PC Bridge',
-    '本地终端环境与远程 PC Bridge': 'Локальное терминальное окружение и удалённый PC Bridge',
+    '本地 Alpine 与远程 PC Bridge':
+        'Локальное терминальное окружение и удалённый PC Bridge',
+    '本地终端环境与远程 PC Bridge':
+        'Локальное терминальное окружение и удалённый PC Bridge',
     'Agent 模式': 'Режим агента',
-    '管理 ACP Agent、可用状态与统一模型绑定': 'Управление ACP-агентами, доступностью и привязкой моделей',
+    '管理 ACP Agent、可用状态与统一模型绑定':
+        'Управление ACP-агентами, доступностью и привязкой моделей',
     '远程 PC Bridge': 'Удалённый PC Bridge',
     '仅配置远程 ACP 连接': 'Настройка только удалённого ACP-подключения',
     '清除失败': 'Не удалось очистить',
@@ -546,12 +547,14 @@ class LegacyTextLocalizer {
     '首页问候': 'Приветствие на главном',
     '显示问候语': 'Показывать приветствие',
     '管理聊天首页问候语和快捷指令': 'Управление приветствием и быстрыми командами',
-    '关闭后，聊天首页不再显示问候语和快捷指令': 'Если выключено, приветствие и быстрые команды не показываются',
+    '关闭后，聊天首页不再显示问候语和快捷指令':
+        'Если выключено, приветствие и быстрые команды не показываются',
     '快捷指令': 'Быстрые команды',
     '新增快捷指令': 'Добавить быструю команду',
     '编辑快捷指令': 'Изменить быструю команду',
     '删除快捷指令': 'Удалить быструю команду',
-    '删除后该快捷指令将不再显示在首页问候语下方。': 'Команда больше не будет показываться под приветствием.',
+    '删除后该快捷指令将不再显示在首页问候语下方。':
+        'Команда больше не будет показываться под приветствием.',
     '暂无快捷指令': 'Быстрых команд нет',
     '指令名称': 'Название команды',
     '填充文本': 'Текст для вставки',
@@ -560,7 +563,8 @@ class LegacyTextLocalizer {
     '固定到首页': 'Закрепить на главном',
     '取消固定': 'Открепить',
     '最多固定两个快捷指令': 'Можно закрепить не более двух команд',
-    '首页、后台隐藏、闹钟、振动与打开方式': 'Главный экран, скрытие из недавних, будильник, вибрация и открытие',
+    '首页、后台隐藏、闹钟、振动与打开方式':
+        'Главный экран, скрытие из недавних, будильник, вибрация и открытие',
     '后台隐藏、闹钟、振动与打开方式': 'Скрытие из недавних, будильник, вибрация и открытие',
     '使用小万打开': 'Открывать в GrimCore',
     '使用小万打开 - 图片': 'Открывать в GrimCore — изображения',
@@ -568,13 +572,17 @@ class LegacyTextLocalizer {
     '分别设置图片和文件的打开方式': 'Настроить открытие изображений и файлов отдельно',
     '图片': 'Изображения',
     '文件': 'Файлы',
-    '复制到 workspace 并在提示词中发送文件路径': 'Копировать в рабочее пространство и отправлять путь в промпте',
+    '复制到 workspace 并在提示词中发送文件路径':
+        'Копировать в рабочее пространство и отправлять путь в промпте',
     '添加到 workspace，附加到对话，并在提示词中发送文件路径': 'Добавлять в рабочее пространство, прикреплять к диалогу и отправлять путь',
     '存入 workspace 并发送路径': 'Сохранять в рабочее пространство и отправлять путь',
-    '图片填入对话，其他文件走文件传输': 'Изображения — в диалог, остальные файлы — через передачу файлов',
+    '图片填入对话，其他文件走文件传输':
+        'Изображения — в диалог, остальные файлы — через передачу файлов',
     '附加到对话输入框': 'Прикреплять к полю ввода',
-    '照片等文件会直接附加到对话输入框': 'Фото и подобные файлы прикрепляются прямо к полю ввода',
-    '启动文件服务器生成局域网链接': 'Запускать файловый сервер и создавать ссылку в локальной сети',
+    '照片等文件会直接附加到对话输入框':
+        'Фото и подобные файлы прикрепляются прямо к полю ввода',
+    '启动文件服务器生成局域网链接':
+        'Запускать файловый сервер и создавать ссылку в локальной сети',
     '生成局域网文件链接': 'Создавать ссылку на файл в локальной сети',
     '非照片文件会启动文件服务器并生成局域网链接': 'Остальные файлы запускают файловый сервер и создают ссылку в локальной сети',
     '默认': 'По умолчанию',
@@ -598,13 +606,15 @@ class LegacyTextLocalizer {
     '手动': 'Вручную',
     '自定义色号': 'Свой цвет',
     '关闭浏览器窗口': 'Закрыть окно браузера',
-    '当前平台暂不支持浏览器工具视图': 'Просмотр инструмента браузера не поддерживается на этой платформе',
+    '当前平台暂不支持浏览器工具视图':
+        'Просмотр инструмента браузера не поддерживается на этой платформе',
     '悬浮窗权限': 'Наложение окон',
     '应用列表读取权限': 'Доступ к списку приложений',
     'Shizuku 权限': 'Разрешение Shizuku',
     '公共文件访问': 'Доступ к общей памяти',
     '正在调用工具': 'Вызов инструмента',
-    '暂时无法生成回复，请重试。': 'Сейчас не удаётся сформировать ответ, попробуйте ещё раз.',
+    '暂时无法生成回复，请重试。':
+        'Сейчас не удаётся сформировать ответ, попробуйте ещё раз.',
     '[只显示最近的部分终端输出]\n': '[Показан только последний вывод терминала]\n',
     '搜索全部对话': 'Поиск',
     '清空搜索': 'Очистить поиск',
@@ -630,7 +640,8 @@ class LegacyTextLocalizer {
     '正在调用内嵌 Alpine 终端执行命令': 'Выполнение команды во встроенном терминале',
     '正在执行内嵌 Alpine 终端命令': 'Выполнение команды во встроенном терминале',
     '终端输出更新中': 'Обновление вывода терминала',
-    '🎉Hi，我是小万，我会做很多事，让我展示给你下！': '🎉Привет, я GrimCore — умею многое, сейчас покажу!',
+    '🎉Hi，我是小万，我会做很多事，让我展示给你下！':
+        '🎉Привет, я GrimCore — умею многое, сейчас покажу!',
     'Hi，我是小万': 'Привет, я GrimCore',
     '你的 AI 助手，随时准备就绪': 'Ваш ИИ-ассистент всегда готов',
     '换一换': 'Другое',
@@ -750,7 +761,8 @@ class LegacyTextLocalizer {
     '暂无总结内容': 'Нет содержимого сводки',
     '检查更新失败': 'Не удалось проверить обновления',
     '已是最新版': 'Установлена последняя версия',
-    '检查 GitHub Release 获取最新版本': 'Проверка GitHub Release на наличие новой версии',
+    '检查 GitHub Release 获取最新版本':
+        'Проверка GitHub Release на наличие новой версии',
     '检查中...': 'Проверка...',
     '查看新版本': 'Посмотреть новую версию',
     '检查更新': 'Проверить обновления',
@@ -761,8 +773,10 @@ class LegacyTextLocalizer {
     '概览': 'Обзор',
     '最近记录': 'Последние записи',
     '最近 10 条 AI 请求，按时间倒序展示。': 'Последние 10 запросов к ИИ в обратном порядке.',
-    '点击条目展开查看请求与响应正文。': 'Нажмите на запись, чтобы увидеть тело запроса и ответа.',
-    '最近 200 条错误和崩溃日志，按时间倒序展示。': 'Последние 200 ошибок и падений в обратном порядке.',
+    '点击条目展开查看请求与响应正文。':
+        'Нажмите на запись, чтобы увидеть тело запроса и ответа.',
+    '最近 200 条错误和崩溃日志，按时间倒序展示。':
+        'Последние 200 ошибок и падений в обратном порядке.',
     '含堆栈的条目可展开查看。': 'Записи со стеком можно раскрыть.',
     '导出运行日志': 'Экспорт журнала выполнения',
     '已复制全部运行日志': 'Весь журнал скопирован',
@@ -785,10 +799,12 @@ class LegacyTextLocalizer {
     '继续任务': 'Продолжить задачу',
     '继续任务仅要求': 'Для продолжения нужно только',
     'Termux 终端能力': 'Возможности терминала Termux',
-    '可选，允许 Agent 通过 Termux 执行终端命令': 'Необязательно: разрешить агенту выполнять команды через Termux',
+    '可选，允许 Agent 通过 Termux 执行终端命令':
+        'Необязательно: разрешить агенту выполнять команды через Termux',
     '可选': 'Необязательно',
     '让小万带你执行一次任务吧！': 'Пусть GrimCore проведёт вас через задачу!',
-    '其中 Termux 终端能力为可选项，未开启也不影响基础功能': 'Возможности Termux необязательны: без них базовые функции работают',
+    '其中 Termux 终端能力为可选项，未开启也不影响基础功能':
+        'Возможности Termux необязательны: без них базовые функции работают',
     '未绑定': 'Не привязано',
     '恢复默认': 'Вернуть по умолчанию',
     '点击右侧按钮后，可按 Provider 搜索、折叠并选择模型。': 'Нажмите кнопку справа, чтобы искать, сворачивать и выбирать модели по провайдерам.',
@@ -800,7 +816,8 @@ class LegacyTextLocalizer {
     '已切换为自定义模型': 'Переключено на свою модель',
     '没有匹配的模型': 'Подходящих моделей нет',
     '搜索模型 ID': 'Поиск ID модели',
-    '请先在模型提供商页配置 Provider': 'Сначала настройте провайдера на странице провайдеров моделей',
+    '请先在模型提供商页配置 Provider':
+        'Сначала настройте провайдера на странице провайдеров моделей',
     '该 Provider 暂无可选模型': 'У этого провайдера нет доступных моделей',
     '请先配置ai服务商和模型': 'Сначала настройте провайдера ИИ и модель',
     '已进入仅聊天模式': 'Включён режим только чата',
@@ -844,7 +861,8 @@ class LegacyTextLocalizer {
     '任务已取消': 'Задача отменена',
     '停止工具': 'Остановить инструмент',
     '正在停止工具': 'Остановка инструмента',
-    '停止工具调用失败，请稍后重试': 'Не удалось остановить вызов инструмента, попробуйте позже',
+    '停止工具调用失败，请稍后重试':
+        'Не удалось остановить вызов инструмента, попробуйте позже',
     '工具调用': 'Вызов инструмента',
     '超时': 'Тайм-аут',
     '中断': 'Прервано',
@@ -866,11 +884,13 @@ class LegacyTextLocalizer {
     '配置你的 AI 助手': 'Настройте своего ИИ-ассистента',
     '选择一种方式开始使用小万': 'Выберите способ начать работу',
     '云 AI 服务': 'Облачный ИИ-сервис',
-    '连接 OpenAI、Anthropic 或兼容的 API 服务': 'Подключите OpenAI, Anthropic или совместимые API',
+    '连接 OpenAI、Anthropic 或兼容的 API 服务':
+        'Подключите OpenAI, Anthropic или совместимые API',
     '继续': 'Продолжить',
     '跳过，稍后在设置中配置': 'Пропустить, настрою позже',
     '云 AI 服务配置': 'Настройка облачного ИИ',
-    '配置云端 AI 服务商，使用更强大的模型能力': 'Настройте облачного провайдера ИИ для более мощных моделей',
+    '配置云端 AI 服务商，使用更强大的模型能力':
+        'Настройте облачного провайдера ИИ для более мощных моделей',
     '协议类型': 'Тип протокола',
     '名称': 'Название',
     '例如：我的 OpenAI': 'например: Мой OpenAI',
@@ -1004,18 +1024,12 @@ class LegacyTextLocalizer {
   /// Russian counterparts of [_regexEn].
   static final List<(RegExp, _TextRewriter)>
   _regexRu = <(RegExp, _TextRewriter)>[
-    (
-      RegExp(r'^MCP 已开启：(.+)$'),
-      (match) => 'MCP включён: ${match.group(1)!}',
-    ),
+    (RegExp(r'^MCP 已开启：(.+)$'), (match) => 'MCP включён: ${match.group(1)!}'),
     (
       RegExp(r'^会话 (\d+) · 任务 (\d+)$'),
       (match) => 'Сессии ${match.group(1)!} · Задачи ${match.group(2)!}',
     ),
-    (
-      RegExp(r'^已连接 · (.+)$'),
-      (match) => 'Подключено · ${match.group(1)!}',
-    ),
+    (RegExp(r'^已连接 · (.+)$'), (match) => 'Подключено · ${match.group(1)!}'),
     (
       RegExp(r'^选择图片失败：(.+)$'),
       (match) => 'Не удалось выбрать изображение: ${match.group(1)!}',
@@ -1028,10 +1042,7 @@ class LegacyTextLocalizer {
       RegExp(r'^已拉取 (\d+) 个模型$'),
       (match) => 'Получено моделей: ${match.group(1)!}',
     ),
-    (
-      RegExp(r'^暂时无法生成回复，请重试。(.*)$'),
-      (match) => '${match.group(1)!}',
-    ),
+    (RegExp(r'^暂时无法生成回复，请重试。(.*)$'), (match) => match.group(1)!),
     (
       RegExp(r'^执行任务前，请先开启：(.+)$'),
       (match) => 'Перед выполнением задач включите: ${match.group(1)!}',
@@ -1040,34 +1051,22 @@ class LegacyTextLocalizer {
       RegExp(r'^执行任务前需要先开启权限$'),
       (match) => 'Перед выполнением задач нужно выдать разрешения',
     ),
-    (
-      RegExp(r'^用户: (.+)\n$'),
-      (match) => 'Пользователь: ${match.group(1)!}\n',
-    ),
+    (RegExp(r'^用户: (.+)\n$'), (match) => 'Пользователь: ${match.group(1)!}\n'),
     (
       RegExp(r'^继续任务仅要求：(.+)$'),
       (match) => 'Для продолжения нужно только: ${match.group(1)!}',
     ),
-    (
-      RegExp(r'^默认：(.+)$'),
-      (match) => 'По умолчанию: ${match.group(1)!}',
-    ),
+    (RegExp(r'^默认：(.+)$'), (match) => 'По умолчанию: ${match.group(1)!}'),
     (
       RegExp(r'^恢复默认（(.+)）$'),
       (match) => 'Вернуть по умолчанию (${match.group(1)!})',
     ),
-    (
-      RegExp(r'^(.+) 已清除绑定$'),
-      (match) => 'Привязка ${match.group(1)!} снята',
-    ),
+    (RegExp(r'^(.+) 已清除绑定$'), (match) => 'Привязка ${match.group(1)!} снята'),
     (
       RegExp(r'^(.+) 已恢复默认模型$'),
       (match) => '${match.group(1)!} снова использует модель по умолчанию',
     ),
-    (
-      RegExp(r'^已切换到 (.+)$'),
-      (match) => 'Переключено на ${match.group(1)!}',
-    ),
+    (RegExp(r'^已切换到 (.+)$'), (match) => 'Переключено на ${match.group(1)!}'),
     (
       RegExp(r'^已设置思考强度为 (.+)$'),
       (match) => 'Уровень рассуждений: ${match.group(1)!}',
@@ -1080,58 +1079,32 @@ class LegacyTextLocalizer {
       RegExp(r'^更新 Agent 模型失败：(.+)$'),
       (match) => 'Не удалось обновить модель агента: ${match.group(1)!}',
     ),
-    (
-      RegExp(r'^(.+)已复制$'),
-      (match) => '${match.group(1)!} скопировано',
-    ),
-    (
-      RegExp(r'^(\d+) 条消息$'),
-      (match) => '${match.group(1)!} сообщений',
-    ),
+    (RegExp(r'^(.+)已复制$'), (match) => '${match.group(1)!} скопировано'),
+    (RegExp(r'^(\d+) 条消息$'), (match) => '${match.group(1)!} сообщений'),
     (
       RegExp(r'^(.+) · (\d+) 条消息$'),
       (match) => '${match.group(1)!} · ${match.group(2)!} сообщений',
     ),
-    (
-      RegExp(r'^匹配 (\d+)%$'),
-      (match) => 'Совпадение ${match.group(1)!}%',
-    ),
-    (
-      RegExp(r'^(\d+) 分钟前$'),
-      (match) => '${match.group(1)!} мин назад',
-    ),
-    (
-      RegExp(r'^(\d+) 小时前$'),
-      (match) => '${match.group(1)!} ч назад',
-    ),
-    (
-      RegExp(r'^(\d+) 天前$'),
-      (match) => '${match.group(1)!} дн назад',
-    ),
-    (
-      RegExp(r'^(\d+) 秒$'),
-      (match) => '${match.group(1)!} с',
-    ),
+    (RegExp(r'^匹配 (\d+)%$'), (match) => 'Совпадение ${match.group(1)!}%'),
+    (RegExp(r'^(\d+) 分钟前$'), (match) => '${match.group(1)!} мин назад'),
+    (RegExp(r'^(\d+) 小时前$'), (match) => '${match.group(1)!} ч назад'),
+    (RegExp(r'^(\d+) 天前$'), (match) => '${match.group(1)!} дн назад'),
+    (RegExp(r'^(\d+) 秒$'), (match) => '${match.group(1)!} с'),
     (
       RegExp(r'^(\d+) 分 (\d+) 秒$'),
       (match) => '${match.group(1)!} мин ${match.group(2)!} с',
     ),
     (
       RegExp(r'^(\d+) 次对话 · (\d+)\/(\d+)$'),
-      (match) => '${match.group(1)!} диалогов · ${match.group(2)!}/${match.group(3)!}',
+      (match) =>
+          '${match.group(1)!} диалогов · ${match.group(2)!}/${match.group(3)!}',
     ),
     (
       RegExp(r'^无对话 · (\d+)\/(\d+)$'),
       (match) => 'Нет диалогов · ${match.group(1)!}/${match.group(2)!}',
     ),
-    (
-      RegExp(r'^本地 (.+)%$'),
-      (match) => 'Локально ${match.group(1)!}%',
-    ),
-    (
-      RegExp(r'^云端 (.+)%$'),
-      (match) => 'Облачно ${match.group(1)!}%',
-    ),
+    (RegExp(r'^本地 (.+)%$'), (match) => 'Локально ${match.group(1)!}%'),
+    (RegExp(r'^云端 (.+)%$'), (match) => 'Облачно ${match.group(1)!}%'),
     (
       RegExp(r'^本地 (.+) · 云端 (.+)$'),
       (match) => 'Локально ${match.group(1)!} · Облачно ${match.group(2)!}',
@@ -1144,10 +1117,7 @@ class LegacyTextLocalizer {
       RegExp(r'^打开\s*(.+?)\s*应用$'),
       (match) => 'Открытие приложения ${match.group(1)!}',
     ),
-    (
-      RegExp(r'^正在打开(.+)$'),
-      (match) => 'Открытие ${match.group(1)!}',
-    ),
+    (RegExp(r'^正在打开(.+)$'), (match) => 'Открытие ${match.group(1)!}'),
   ];
 
   static void setResolvedLocale(Locale locale) {
@@ -1173,6 +1143,47 @@ class LegacyTextLocalizer {
   static bool get isEnglish => _resolvedLocale.languageCode == 'en';
 
   static bool get isRussian => _resolvedLocale.languageCode == 'ru';
+
+  /// Picks text for legacy call sites that still provide only English and
+  /// Chinese variants. Russian uses the existing legacy translation tables
+  /// and falls back to English when a Russian translation is not available.
+  static String pick(String en, String zh, {String? ru, Locale? locale}) {
+    final targetLocale = locale ?? _resolvedLocale;
+    switch (targetLocale.languageCode) {
+      case 'en':
+        return en;
+      case 'ru':
+        if (ru != null && ru.trim().isNotEmpty) {
+          return ru;
+        }
+        final translated = localize(zh, locale: targetLocale);
+        if (translated == zh || _cjkPattern.hasMatch(translated)) {
+          return en;
+        }
+        return translated;
+      default:
+        return zh;
+    }
+  }
+
+  /// Preserves a legacy English/Chinese flag while allowing Russian to use
+  /// the translation table (or the English fallback) instead of Chinese.
+  static String pickForEnglishFlag(
+    bool english,
+    String en,
+    String zh, {
+    String? ru,
+    Locale? locale,
+  }) {
+    if (english) {
+      return en;
+    }
+    final targetLocale = locale ?? _resolvedLocale;
+    if (targetLocale.languageCode == 'ru') {
+      return pick(en, zh, ru: ru, locale: targetLocale);
+    }
+    return zh;
+  }
 
   static String localize(String text, {Locale? locale}) {
     final targetLocale = locale ?? _resolvedLocale;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/features/home/pages/authorize/authorize_page_args.dart';
 import 'package:ui/features/home/pages/authorize/widgets/permission_prompt_sheet.dart';
 import 'package:ui/features/home/pages/authorize/widgets/permission_section.dart';
@@ -110,4 +111,4 @@ class ManualRecordingPermissionGuard {
 }
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));

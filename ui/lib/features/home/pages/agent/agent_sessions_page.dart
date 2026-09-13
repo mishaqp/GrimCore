@@ -86,7 +86,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
           _isLoading = false;
           _error =
               status.error ??
-              (_isEnglish ? 'Agent runtime is unavailable' : 'Agent 运行时不可用');
+              (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Agent runtime is unavailable',
+                'Agent 运行时不可用',
+                ru: 'Среда выполнения агента недоступна',
+              ));
         });
         return;
       }
@@ -94,9 +99,7 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       String? cursor;
       final seenCursors = <String>{};
       while (true) {
-        final payload = await AgentRuntimeService.listSessions(
-          cursor: cursor,
-        );
+        final payload = await AgentRuntimeService.listSessions(cursor: cursor);
         payloads.add(payload);
         final nextCursor = _stringValue(
           payload['nextCursor'] ??
@@ -175,9 +178,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       final conversationId = _intValue(response['conversationId']);
       if (conversationId == null) {
         throw StateError(
-          _isEnglish
-              ? 'Agent session did not return a local conversation'
-              : 'Agent session 未返回本地对话',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Agent session did not return a local conversation',
+            'Agent session 未返回本地对话',
+            ru: 'Сеанс агента не вернул локальный диалог',
+          ),
         );
       }
       if (!mounted) return;
@@ -192,7 +198,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Failed to open session: $error' : '打开 session 失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Failed to open session: $error',
+          '打开 session 失败：$error',
+          ru: 'Не удалось открыть сеанс: $error',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -223,9 +234,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       final threadId = _threadIdFromResponse(response);
       if (threadId == null) {
         throw StateError(
-          _isEnglish
-              ? 'Agent did not return a session id'
-              : 'Agent 未返回 session id',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Agent did not return a session id',
+            'Agent 未返回 session id',
+            ru: 'Агент не вернул ID сессии',
+          ),
         );
       }
       if (!mounted) return;
@@ -244,9 +258,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish
-            ? 'Failed to start remote session: $error'
-            : '创建远程 session 失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Failed to start remote session: $error',
+          '创建远程 session 失败：$error',
+          ru: 'Не удалось запустить удалённый сеанс: $error',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -270,9 +287,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       if (!mounted) return;
       if (!config.remoteEnabled || config.remoteBridgeUrl.trim().isEmpty) {
         showToast(
-          _isEnglish
-              ? 'Remote Codex Bridge is not configured'
-              : '远程 Codex Bridge 尚未配置',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Remote Codex Bridge is not configured',
+            '远程 Codex Bridge 尚未配置',
+            ru: 'Удалённый мост Codex не настроен',
+          ),
           type: ToastType.warning,
         );
         return;
@@ -301,17 +321,26 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       setState(() {
         _status = status;
       });
+      final workspaceName = _lastPathSegment(nextCwd) ?? nextCwd;
       showToast(
-        _isEnglish
-            ? 'Workspace switched to ${_lastPathSegment(nextCwd) ?? nextCwd}'
-            : '已切换到 ${_lastPathSegment(nextCwd) ?? nextCwd}',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Workspace switched to $workspaceName',
+          '已切换到 $workspaceName',
+          ru: 'Выбрана рабочая область $workspaceName',
+        ),
         type: ToastType.success,
       );
       unawaited(_loadSessions(showLoading: false));
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Failed to switch workspace: $error' : '切换工作目录失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Failed to switch workspace: $error',
+          '切换工作目录失败：$error',
+          ru: 'Не удалось сменить рабочую область: $error',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -376,21 +405,36 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                     _buildSessionActionTile(
                       sheetContext,
                       icon: Icons.open_in_new_rounded,
-                      label: _isEnglish ? 'Open session' : '打开 Session',
+                      label: LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Open session',
+                        '打开 Session',
+                        ru: 'Открыть сессию',
+                      ),
                       action: _AgentSessionAction.open,
                     ),
                     const SizedBox(height: 8),
                     _buildSessionActionTile(
                       sheetContext,
                       icon: Icons.folder_open_rounded,
-                      label: _isEnglish ? 'Open workspace' : '打开工作区',
+                      label: LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Open workspace',
+                        '打开工作区',
+                        ru: 'Открыть рабочую область',
+                      ),
                       action: _AgentSessionAction.workspace,
                     ),
                     const SizedBox(height: 8),
                     _buildSessionActionTile(
                       sheetContext,
                       icon: Icons.drive_file_rename_outline_rounded,
-                      label: _isEnglish ? 'Rename' : '重命名',
+                      label: LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Rename',
+                        '重命名',
+                        ru: 'Переименовать',
+                      ),
                       action: _AgentSessionAction.rename,
                     ),
                     const SizedBox(height: 8),
@@ -400,8 +444,18 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                           ? Icons.unarchive_outlined
                           : Icons.archive_outlined,
                       label: session.archived
-                          ? (_isEnglish ? 'Unarchive' : '取消归档')
-                          : (_isEnglish ? 'Archive' : '归档'),
+                          ? (LegacyTextLocalizer.pickForEnglishFlag(
+                              _isEnglish,
+                              'Unarchive',
+                              '取消归档',
+                              ru: 'Вернуть из архива',
+                            ))
+                          : (LegacyTextLocalizer.pickForEnglishFlag(
+                              _isEnglish,
+                              'Archive',
+                              '归档',
+                              ru: 'Архивировать',
+                            )),
                       action: session.archived
                           ? _AgentSessionAction.unarchive
                           : _AgentSessionAction.archive,
@@ -410,7 +464,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                     _buildSessionActionTile(
                       sheetContext,
                       icon: Icons.copy_rounded,
-                      label: _isEnglish ? 'Copy thread id' : '复制 Thread ID',
+                      label: LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Copy thread id',
+                        '复制 Thread ID',
+                        ru: 'Скопировать ID треда',
+                      ),
                       action: _AgentSessionAction.copyThreadId,
                     ),
                     if (session.cwd.trim().isNotEmpty) ...[
@@ -418,7 +477,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                       _buildSessionActionTile(
                         sheetContext,
                         icon: Icons.content_copy_rounded,
-                        label: _isEnglish ? 'Copy workspace path' : '复制工作区路径',
+                        label: LegacyTextLocalizer.pickForEnglishFlag(
+                          _isEnglish,
+                          'Copy workspace path',
+                          '复制工作区路径',
+                          ru: 'Скопировать путь к рабочей области',
+                        ),
                         action: _AgentSessionAction.copyCwd,
                       ),
                     ],
@@ -446,7 +510,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                _isEnglish ? 'Cancel' : '取消',
+                                LegacyTextLocalizer.pickForEnglishFlag(
+                                  _isEnglish,
+                                  'Cancel',
+                                  '取消',
+                                  ru: 'Отмена',
+                                ),
                                 style: TextStyle(
                                   color: palette.textPrimary,
                                   fontSize: 14,
@@ -482,12 +551,22 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       case _AgentSessionAction.copyThreadId:
         await _copyText(
           session.threadId,
-          _isEnglish ? 'Thread id copied' : '已复制 Thread ID',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Thread id copied',
+            '已复制 Thread ID',
+            ru: 'ID треда скопирован',
+          ),
         );
       case _AgentSessionAction.copyCwd:
         await _copyText(
           session.cwd,
-          _isEnglish ? 'Workspace path copied' : '已复制工作区路径',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Workspace path copied',
+            '已复制工作区路径',
+            ru: 'Путь к рабочей области скопирован',
+          ),
         );
     }
   }
@@ -541,16 +620,41 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
   Future<void> _renameSession(_AgentSessionSummary session) async {
     final nextName = (await AppDialog.input(
       context,
-      title: _isEnglish ? 'Rename session' : '重命名 Session',
-      hintText: _isEnglish ? 'Session name' : 'Session 名称',
+      title: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Rename session',
+        '重命名 Session',
+        ru: 'Переименовать сессию',
+      ),
+      hintText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Session name',
+        'Session 名称',
+        ru: 'Название сеанса',
+      ),
       initialValue: session.title,
-      confirmText: _isEnglish ? 'Save' : '保存',
-      cancelText: _isEnglish ? 'Cancel' : '取消',
+      confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Save',
+        '保存',
+        ru: 'Сохранить',
+      ),
+      cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Cancel',
+        '取消',
+        ru: 'Отмена',
+      ),
     ))?.trim();
     if (!mounted || nextName == null) return;
     if (nextName.isEmpty) {
       showToast(
-        _isEnglish ? 'Name is required' : '名称不能为空',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Name is required',
+          '名称不能为空',
+          ru: 'Введите имя',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -574,14 +678,24 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
             .toList(growable: false);
       });
       showToast(
-        _isEnglish ? 'Session renamed' : 'Session 已重命名',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Session renamed',
+          'Session 已重命名',
+          ru: 'Сеанс переименован',
+        ),
         type: ToastType.success,
       );
       unawaited(_loadSessions(showLoading: false));
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Rename failed: $error' : '重命名失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Rename failed: $error',
+          '重命名失败：$error',
+          ru: 'Не удалось переименовать: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -609,8 +723,18 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       });
       showToast(
         archived
-            ? (_isEnglish ? 'Session archived' : 'Session 已归档')
-            : (_isEnglish ? 'Session restored' : 'Session 已恢复'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Session archived',
+                'Session 已归档',
+                ru: 'Сеанс архивирован',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Session restored',
+                'Session 已恢复',
+                ru: 'Сеанс восстановлен',
+              )),
         type: ToastType.success,
       );
       unawaited(_loadSessions(showLoading: false));
@@ -618,8 +742,18 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       if (!mounted) return;
       showToast(
         archived
-            ? (_isEnglish ? 'Archive failed: $error' : '归档失败：$error')
-            : (_isEnglish ? 'Unarchive failed: $error' : '取消归档失败：$error'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Archive failed: $error',
+                '归档失败：$error',
+                ru: 'Не удалось архивировать: $error',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Unarchive failed: $error',
+                '取消归档失败：$error',
+                ru: 'Не удалось вернуть из архива: $error',
+              )),
         type: ToastType.error,
       );
     }
@@ -640,7 +774,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
           : config.remoteCwd.trim();
       if (config.remoteBridgeUrl.trim().isEmpty || workspacePath.isEmpty) {
         showToast(
-          _isEnglish ? 'Remote workspace is not configured' : '远程工作区尚未配置',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Remote workspace is not configured',
+            '远程工作区尚未配置',
+            ru: 'Удалённое рабочее пространство не настроено',
+          ),
           type: ToastType.warning,
         );
         return;
@@ -650,7 +789,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
           builder: (_) => _AgentSessionWorkspacePage(
             title: session.cwdLabel.isNotEmpty
                 ? session.cwdLabel
-                : (_isEnglish ? 'Remote workspace' : '远程工作区'),
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Remote workspace',
+                    '远程工作区',
+                    ru: 'Удалённая рабочая область',
+                  )),
             workspacePath: workspacePath,
             remoteBridgeUrl: config.remoteBridgeUrl,
             remoteBridgeToken: config.remoteBridgeToken,
@@ -660,15 +804,30 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Failed to open workspace: $error' : '打开工作区失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Failed to open workspace: $error',
+          '打开工作区失败：$error',
+          ru: 'Не удалось открыть рабочее пространство: $error',
+        ),
         type: ToastType.error,
       );
     }
   }
 
   String get _title => _status.runtime == 'remote'
-      ? (_isEnglish ? 'Remote Codex Sessions' : '远程 Codex Sessions')
-      : (_isEnglish ? 'Local Agent Sessions' : '本地 Agent Sessions');
+      ? (LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Remote Codex Sessions',
+          '远程 Codex Sessions',
+          ru: 'Удалённые сеансы Codex',
+        ))
+      : (LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Local Agent Sessions',
+          '本地 Agent Sessions',
+          ru: 'Сеансы локального агента',
+        ));
 
   @override
   Widget build(BuildContext context) {
@@ -691,9 +850,19 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
     if (_error != null && !_isRemoteRuntime && _sessions.isEmpty) {
       return _AgentSessionsStateView(
         icon: Icons.error_outline_rounded,
-        title: _isEnglish ? 'Unable to load sessions' : '无法加载 Sessions',
+        title: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Unable to load sessions',
+          '无法加载 Sessions',
+          ru: 'Не удалось загрузить сессии',
+        ),
         subtitle: _error!,
-        actionLabel: _isEnglish ? 'Retry' : '重试',
+        actionLabel: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Retry',
+          '重试',
+          ru: 'Повторить',
+        ),
         onAction: () => unawaited(_loadSessions()),
       );
     }
@@ -710,9 +879,19 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
           const SizedBox(height: 18),
           _buildInlineState(
             icon: Icons.error_outline_rounded,
-            title: _isEnglish ? 'Bridge unavailable' : 'Bridge 不可用',
+            title: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Bridge unavailable',
+              'Bridge 不可用',
+              ru: 'Bridge недоступен',
+            ),
             subtitle: _error!,
-            actionLabel: _isEnglish ? 'Retry' : '重试',
+            actionLabel: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Retry',
+              '重试',
+              ru: 'Повторить',
+            ),
             onAction: () => unawaited(_loadSessions()),
           ),
         ],
@@ -722,24 +901,41 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
         if (_sessions.isEmpty && _error == null)
           _buildInlineState(
             icon: Icons.history_rounded,
-            title: _isEnglish ? 'No Agent sessions' : '暂无 Agent Sessions',
+            title: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'No Agent sessions',
+              '暂无 Agent Sessions',
+              ru: 'Нет сеансов агента',
+            ),
             subtitle: _status.runtime == 'remote'
-                ? (_isEnglish
-                      ? 'The remote PC Bridge returned no sessions.'
-                      : '远程 PC Bridge 暂无可用 session。')
-                : (_isEnglish
-                      ? 'Local Agent returned no sessions.'
-                      : '本地 Agent 暂无可用 session。'),
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'The remote PC Bridge returned no sessions.',
+                    '远程 PC Bridge 暂无可用 session。',
+                    ru: 'Удалённый PC Bridge не вернул ни одного сеанса.',
+                  ))
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Local Agent returned no sessions.',
+                    '本地 Agent 暂无可用 session。',
+                    ru: 'Локальный агент не вернул ни одного сеанса.',
+                  )),
           )
         else if (_sessions.isNotEmpty && visibleSessions.isEmpty)
           _buildInlineState(
             icon: Icons.filter_alt_off_rounded,
-            title: _isEnglish
-                ? 'No sessions in this filter'
-                : '当前筛选下暂无 Session',
-            subtitle: _isEnglish
-                ? 'Switch filters or refresh after the bridge syncs.'
-                : '切换筛选，或等待 Bridge 同步后刷新。',
+            title: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'No sessions in this filter',
+              '当前筛选下暂无 Session',
+              ru: 'Нет сессий с этим фильтром',
+            ),
+            subtitle: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Switch filters or refresh after the bridge syncs.',
+              '切换筛选，或等待 Bridge 同步后刷新。',
+              ru: 'Смените фильтры или обновите список после синхронизации Bridge.',
+            ),
           )
         else
           for (var index = 0; index < visibleSessions.length; index++) ...[
@@ -778,19 +974,47 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
     final activeConnections = _status.remoteActiveConnections;
     final uptimeLabel = _formatUptime(_status.remoteUptimeMs);
     final statusLines = [
-      ready ? (_isEnglish ? 'Ready' : '可用') : (_isEnglish ? 'Offline' : '离线'),
-      if (_status.connected) _isEnglish ? 'connected' : '已连接',
+      ready
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Ready',
+              '可用',
+              ru: 'Готово',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Offline',
+              '离线',
+              ru: 'Не в сети',
+            )),
+      if (_status.connected)
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'connected',
+          '已连接',
+          ru: 'подключено',
+        ),
       if (bridgeLabel.isNotEmpty) bridgeLabel,
       if (transport.isNotEmpty) transport,
       if (activeConnections != null)
-        _isEnglish ? '$activeConnections clients' : '$activeConnections 个连接',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          '$activeConnections clients',
+          '$activeConnections 个连接',
+          ru: 'Клиентов: $activeConnections',
+        ),
       if (uptimeLabel.isNotEmpty) uptimeLabel,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SettingsSectionTitle(
-          label: _isEnglish ? 'Runtime' : '运行时',
+          label: LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Runtime',
+            '运行时',
+            ru: 'Среда выполнения',
+          ),
           bottomPadding: 10,
         ),
         Padding(
@@ -809,8 +1033,18 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                   children: [
                     Text(
                       isRemote
-                          ? (_isEnglish ? 'Remote PC Bridge' : '远程 PC Bridge')
-                          : (_isEnglish ? 'Local ACP Agent' : '本地 ACP Agent'),
+                          ? (LegacyTextLocalizer.pickForEnglishFlag(
+                              _isEnglish,
+                              'Remote PC Bridge',
+                              '远程 PC Bridge',
+                              ru: 'Удалённый PC Bridge',
+                            ))
+                          : (LegacyTextLocalizer.pickForEnglishFlag(
+                              _isEnglish,
+                              'Local ACP Agent',
+                              '本地 ACP Agent',
+                              ru: 'Локальный агент ACP',
+                            )),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -839,8 +1073,18 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
               const SizedBox(width: 10),
               _StatusPill(
                 label: ready
-                    ? (_isEnglish ? 'Live' : '在线')
-                    : (_isEnglish ? 'Down' : '不可用'),
+                    ? (LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Live',
+                        '在线',
+                        ru: 'В сети',
+                      ))
+                    : (LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Down',
+                        '不可用',
+                        ru: 'Недоступно',
+                      )),
                 color: ready
                     ? const Color(0xFF1F9D55)
                     : const Color(0xFFE53935),
@@ -867,28 +1111,48 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
         children: [
           Expanded(
             child: _MetricChip(
-              label: _isEnglish ? 'Sessions' : '总数',
+              label: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Sessions',
+                '总数',
+                ru: 'Всего',
+              ),
               value: '${stats.total}',
             ),
           ),
           _MetricDivider(color: palette.borderSubtle),
           Expanded(
             child: _MetricChip(
-              label: _isEnglish ? 'Running' : '运行中',
+              label: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Running',
+                '运行中',
+                ru: 'Выполняется',
+              ),
               value: '${stats.active}',
             ),
           ),
           _MetricDivider(color: palette.borderSubtle),
           Expanded(
             child: _MetricChip(
-              label: _isEnglish ? 'Loaded' : '已载入',
+              label: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Loaded',
+                '已载入',
+                ru: 'Загружено',
+              ),
               value: '${stats.loaded}',
             ),
           ),
           _MetricDivider(color: palette.borderSubtle),
           Expanded(
             child: _MetricChip(
-              label: _isEnglish ? 'Archived' : '已归档',
+              label: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Archived',
+                '已归档',
+                ru: 'В архиве',
+              ),
               value: '${stats.archived}',
             ),
           ),
@@ -915,7 +1179,14 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.add_rounded, size: 17),
-            label: Text(_isEnglish ? 'New' : '新建'),
+            label: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'New',
+                '新建',
+                ru: 'Создать',
+              ),
+            ),
           ),
         if (isRemote)
           TextButton.icon(
@@ -930,12 +1201,26 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.folder_open_rounded, size: 17),
-            label: Text(_isEnglish ? 'Workspace' : '工作区'),
+            label: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Workspace',
+                '工作区',
+                ru: 'Рабочая область',
+              ),
+            ),
           ),
         TextButton.icon(
           onPressed: () => GoRouterManager.push('/home/remote_codex_setting'),
           icon: const Icon(Icons.tune_rounded, size: 17),
-          label: Text(_isEnglish ? 'Settings' : '设置'),
+          label: Text(
+            LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Settings',
+              '设置',
+              ru: 'Настройки',
+            ),
+          ),
         ),
       ],
     );
@@ -975,11 +1260,21 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                   height: 28,
                 ),
                 padding: EdgeInsets.zero,
-                tooltip: _isEnglish ? 'Copy path' : '复制路径',
+                tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                  _isEnglish,
+                  'Copy path',
+                  '复制路径',
+                  ru: 'Копировать путь',
+                ),
                 onPressed: () => unawaited(
                   _copyText(
                     workspacePath,
-                    _isEnglish ? 'Workspace path copied' : '已复制工作区路径',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Workspace path copied',
+                      '已复制工作区路径',
+                      ru: 'Путь к рабочей области скопирован',
+                    ),
                   ),
                 ),
                 icon: Icon(
@@ -1008,7 +1303,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SettingsSectionTitle(
-          label: _isEnglish ? 'Sessions' : '会话',
+          label: LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'Sessions',
+            '会话',
+            ru: 'Сеансы',
+          ),
           bottomPadding: 8,
         ),
         DecoratedBox(
@@ -1027,27 +1327,39 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
               children: [
                 _buildFilterChip(
                   filter: _AgentSessionFilter.all,
-                  label: _isEnglish
-                      ? 'All ${stats.total}'
-                      : '全部 ${stats.total}',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'All ${stats.total}',
+                    '全部 ${stats.total}',
+                    ru: 'Все ${stats.total}',
+                  ),
                 ),
                 _buildFilterChip(
                   filter: _AgentSessionFilter.active,
-                  label: _isEnglish
-                      ? 'Live ${stats.active + stats.loaded}'
-                      : '在线 ${stats.active + stats.loaded}',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Live ${stats.active + stats.loaded}',
+                    '在线 ${stats.active + stats.loaded}',
+                    ru: 'Активные ${stats.active + stats.loaded}',
+                  ),
                 ),
                 _buildFilterChip(
                   filter: _AgentSessionFilter.recent,
-                  label: _isEnglish
-                      ? 'Recent ${stats.recent}'
-                      : '最近 ${stats.recent}',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Recent ${stats.recent}',
+                    '最近 ${stats.recent}',
+                    ru: 'Недавние ${stats.recent}',
+                  ),
                 ),
                 _buildFilterChip(
                   filter: _AgentSessionFilter.archived,
-                  label: _isEnglish
-                      ? 'Archived ${stats.archived}'
-                      : '已归档 ${stats.archived}',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Archived ${stats.archived}',
+                    '已归档 ${stats.archived}',
+                    ru: 'В архиве: ${stats.archived}',
+                  ),
                 ),
               ],
             ),
@@ -1249,9 +1561,12 @@ class _AgentSessionsPageState extends State<AgentSessionsPage> {
                             height: 34,
                           ),
                           padding: EdgeInsets.zero,
-                          tooltip: _isEnglish
-                              ? 'Session actions'
-                              : 'Session 操作',
+                          tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                            _isEnglish,
+                            'Session actions',
+                            'Session 操作',
+                            ru: 'Действия с сеансом',
+                          ),
                           onPressed: () =>
                               unawaited(_showSessionActions(session)),
                           icon: Icon(
@@ -2170,9 +2485,9 @@ Map<String, dynamic>? _asStringMap(dynamic value) {
 List<Map<String, dynamic>> extractAgentSessionSummariesForTesting(
   List<dynamic> payloads,
 ) {
-  return _extractAgentSessions(
-    payloads,
-  ).map((session) => session.toDebugMap()).toList(growable: false);
+  return _extractAgentSessions(payloads)
+      .map((session) => session.toDebugMap())
+      .toList(growable: false);
 }
 
 const Set<String> _threadNestedSkipKeys = <String>{

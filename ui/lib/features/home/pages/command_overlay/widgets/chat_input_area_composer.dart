@@ -324,8 +324,18 @@ mixin _ChatInputAreaComposerMixin on _ChatInputAreaStateBase {
       padding: EdgeInsets.zero,
       iconSize: 20,
       tooltip: widget.isEditingUserMessage
-          ? (isEnglish ? 'Exit editing' : '退出编辑')
-          : (isEnglish ? 'Add attachment' : '添加附件'),
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Exit editing',
+              '退出编辑',
+              ru: 'Завершить редактирование',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Add attachment',
+              '添加附件',
+              ru: 'Добавить вложение',
+            )),
       icon: AnimatedRotation(
         key: const ValueKey('chat-input-add-or-cancel-edit-icon'),
         turns: widget.isEditingUserMessage ? 0.125 : 0,
@@ -386,12 +396,18 @@ mixin _ChatInputAreaComposerMixin on _ChatInputAreaStateBase {
       child: IconButton(
         key: const ValueKey('chat-input-send-or-stop-button'),
         tooltip: action == ChatComposerPrimaryAction.cancel
-            ? (Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Stop'
-                  : '停止')
-            : (Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Send'
-                  : '发送'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Stop',
+                '停止',
+                ru: 'Остановить',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Send',
+                '发送',
+                ru: 'Отправить',
+              )),
         padding: EdgeInsets.zero,
         iconSize: 20,
         icon: AnimatedSwitcher(

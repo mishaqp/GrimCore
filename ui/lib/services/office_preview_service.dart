@@ -48,29 +48,41 @@ class OmnibotOfficePreviewService {
         'office_sheet' => _parseWorkbookPreview(archive),
         'office_slide' => _parseSlidePreview(archive),
         _ => throw StateError(
-          LegacyTextLocalizer.isEnglish
-              ? 'This Office file type is not supported'
-              : '暂不支持该 Office 文件类型',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'This Office file type is not supported',
+            '暂不支持该 Office 文件类型',
+            ru: 'Этот тип файла Office не поддерживается',
+          ),
         ),
       };
     } on XmlParserException catch (error) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'Failed to parse Office file structure: ${error.message}'
-            : 'Office 文件结构解析失败: ${error.message}',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Failed to parse Office file structure: ${error.message}',
+          'Office 文件结构解析失败: ${error.message}',
+          ru: 'Не удалось разобрать структуру файла Office: ${error.message}',
+        ),
       );
     } on FormatException catch (error) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'Failed to parse Office file content: ${error.message}'
-            : 'Office 文件内容解析失败: ${error.message}',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Failed to parse Office file content: ${error.message}',
+          'Office 文件内容解析失败: ${error.message}',
+          ru: 'Не удалось разобрать содержимое файла Office: ${error.message}',
+        ),
       );
     } catch (error) {
       if (error is StateError) rethrow;
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'Office file preview failed: $error'
-            : 'Office 文件预览失败: $error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Office file preview failed: $error',
+          'Office 文件预览失败: $error',
+          ru: 'Не удалось просмотреть файл Office: $error',
+        ),
       );
     }
   }
@@ -89,23 +101,42 @@ class OmnibotOfficePreviewService {
 
     if (paragraphs.isEmpty) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'No previewable Word text content found'
-            : '未找到可预览的 Word 文本内容',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No previewable Word text content found',
+          '未找到可预览的 Word 文本内容',
+          ru: 'В документе Word нет текста для предпросмотра',
+        ),
       );
     }
 
     return OmnibotOfficePreviewData(
-      kindLabel: LegacyTextLocalizer.isEnglish ? 'Word Preview' : 'Word 预览',
-      summary: (LegacyTextLocalizer.isEnglish
-          ? 'Extracted ${paragraphs.length} paragraphs in total'
-          : '共提取 ${paragraphs.length} 段正文'),
+      kindLabel: LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Word Preview',
+        'Word 预览',
+        ru: 'Предпросмотр Word',
+      ),
+      summary: (LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Extracted ${paragraphs.length} paragraphs in total',
+        '共提取 ${paragraphs.length} 段正文',
+        ru: 'Всего извлечено абзацев: ${paragraphs.length}',
+      )),
       sections: <OmnibotOfficePreviewSection>[
         OmnibotOfficePreviewSection(
-          title: LegacyTextLocalizer.isEnglish ? 'Body' : '正文',
-          subtitle: LegacyTextLocalizer.isEnglish
-              ? 'Scroll to view extracted document content'
-              : '滚动查看文档提取内容',
+          title: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Body',
+            '正文',
+            ru: 'Основной текст',
+          ),
+          subtitle: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Scroll to view extracted document content',
+            '滚动查看文档提取内容',
+            ru: 'Прокрутите, чтобы посмотреть извлечённый текст документа',
+          ),
           lines: paragraphs,
         ),
       ],
@@ -132,9 +163,12 @@ class OmnibotOfficePreviewService {
     for (final sheet in _elementsByLocalName(workbook, 'sheet')) {
       final resolvedSheetName = _attributeValue(sheet, 'name');
       final sheetName = resolvedSheetName.isEmpty
-          ? (LegacyTextLocalizer.isEnglish
-                ? 'Sheet ${sections.length + 1}'
-                : '工作表 ${sections.length + 1}')
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Sheet ${sections.length + 1}',
+              '工作表 ${sections.length + 1}',
+              ru: 'Лист ${sections.length + 1}',
+            ))
           : resolvedSheetName;
       final relationId = _attributeValue(sheet, 'id');
       final target = relationshipTargets[relationId];
@@ -157,17 +191,28 @@ class OmnibotOfficePreviewService {
 
     if (sections.isEmpty) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'No previewable Excel worksheet content found'
-            : '未找到可预览的 Excel 工作表内容',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No previewable Excel worksheet content found',
+          '未找到可预览的 Excel 工作表内容',
+          ru: 'В книге Excel нет данных для предпросмотра',
+        ),
       );
     }
 
     return OmnibotOfficePreviewData(
-      kindLabel: LegacyTextLocalizer.isEnglish ? 'Excel Preview' : 'Excel 预览',
-      summary: (LegacyTextLocalizer.isEnglish
-          ? 'Extracted ${sections.length} worksheets in total'
-          : '共提取 ${sections.length} 个工作表'),
+      kindLabel: LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Excel Preview',
+        'Excel 预览',
+        ru: 'Предпросмотр Excel',
+      ),
+      summary: (LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Extracted ${sections.length} worksheets in total',
+        '共提取 ${sections.length} 个工作表',
+        ru: 'Извлечено листов: ${sections.length}',
+      )),
       sections: sections,
     );
   }
@@ -210,13 +255,19 @@ class OmnibotOfficePreviewService {
     if (sparseRows.isEmpty) {
       return OmnibotOfficePreviewSection(
         title: sheetName,
-        subtitle: LegacyTextLocalizer.isEnglish
-            ? 'No cell content extracted'
-            : '未提取到单元格内容',
+        subtitle: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No cell content extracted',
+          '未提取到单元格内容',
+          ru: 'Нет извлечённого содержимого ячеек',
+        ),
         lines: <String>[
-          LegacyTextLocalizer.isEnglish
-              ? 'No previewable text in this worksheet'
-              : '该工作表暂无可预览文本',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'No previewable text in this worksheet',
+            '该工作表暂无可预览文本',
+            ru: 'На этом листе нет текста для предпросмотра',
+          ),
         ],
       );
     }
@@ -233,9 +284,12 @@ class OmnibotOfficePreviewService {
 
     return OmnibotOfficePreviewSection(
       title: sheetName,
-      subtitle: (LegacyTextLocalizer.isEnglish
-          ? 'Extracted ${tableRows.length} rows in total'
-          : '共提取 ${tableRows.length} 行'),
+      subtitle: (LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Extracted ${tableRows.length} rows in total',
+        '共提取 ${tableRows.length} 行',
+        ru: 'Всего извлечено строк: ${tableRows.length}',
+      )),
       tableRows: tableRows,
     );
   }
@@ -250,16 +304,19 @@ class OmnibotOfficePreviewService {
             )
             .toList()
           ..sort(
-            (left, right) => _extractTrailingNumber(
-              left.name,
-            ).compareTo(_extractTrailingNumber(right.name)),
+            (left, right) =>
+                _extractTrailingNumber(left.name)
+                    .compareTo(_extractTrailingNumber(right.name)),
           );
 
     if (slideFiles.isEmpty) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish
-            ? 'No previewable PowerPoint slides found'
-            : '未找到可预览的 PowerPoint 页面',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No previewable PowerPoint slides found',
+          '未找到可预览的 PowerPoint 页面',
+          ru: 'Не найдено слайдов PowerPoint для предпросмотра',
+        ),
       );
     }
 
@@ -279,14 +336,20 @@ class OmnibotOfficePreviewService {
 
       sections.add(
         OmnibotOfficePreviewSection(
-          title: LegacyTextLocalizer.isEnglish
-              ? 'Slide ${sections.length + 1}'
-              : '第 ${sections.length + 1} 页',
+          title: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Slide ${sections.length + 1}',
+            '第 ${sections.length + 1} 页',
+            ru: 'Слайд ${sections.length + 1}',
+          ),
           lines: lines.isEmpty
               ? <String>[
-                  LegacyTextLocalizer.isEnglish
-                      ? 'No extractable text on this slide'
-                      : '该页没有可提取文本',
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'No extractable text on this slide',
+                    '该页没有可提取文本',
+                    ru: 'На этом слайде нет текста для извлечения',
+                  ),
                 ]
               : lines,
         ),
@@ -294,12 +357,18 @@ class OmnibotOfficePreviewService {
     }
 
     return OmnibotOfficePreviewData(
-      kindLabel: LegacyTextLocalizer.isEnglish
-          ? 'PowerPoint Preview'
-          : 'PowerPoint 预览',
-      summary: (LegacyTextLocalizer.isEnglish
-          ? 'Extracted ${sections.length} slides in total'
-          : '共提取 ${sections.length} 页幻灯片'),
+      kindLabel: LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'PowerPoint Preview',
+        'PowerPoint 预览',
+        ru: 'Предпросмотр PowerPoint',
+      ),
+      summary: (LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Extracted ${sections.length} slides in total',
+        '共提取 ${sections.length} 页幻灯片',
+        ru: 'Всего извлечено слайдов: ${sections.length}',
+      )),
       sections: sections,
     );
   }
@@ -349,7 +418,12 @@ class OmnibotOfficePreviewService {
     final document = _tryParseXmlEntry(archive, path);
     if (document == null) {
       throw StateError(
-        LegacyTextLocalizer.isEnglish ? 'File missing: $path' : '文件缺少 $path',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'File missing: $path',
+          '文件缺少 $path',
+          ru: 'Файл не найден: $path',
+        ),
       );
     }
     return document;

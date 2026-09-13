@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui/l10n/generated/app_localizations.dart';
 import 'package:ui/features/home/pages/settings/workspace_memory_setting_page.dart';
 import 'package:ui/theme/app_theme.dart';
 
@@ -33,6 +34,9 @@ void main() {
 
   Widget buildTestApp(Widget child) {
     return MaterialApp(
+      locale: const Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: DefaultAssetBundle(bundle: _SvgTestAssetBundle(), child: child),
@@ -150,5 +154,4 @@ void main() {
 
     expect(find.text('去场景模型配置记忆嵌入模型'), findsOneWidget);
   });
-
 }

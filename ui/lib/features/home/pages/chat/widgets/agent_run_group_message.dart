@@ -1,3 +1,4 @@
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/features/home/pages/chat/tool_activity_utils.dart';
@@ -148,10 +149,10 @@ class _AgentRunGroupMessageState extends State<AgentRunGroupMessage>
 
   @override
   Widget build(BuildContext context) {
-    final primaryVisibleMessageId =
-        widget.group.visibleMessagesOldestFirst
-            .where((message) => !isAgentTurnFailureMessage(message))
-            .lastOrNull?.id;
+    final primaryVisibleMessageId = widget.group.visibleMessagesOldestFirst
+        .where((message) => !isAgentTurnFailureMessage(message))
+        .lastOrNull
+        ?.id;
     final hasFoldableHistory = widget.group.segmentsOldestFirst.any(
       (segment) =>
           segment.isProcess || segment.message.id != primaryVisibleMessageId,
@@ -619,7 +620,12 @@ class _AgentToolCallGroup extends StatelessWidget {
     }
     // Completed tool groups keep the compact historical label. While a tool
     // is live, however, the capsule must identify the action being performed.
-    return isEnglish ? 'Processed' : '已处理';
+    return LegacyTextLocalizer.pickForEnglishFlag(
+      isEnglish,
+      'Processed',
+      '已处理',
+      ru: 'Обработано',
+    );
   }
 
   String _toolGroupTooltip(List<ChatMessageModel> messages) {
@@ -662,10 +668,25 @@ class _LegacyAgentRunSummaryHeader extends StatelessWidget {
     // candidate message → last candidate message). If we can't derive
     // a duration (single instant), we just show "已处理".
     final baseLabel = group.status == AgentRunStatus.failed
-        ? (isEnglish ? 'Failed' : '执行失败')
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Failed',
+            '执行失败',
+            ru: 'Ошибка',
+          ))
         : group.status == AgentRunStatus.cancelled
-        ? (isEnglish ? 'Cancelled' : '已取消')
-        : (isEnglish ? 'Processed' : '已处理');
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Cancelled',
+            '已取消',
+            ru: 'Отменено',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Processed',
+            '已处理',
+            ru: 'Обработано',
+          ));
     final elapsedLabel = _agentRunElapsedLabel(group);
     final label = elapsedLabel.isEmpty
         ? baseLabel

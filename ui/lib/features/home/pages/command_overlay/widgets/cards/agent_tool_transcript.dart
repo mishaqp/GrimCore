@@ -1066,9 +1066,12 @@ class _AgentToolDetailContent extends StatelessWidget {
                   height: 28,
                 ),
                 splashRadius: 14,
-                tooltip: LegacyTextLocalizer.isEnglish
-                    ? 'Copy details'
-                    : '复制详情',
+                tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Copy details',
+                  '复制详情',
+                  ru: 'Скопировать сведения',
+                ),
                 onPressed: copyText.isEmpty
                     ? null
                     : () async {
@@ -1078,12 +1081,18 @@ class _AgentToolDetailContent extends StatelessWidget {
                             );
                         showToast(
                           copied
-                              ? (LegacyTextLocalizer.isEnglish
-                                    ? 'Copied'
-                                    : '已复制')
-                              : (LegacyTextLocalizer.isEnglish
-                                    ? 'Copy failed'
-                                    : '复制失败'),
+                              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                                  LegacyTextLocalizer.isEnglish,
+                                  'Copied',
+                                  '已复制',
+                                  ru: 'Скопировано',
+                                ))
+                              : (LegacyTextLocalizer.pickForEnglishFlag(
+                                  LegacyTextLocalizer.isEnglish,
+                                  'Copy failed',
+                                  '复制失败',
+                                  ru: 'Не удалось скопировать',
+                                )),
                           type: copied ? ToastType.success : ToastType.error,
                         );
                       },
@@ -1144,7 +1153,12 @@ List<Map<String, dynamic>> _resolveAgentToolActions(
   if (workspaceId.isNotEmpty && !hasWorkspaceAction) {
     actions.add(<String, dynamic>{
       'type': 'workspace',
-      'label': LegacyTextLocalizer.isEnglish ? 'Open workspace' : '打开工作区',
+      'label': LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Open workspace',
+        '打开工作区',
+        ru: 'Открыть рабочую область',
+      ),
       'payload': <String, dynamic>{'workspaceId': workspaceId},
     });
   }
@@ -1152,16 +1166,24 @@ List<Map<String, dynamic>> _resolveAgentToolActions(
   if (cardData['showScheduleAction'] == true || toolType == 'schedule') {
     actions.add(<String, dynamic>{
       'type': 'route',
-      'label': LegacyTextLocalizer.isEnglish
-          ? 'View scheduled tasks'
-          : '查看定时任务',
+      'label': LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'View scheduled tasks',
+        '查看定时任务',
+        ru: 'Просмотреть запланированные задачи',
+      ),
       'target': '/task/scheduled_tasks',
     });
   }
   if (cardData['showAlarmAction'] == true || toolType == 'alarm') {
     actions.add(<String, dynamic>{
       'type': 'route',
-      'label': LegacyTextLocalizer.isEnglish ? 'View alarms' : '查看闹钟列表',
+      'label': LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'View alarms',
+        '查看闹钟列表',
+        ru: 'Посмотреть будильники',
+      ),
       'target': '/task/scheduled_tasks?tab=alarm',
     });
   }

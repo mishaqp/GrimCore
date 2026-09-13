@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/special_permission.dart';
 
 Future<bool> showAccessibilityPermissionPrompt(BuildContext context) async {
@@ -98,9 +99,7 @@ class _AccessibilityPermissionDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(
-        _text(context, '开启无障碍权限', 'Enable accessibility permission'),
-      ),
+      title: Text(_text(context, '开启无障碍权限', 'Enable accessibility permission')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,4 +165,4 @@ Future<bool> _isAccessibilityReady() async {
 }
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));

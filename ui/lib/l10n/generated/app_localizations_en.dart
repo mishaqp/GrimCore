@@ -78,6 +78,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEnglish => 'English';
 
   @override
+  String get languageRussian => 'Русский';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

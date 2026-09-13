@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/features/home/widgets/home_quick_prompt_icon.dart';
-import 'package:ui/l10n/l10n.dart';
 import 'package:ui/services/home_greeting_settings_service.dart';
 import 'package:ui/theme/theme_context.dart';
 
@@ -28,6 +28,17 @@ const List<String> _kChatGreetingWordsEn = <String>[
   'summarize',
   'search',
   'remember',
+];
+
+const List<String> _kChatGreetingWordsRu = <String>[
+  'общаться',
+  'выполнять',
+  'создавать',
+  'исследовать',
+  'планировать',
+  'обобщать',
+  'искать',
+  'запоминать',
 ];
 
 class ChatEmptyGreeting extends StatelessWidget {
@@ -58,7 +69,8 @@ class ChatEmptyGreeting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final isEnglish = languageCode == 'en';
     final palette = context.omniPalette;
     final primaryColor = primaryTextColor ?? palette.textPrimary;
     final secondaryColor = secondaryTextColor ?? palette.textSecondary;
@@ -67,15 +79,32 @@ class ChatEmptyGreeting extends StatelessWidget {
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final resolvedAgentName = agentName?.trim() ?? '';
     final displayAgentName = resolvedAgentName.isEmpty
-        ? (isEnglish ? 'Omnibot' : '小万')
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Omnibot',
+            '小万',
+            ru: 'GrimCore',
+          ))
         : resolvedAgentName;
-    final headline = isEnglish
-        ? "Hi 👋, I'm $displayAgentName"
-        : '你好👋，我是$displayAgentName';
-    final prefix = isEnglish ? 'I can help you' : '我可以帮助你';
+    final headline = LegacyTextLocalizer.pickForEnglishFlag(
+      isEnglish,
+      "Hi 👋, I'm $displayAgentName",
+      '你好👋，我是$displayAgentName',
+      ru: "Привет! 👋 Я $displayAgentName",
+    );
+    final prefix = LegacyTextLocalizer.pickForEnglishFlag(
+      isEnglish,
+      'I can help you',
+      '我可以帮助你',
+      ru: 'Я могу помочь вам',
+    );
     final workspaceName = agentWorkspaceName?.trim() ?? '';
     final useAgentWorkspaceGreeting = workspaceName.isNotEmpty;
-    final words = isEnglish ? _kChatGreetingWordsEn : _kChatGreetingWordsZh;
+    final words = switch (languageCode) {
+      'ru' => _kChatGreetingWordsRu,
+      'en' => _kChatGreetingWordsEn,
+      _ => _kChatGreetingWordsZh,
+    };
     final fontSize = compact ? 17.0 : 19.0;
     final headlineStyle = TextStyle(
       color: primaryColor,
@@ -97,7 +126,7 @@ class ChatEmptyGreeting extends StatelessWidget {
       fontWeight: FontWeight.w400,
       height: 1.3,
       letterSpacing: 0,
-      fontFamily: isEnglish ? 'Georgia' : 'Noto Serif CJK SC',
+      fontFamily: languageCode == 'zh' ? 'Noto Serif CJK SC' : 'Georgia',
       fontFamilyFallback: const <String>[
         'Noto Serif CJK SC',
         'Source Han Serif SC',
@@ -110,12 +139,18 @@ class ChatEmptyGreeting extends StatelessWidget {
     );
 
     final greetingSemanticsLabel = useAgentWorkspaceGreeting
-        ? (isEnglish
-              ? '$headline\nWhat can we do in $workspaceName?'
-              : '$headline\n可以在$workspaceName中做点什么')
-        : (isEnglish
-              ? "$headline\nI can help you chat, execute, build, and explore."
-              : '$headline\n我可以帮助你聊天、执行、构建和探索。');
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            '$headline\nWhat can we do in $workspaceName?',
+            '$headline\n可以在$workspaceName中做点什么',
+            ru: '$headline\nЧто можно сделать в $workspaceName?',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            "$headline\nI can help you chat, execute, build, and explore.",
+            '$headline\n我可以帮助你聊天、执行、构建和探索。',
+            ru: '$headline\nЯ могу помочь с общением, выполнением задач, разработкой и исследованиями.',
+          ));
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
@@ -163,7 +198,12 @@ class ChatEmptyGreeting extends StatelessWidget {
                         runSpacing: 2,
                         children: [
                           Text(
-                            isEnglish ? 'What can we do in' : '可以在',
+                            LegacyTextLocalizer.pickForEnglishFlag(
+                              isEnglish,
+                              'What can we do in',
+                              '可以在',
+                              ru: 'Что можно сделать в',
+                            ),
                             style: helperStyle,
                           ),
                           _AgentWorkspaceNameButton(
@@ -171,7 +211,15 @@ class ChatEmptyGreeting extends StatelessWidget {
                             style: keywordStyle,
                             onTap: onAgentWorkspaceTap,
                           ),
-                          Text(isEnglish ? '?' : '中做点什么', style: helperStyle),
+                          Text(
+                            LegacyTextLocalizer.pickForEnglishFlag(
+                              isEnglish,
+                              '?',
+                              '中做点什么',
+                              ru: '?',
+                            ),
+                            style: helperStyle,
+                          ),
                         ],
                       )
                     else

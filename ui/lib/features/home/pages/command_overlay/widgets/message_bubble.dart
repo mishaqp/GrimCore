@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/features/home/pages/omnibot_workspace/omnibot_artifact_preview_page.dart';
@@ -11,6 +12,7 @@ import 'package:ui/models/chat_link_preview.dart';
 import 'package:ui/services/omnibot_resource_service.dart';
 import 'package:ui/widgets/image_preview_overlay.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../../../models/chat_message_model.dart';
 import '../../../../../services/app_background_service.dart';
 import '../../../../../services/voice_playback_coordinator.dart';
@@ -19,6 +21,7 @@ import '../../../../../theme/theme_context.dart';
 import '../../../../../widgets/streaming_text.dart';
 import 'thinking_dots_indicator.dart';
 import 'cards/card_widget_factory.dart';
+
 import 'package:flutter_svg/flutter_svg.dart';
 
 export 'package:ui/widgets/streaming_text.dart'
@@ -571,9 +574,18 @@ class MessageBubble extends StatelessWidget {
         ? _resolvedUserPrimaryTextColor(context).withValues(alpha: 0.82)
         : _resolvedAiSecondaryTextColor(context);
     final statusLabel = switch (preview.status) {
-      ChatLinkPreview.statusLoading => isEnglish ? 'Loading preview' : '加载预览中',
-      ChatLinkPreview.statusFailed =>
-        isEnglish ? 'Preview unavailable' : '预览暂不可用',
+      ChatLinkPreview.statusLoading => LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Loading preview',
+        '加载预览中',
+        ru: 'Загрузка предпросмотра',
+      ),
+      ChatLinkPreview.statusFailed => LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Preview unavailable',
+        '预览暂不可用',
+        ru: 'Предпросмотр недоступен',
+      ),
       _ => '',
     };
 
@@ -706,9 +718,18 @@ class MessageBubble extends StatelessWidget {
     final metaColor = secondaryBaseColor.withValues(alpha: 0.82);
     final secondaryColor = secondaryBaseColor.withValues(alpha: 0.94);
     final statusLabel = switch (preview.status) {
-      ChatLinkPreview.statusLoading => isEnglish ? 'Loading preview' : '加载预览中',
-      ChatLinkPreview.statusFailed =>
-        isEnglish ? 'Preview unavailable' : '预览暂不可用',
+      ChatLinkPreview.statusLoading => LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Loading preview',
+        '加载预览中',
+        ru: 'Загрузка предпросмотра',
+      ),
+      ChatLinkPreview.statusFailed => LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Preview unavailable',
+        '预览暂不可用',
+        ru: 'Предпросмотр недоступен',
+      ),
       _ => '',
     };
 
@@ -970,9 +991,8 @@ class MessageBubble extends StatelessWidget {
     if (onEditTap == null) {
       return textWidget;
     }
-    final underlineColor = _resolvedUserPrimaryTextColor(
-      context,
-    ).withValues(alpha: 0.52);
+    final underlineColor = _resolvedUserPrimaryTextColor(context)
+        .withValues(alpha: 0.52);
     return Semantics(
       button: true,
       label: context.trLegacy('编辑消息'),
@@ -1110,9 +1130,8 @@ class MessageBubble extends StatelessWidget {
             '${speed.toStringAsFixed(1)} tok/s',
             style: TextStyle(
               fontSize: 11,
-              color: _resolvedAiSecondaryTextColor(
-                context,
-              ).withValues(alpha: 0.6),
+              color: _resolvedAiSecondaryTextColor(context)
+                  .withValues(alpha: 0.6),
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -1295,7 +1314,14 @@ class MessageBubble extends StatelessWidget {
             child: TextButton.icon(
               onPressed: onRetryAgentMessage,
               icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: Text(LegacyTextLocalizer.isEnglish ? 'Retry' : '重试本轮'),
+              label: Text(
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Retry',
+                  '重试本轮',
+                  ru: 'Повторить',
+                ),
+              ),
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,
@@ -1317,9 +1343,8 @@ class MessageBubble extends StatelessWidget {
     final durationMs = _readIntValue(usage['durationMs']);
     final hasUsage = input != null || output != null || cache != null;
     if (!hasUsage && endedAt == null) return null;
-    final textColor = _resolvedAiSecondaryTextColor(
-      context,
-    ).withValues(alpha: 0.72);
+    final textColor = _resolvedAiSecondaryTextColor(context)
+        .withValues(alpha: 0.72);
     final ended = endedAt == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(endedAt).toLocal();

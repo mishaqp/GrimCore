@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/models/omni_plugin_item.dart';
 
 class OmniVlmReadiness {
@@ -69,7 +70,12 @@ class OmniPluginActionItem {
   }) {
     final value = presentation[key];
     if (value is Map) {
-      final localized = value[english ? 'en' : 'zh']?.toString().trim() ?? '';
+      final requestedLanguage = LegacyTextLocalizer.isRussian
+          ? 'ru'
+          : english
+          ? 'en'
+          : 'zh';
+      final localized = value[requestedLanguage]?.toString().trim() ?? '';
       if (localized.isNotEmpty) return localized;
       final englishValue = value['en']?.toString().trim() ?? '';
       if (englishValue.isNotEmpty) return englishValue;

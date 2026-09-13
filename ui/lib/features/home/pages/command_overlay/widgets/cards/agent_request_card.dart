@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/models/conversation_model.dart';
 import 'package:ui/services/agent_runtime_service.dart';
@@ -213,9 +214,12 @@ class _AgentRequestNoticeState extends State<AgentRequestNotice> {
       if (!mounted) return;
       setState(() => _submitting = false);
       showToast(
-        Localizations.maybeLocaleOf(context)?.languageCode == 'en'
-            ? 'Reply was not sent. Try again.'
-            : '回复未送达，可以重试',
+        LegacyTextLocalizer.pick(
+          'Reply was not sent. Try again.',
+          '回复未送达，可以重试',
+          ru: 'Ответ не отправлен. Повторите попытку.',
+          locale: Localizations.maybeLocaleOf(context),
+        ),
         type: ToastType.warning,
       );
     }
@@ -469,9 +473,12 @@ class _AgentRequestCardState extends State<AgentRequestCard> {
             const SizedBox(height: 8),
             Text(
               interactionUnavailableReason == 'session_ended'
-                  ? (Localizations.maybeLocaleOf(context)?.languageCode == 'en'
-                        ? 'This request expired with the ACP session. Start a new prompt to continue.'
-                        : 'ACP 会话已结束，该请求已过期。请发起新的请求继续。')
+                  ? LegacyTextLocalizer.pick(
+                      'This request expired with the ACP session. Start a new prompt to continue.',
+                      'ACP 会话已结束，该请求已过期。请发起新的请求继续。',
+                      ru: 'Сеанс ACP завершён, поэтому срок действия запроса истёк. Чтобы продолжить, отправьте новый запрос.',
+                      locale: Localizations.maybeLocaleOf(context),
+                    )
                   : 'This request cannot be answered because ACP omitted its request id.',
               style: TextStyle(
                 fontSize: 12,
@@ -632,9 +639,12 @@ class _AgentRequestCardState extends State<AgentRequestCard> {
         _isSubmitting = false;
       });
       showToast(
-        Localizations.maybeLocaleOf(context)?.languageCode == 'en'
-            ? 'Reply was not sent. Try again.'
-            : '回复未送达，可以重试',
+        LegacyTextLocalizer.pick(
+          'Reply was not sent. Try again.',
+          '回复未送达，可以重试',
+          ru: 'Ответ не отправлен. Повторите попытку.',
+          locale: Localizations.maybeLocaleOf(context),
+        ),
         type: ToastType.warning,
       );
     }
@@ -1037,7 +1047,12 @@ class _RequestFooter extends StatelessWidget {
               ),
             ),
             child: Text(
-              isEnglish ? 'Decline' : '拒绝',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                'Decline',
+                '拒绝',
+                ru: 'Отклонить',
+              ),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
             ),
           ),
@@ -1058,7 +1073,12 @@ class _RequestFooter extends StatelessWidget {
               ),
             ),
             child: Text(
-              isEnglish ? 'Accept' : '接受',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                'Accept',
+                '接受',
+                ru: 'Принять',
+              ),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
           ),
@@ -1077,7 +1097,12 @@ class _RequestFooter extends StatelessWidget {
             disabledForegroundColor: palette.textTertiary,
           ),
           child: Text(
-            isEnglish ? 'Ignore' : '忽略',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Ignore',
+              '忽略',
+              ru: 'Игнорировать',
+            ),
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
           ),
         ),
@@ -1098,7 +1123,12 @@ class _RequestFooter extends StatelessWidget {
             ),
           ),
           child: Text(
-            isEnglish ? 'Submit ↵' : '提交 ↵',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Submit ↵',
+              '提交 ↵',
+              ru: 'Отправить ↵',
+            ),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
           ),
         ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:ui/services/chat_detail_sheet_preferences.dart';
 import 'package:ui/services/omnibot_resource_service.dart';
@@ -173,18 +174,30 @@ class _OmnibotArtifactPreviewPageState
     if (_isDirty) {
       final confirmed = await AppDialog.confirm(
         context,
-        title: Localizations.localeOf(context).languageCode == 'en'
-            ? 'Discard changes'
-            : '放弃修改',
-        content: Localizations.localeOf(context).languageCode == 'en'
-            ? 'There are unsaved changes. Discard them?'
-            : '当前有未保存修改，确认放弃吗？',
-        cancelText: Localizations.localeOf(context).languageCode == 'en'
-            ? 'Keep editing'
-            : '继续编辑',
-        confirmText: Localizations.localeOf(context).languageCode == 'en'
-            ? 'Discard'
-            : '放弃',
+        title: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Discard changes',
+          '放弃修改',
+          ru: 'Отменить изменения',
+        ),
+        content: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'There are unsaved changes. Discard them?',
+          '当前有未保存修改，确认放弃吗？',
+          ru: 'Есть несохранённые изменения. Отменить их?',
+        ),
+        cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Keep editing',
+          '继续编辑',
+          ru: 'Продолжить редактирование',
+        ),
+        confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Discard',
+          '放弃',
+          ru: 'Отменить изменения',
+        ),
       );
       if (confirmed != true || !mounted) {
         return;
@@ -217,17 +230,23 @@ class _OmnibotArtifactPreviewPageState
       await _loadIfNeeded(showLoading: false);
       if (!mounted) return;
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'File saved'
-            : '文件已保存',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'File saved',
+          '文件已保存',
+          ru: 'Файл сохранён',
+        ),
         type: ToastType.success,
       );
     } catch (error) {
       if (!mounted) return;
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Save failed: $error'
-            : '保存失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Save failed: $error',
+          '保存失败：$error',
+          ru: 'Не удалось сохранить: $error',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -247,16 +266,24 @@ class _OmnibotArtifactPreviewPageState
       if (!mounted) return;
       if (!opened) {
         showToast(
-          isEnglish
-              ? 'Open with system failed. Please try again later.'
-              : '系统打开失败，请稍后重试',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Open with system failed. Please try again later.',
+            '系统打开失败，请稍后重试',
+            ru: 'Не удалось открыть файл в системном приложении. Повторите позже.',
+          ),
           type: ToastType.error,
         );
       }
     } catch (error) {
       if (!mounted) return;
       showToast(
-        isEnglish ? 'Open with system failed: $error' : '系统打开失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Open with system failed: $error',
+          '系统打开失败：$error',
+          ru: 'Не удалось открыть через систему: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -272,14 +299,24 @@ class _OmnibotArtifactPreviewPageState
       if (!mounted) return;
       if (!opened) {
         showToast(
-          isEnglish ? 'Browser opening failed' : '浏览器打开失败',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Browser opening failed',
+            '浏览器打开失败',
+            ru: 'Не удалось открыть браузер',
+          ),
           type: ToastType.error,
         );
       }
     } catch (error) {
       if (!mounted) return;
       showToast(
-        isEnglish ? 'Browser opening failed: $error' : '浏览器打开失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Browser opening failed: $error',
+          '浏览器打开失败：$error',
+          ru: 'Не удалось открыть браузер: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -296,14 +333,29 @@ class _OmnibotArtifactPreviewPageState
       if (!mounted) return;
       showToast(
         savedUri == null
-            ? (isEnglish ? 'Save failed' : '保存失败')
-            : (isEnglish ? 'Saved to device' : '已保存到设备'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                'Save failed',
+                '保存失败',
+                ru: 'Не удалось сохранить',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                'Saved to device',
+                '已保存到设备',
+                ru: 'Сохранено на устройстве',
+              )),
         type: savedUri == null ? ToastType.error : ToastType.success,
       );
     } catch (error) {
       if (!mounted) return;
       showToast(
-        isEnglish ? 'Save failed: $error' : '保存失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Save failed: $error',
+          '保存失败：$error',
+          ru: 'Не удалось сохранить: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -320,14 +372,24 @@ class _OmnibotArtifactPreviewPageState
       if (!mounted) return;
       if (!shared) {
         showToast(
-          isEnglish ? 'Share failed. Please try again later.' : '分享失败，请稍后重试',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Share failed. Please try again later.',
+            '分享失败，请稍后重试',
+            ru: 'Не удалось поделиться файлом. Повторите позже.',
+          ),
           type: ToastType.error,
         );
       }
     } catch (error) {
       if (!mounted) return;
       showToast(
-        isEnglish ? 'Share failed: $error' : '分享失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Share failed: $error',
+          '分享失败：$error',
+          ru: 'Не удалось поделиться: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -356,18 +418,30 @@ class _OmnibotArtifactPreviewPageState
     }
     final confirmed = await AppDialog.confirm(
       context,
-      title: Localizations.localeOf(context).languageCode == 'en'
-          ? 'Exit editing'
-          : '退出编辑',
-      content: Localizations.localeOf(context).languageCode == 'en'
-          ? 'There are unsaved changes. Exit editing?'
-          : '当前有未保存修改，确认退出吗？',
-      cancelText: Localizations.localeOf(context).languageCode == 'en'
-          ? 'Keep editing'
-          : '继续编辑',
-      confirmText: Localizations.localeOf(context).languageCode == 'en'
-          ? 'Exit'
-          : '退出',
+      title: LegacyTextLocalizer.pickForEnglishFlag(
+        Localizations.localeOf(context).languageCode == 'en',
+        'Exit editing',
+        '退出编辑',
+        ru: 'Завершить редактирование',
+      ),
+      content: LegacyTextLocalizer.pickForEnglishFlag(
+        Localizations.localeOf(context).languageCode == 'en',
+        'There are unsaved changes. Exit editing?',
+        '当前有未保存修改，确认退出吗？',
+        ru: 'Есть несохранённые изменения. Выйти из режима редактирования?',
+      ),
+      cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+        Localizations.localeOf(context).languageCode == 'en',
+        'Keep editing',
+        '继续编辑',
+        ru: 'Продолжить редактирование',
+      ),
+      confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+        Localizations.localeOf(context).languageCode == 'en',
+        'Exit',
+        '退出',
+        ru: 'Выйти',
+      ),
     );
     if (confirmed != true || !mounted) {
       return;
@@ -454,9 +528,12 @@ class _OmnibotArtifactPreviewPageState
               decoration: InputDecoration(
                 filled: true,
                 fillColor: palette.surfacePrimary,
-                hintText: Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Enter file content'
-                    : '输入文件内容',
+                hintText: LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Enter file content',
+                  '输入文件内容',
+                  ru: 'Введите содержимое файла',
+                ),
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -482,9 +559,12 @@ class _OmnibotArtifactPreviewPageState
     if (!widget.exists) {
       return Center(
         child: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'File does not exist'
-              : '文件不存在',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'File does not exist',
+            '文件不存在',
+            ru: 'Файл не найден',
+          ),
         ),
       );
     }
@@ -524,9 +604,12 @@ class _OmnibotArtifactPreviewPageState
         if (_textContent == null) {
           return Center(
             child: Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'No content'
-                  : '暂无内容',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'No content',
+                '暂无内容',
+                ru: 'Нет содержимого',
+              ),
             ),
           );
         }
@@ -571,9 +654,12 @@ class _OmnibotArtifactPreviewPageState
                   onPressed: _handleOpenWithSystem,
                   icon: const Icon(Icons.open_in_new_outlined),
                   label: Text(
-                    Localizations.localeOf(context).languageCode == 'en'
-                        ? 'Open with system'
-                        : '系统打开',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      Localizations.localeOf(context).languageCode == 'en',
+                      'Open with system',
+                      '系统打开',
+                      ru: 'Открыть через систему',
+                    ),
                   ),
                 ),
               ],
@@ -621,9 +707,12 @@ class _OmnibotArtifactPreviewPageState
       actions.add(
         PopupMenuButton<_ArtifactPreviewAction>(
           key: const ValueKey('artifact-preview-more-actions'),
-          tooltip: Localizations.localeOf(context).languageCode == 'en'
-              ? 'More actions'
-              : '更多操作',
+          tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'More actions',
+            '更多操作',
+            ru: 'Другие действия',
+          ),
           splashRadius: 18,
           onSelected: _handleToolbarAction,
           itemBuilder: (context) => [
@@ -631,33 +720,45 @@ class _OmnibotArtifactPreviewPageState
               PopupMenuItem<_ArtifactPreviewAction>(
                 value: _ArtifactPreviewAction.openInBrowser,
                 child: Text(
-                  Localizations.localeOf(context).languageCode == 'en'
-                      ? 'Open in browser'
-                      : '在浏览器打开',
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    Localizations.localeOf(context).languageCode == 'en',
+                    'Open in browser',
+                    '在浏览器打开',
+                    ru: 'Открыть в браузере',
+                  ),
                 ),
               ),
             PopupMenuItem<_ArtifactPreviewAction>(
               value: _ArtifactPreviewAction.saveFile,
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Save to device'
-                    : '保存到设备',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Save to device',
+                  '保存到设备',
+                  ru: 'Сохранить на устройство',
+                ),
               ),
             ),
             PopupMenuItem<_ArtifactPreviewAction>(
               value: _ArtifactPreviewAction.openWithSystem,
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Open with system'
-                    : '系统打开',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Open with system',
+                  '系统打开',
+                  ru: 'Открыть через систему',
+                ),
               ),
             ),
             PopupMenuItem<_ArtifactPreviewAction>(
               value: _ArtifactPreviewAction.shareFile,
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Share file'
-                    : '分享文件',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Share file',
+                  '分享文件',
+                  ru: 'Поделиться файлом',
+                ),
               ),
             ),
           ],

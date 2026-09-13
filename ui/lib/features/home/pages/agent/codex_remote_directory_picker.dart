@@ -80,7 +80,12 @@ class _CodexRemoteDirectoryPickerSheetState
         _error = listing.ok
             ? null
             : (listing.error ??
-                  (_isEnglish ? 'Failed to read directory' : '读取目录失败'));
+                  (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Failed to read directory',
+                    '读取目录失败',
+                    ru: 'Не удалось прочитать папку',
+                  )));
       });
     } catch (error) {
       if (!mounted) return;
@@ -133,7 +138,12 @@ class _CodexRemoteDirectoryPickerSheetState
                 children: [
                   Expanded(
                     child: Text(
-                      _isEnglish ? 'Remote Workspace' : '远程工作目录',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Remote Workspace',
+                        '远程工作目录',
+                        ru: 'Удалённая рабочая область',
+                      ),
                       style: TextStyle(
                         color: palette.textPrimary,
                         fontSize: 16,
@@ -142,7 +152,12 @@ class _CodexRemoteDirectoryPickerSheetState
                     ),
                   ),
                   IconButton(
-                    tooltip: _isEnglish ? 'Close' : '关闭',
+                    tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Close',
+                      '关闭',
+                      ru: 'Закрыть',
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                     icon: Icon(
                       LucideIcons.x,
@@ -160,7 +175,12 @@ class _CodexRemoteDirectoryPickerSheetState
                   Expanded(
                     child: Text(
                       _currentPath.isEmpty
-                          ? (_isEnglish ? 'Bridge default' : 'Bridge 默认目录')
+                          ? (LegacyTextLocalizer.pickForEnglishFlag(
+                              _isEnglish,
+                              'Bridge default',
+                              'Bridge 默认目录',
+                              ru: 'Каталог Bridge по умолчанию',
+                            ))
                           : _currentPath,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -173,21 +193,36 @@ class _CodexRemoteDirectoryPickerSheetState
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    tooltip: _isEnglish ? 'Home' : '主目录',
+                    tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Home',
+                      '主目录',
+                      ru: 'Домашняя папка',
+                    ),
                     onPressed: (_listing?.home ?? '').isEmpty || _isLoading
                         ? null
                         : () => unawaited(_loadDirectory(_listing!.home!)),
                     icon: const Icon(LucideIcons.house, size: 19),
                   ),
                   IconButton(
-                    tooltip: _isEnglish ? 'Parent' : '上级目录',
+                    tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Parent',
+                      '上级目录',
+                      ru: 'Вверх',
+                    ),
                     onPressed: (_listing?.parent ?? '').isEmpty || _isLoading
                         ? null
                         : () => unawaited(_loadDirectory(_listing!.parent!)),
                     icon: const Icon(LucideIcons.arrowUp, size: 19),
                   ),
                   IconButton(
-                    tooltip: _isEnglish ? 'Reload' : '刷新',
+                    tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Reload',
+                      '刷新',
+                      ru: 'Обновить',
+                    ),
                     onPressed: _isLoading
                         ? null
                         : () => unawaited(_loadDirectory(_currentPath)),
@@ -207,7 +242,12 @@ class _CodexRemoteDirectoryPickerSheetState
                     )
                   : directoryEntries.isEmpty
                   ? _DirectoryEmpty(
-                      message: _isEnglish ? 'No subdirectories' : '没有子目录',
+                      message: LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'No subdirectories',
+                        '没有子目录',
+                        ru: 'Нет подпапок',
+                      ),
                     )
                   : ListView.separated(
                       shrinkWrap: true,

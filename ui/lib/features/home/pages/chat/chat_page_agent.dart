@@ -209,21 +209,26 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
     if (!status.ready) {
       if (status.remoteEnabled) {
         _showSnackBar(
-          LegacyTextLocalizer.isEnglish
-              ? 'Remote Agent Bridge is unavailable'
-              : '远程 Agent Bridge 不可用',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Remote Agent Bridge is unavailable',
+            '远程 Agent Bridge 不可用',
+            ru: 'Удалённый Agent Bridge недоступен',
+          ),
         );
         GoRouterManager.push('/home/remote_codex_setting');
         return;
       }
+      final error = status.error?.trim();
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? (status.error?.trim().isNotEmpty == true
-                  ? status.error!.trim()
-                  : 'The selected ACP Agent is unavailable')
-            : (status.error?.trim().isNotEmpty == true
-                  ? status.error!.trim()
-                  : '所选 ACP Agent 当前不可用'),
+        error?.isNotEmpty == true
+            ? error!
+            : LegacyTextLocalizer.pick(
+                'The selected ACP Agent is unavailable',
+                '所选 ACP Agent 当前不可用',
+                ru: 'Выбранный ACP-агент недоступен',
+                locale: Localizations.localeOf(context),
+              ),
       );
       GoRouterManager.push('/home/agent_mode_setting');
       return;
@@ -386,9 +391,12 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
     if (!mounted) return;
     if (!config.remoteEnabled || config.remoteBridgeUrl.trim().isEmpty) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Remote Agent Bridge is not configured'
-            : '远程 Agent Bridge 尚未配置',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Remote Agent Bridge is not configured',
+          '远程 Agent Bridge 尚未配置',
+          ru: 'Удалённый Agent Bridge не настроен',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -420,10 +428,14 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
         _activeAgentThreadId = null;
         _activeAgentTurnId = null;
       });
+      final workspaceName = _remoteCodexLastPathSegment(nextCwd) ?? nextCwd;
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Switched Agent workspace to ${_remoteCodexLastPathSegment(nextCwd) ?? nextCwd}'
-            : '已切换到 ${_remoteCodexLastPathSegment(nextCwd) ?? nextCwd}',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Switched Agent workspace to $workspaceName',
+          '已切换到 $workspaceName',
+          ru: 'Рабочее пространство агента переключено на $workspaceName',
+        ),
         type: ToastType.success,
       );
     } catch (error) {
@@ -823,9 +835,9 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
         includeHistory: false,
       );
       if (!mounted || generation != _conversationTargetRequestId) return;
-      final option = acpConfigOptions(
-        response,
-      ).where((option) => option['id'] == 'collaboration_mode').firstOrNull;
+      final option = acpConfigOptions(response)
+          .where((option) => option['id'] == 'collaboration_mode')
+          .firstOrNull;
       final choices = <Map>[];
       for (final entry
           in (option?['options'] as List? ?? const []).whereType<Map>()) {
@@ -990,9 +1002,12 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
         formatAgentRuntimeErrorForUser(
           error,
           english: LegacyTextLocalizer.isEnglish,
-          fallback: LegacyTextLocalizer.isEnglish
-              ? 'Could not switch assistants. Please try again.'
-              : '未能切换助手，请重试。',
+          fallback: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Could not switch assistants. Please try again.',
+            '未能切换助手，请重试。',
+            ru: 'Не удалось сменить ассистента. Повторите попытку.',
+          ),
         ),
         type: ToastType.error,
       );
@@ -1012,9 +1027,12 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
       if (!remote.remoteConfigured) {
         if (mounted) {
           _showSnackBar(
-            LegacyTextLocalizer.isEnglish
-                ? 'Remote Agent Bridge is not configured'
-                : '远程 Agent Bridge 尚未配置',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Remote Agent Bridge is not configured',
+              '远程 Agent Bridge 尚未配置',
+              ru: 'Удалённый Agent Bridge не настроен',
+            ),
           );
           GoRouterManager.push('/home/remote_codex_setting');
         }
@@ -1171,9 +1189,12 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
     if (!mounted || generation != _conversationTargetRequestId) return;
     if (planMode == null) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'This Agent does not advertise Plan mode'
-            : '当前 Agent 未提供 Plan 模式',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'This Agent does not advertise Plan mode',
+          '当前 Agent 未提供 Plan 模式',
+          ru: 'Этот агент не поддерживает режим планирования',
+        ),
       );
       return;
     }
@@ -1203,7 +1224,11 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
     final defaultMode = _agentCollaborationModes
         .where((mode) => mode.toLowerCase() == 'default')
         .firstOrNull;
-    if (defaultMode == null || !mounted || generation != _conversationTargetRequestId) return;
+    if (defaultMode == null ||
+        !mounted ||
+        generation != _conversationTargetRequestId) {
+      return;
+    }
     await _setAgentConfigOption(
       configId: 'collaboration_mode',
       value: defaultMode,
@@ -1356,9 +1381,12 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
         _messageController.clear();
         _hideSlashCommandPanel();
         _showSnackBar(
-          LegacyTextLocalizer.isEnglish
-              ? 'Unsupported Agent command'
-              : '不支持的 Agent 命令',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Unsupported Agent command',
+            '不支持的 Agent 命令',
+            ru: 'Команда агента не поддерживается',
+          ),
         );
         return true;
     }
@@ -1378,9 +1406,14 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
   @override
   Future<void> _startAgentReviewCommand() async {
     if (_availableAcpCommandForText('/review') == null) {
-      _showSnackBar(LegacyTextLocalizer.isEnglish
-          ? 'This Agent does not advertise /review'
-          : '当前 Agent 未提供 /review 命令');
+      _showSnackBar(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'This Agent does not advertise /review',
+          '当前 Agent 未提供 /review 命令',
+          ru: 'Этот агент не поддерживает команду /review',
+        ),
+      );
       return;
     }
     if (_isAiResponding) {
@@ -1766,12 +1799,10 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
     if (remoteCodex && eventThreadId != null && !shouldPromoteRemoteEvent) {
       this._ensureRemoteCodexRuntimeForThread(eventThreadId);
     }
-    final normalConversationId = _modeState(
-      ChatPageMode.normal,
-    ).currentConversationId;
-    final agentConversationId = _modeState(
-      ChatPageMode.agent,
-    ).currentConversationId;
+    final normalConversationId = _modeState(ChatPageMode.normal)
+        .currentConversationId;
+    final agentConversationId = _modeState(ChatPageMode.agent)
+        .currentConversationId;
     final ownerMode = _runtimeCoordinator.modeForAcpEvent(
       conversationId: conversationId,
       sessionId: eventSessionId,
@@ -2227,14 +2258,20 @@ mixin _ChatPageAgentMixin on _ChatPageStateBase {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
           content: Text(
-            Localizations.localeOf(context).languageCode == 'en'
-                ? 'Agent login required'
-                : '需要登录 Agent',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Agent login required',
+              '需要登录 Agent',
+              ru: 'Требуется вход в аккаунт агента',
+            ),
           ),
           action: SnackBarAction(
-            label: Localizations.localeOf(context).languageCode == 'en'
-                ? 'Login'
-                : '登录',
+            label: LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Login',
+              '登录',
+              ru: 'Войти',
+            ),
             onPressed: () {
               if (_agentRuntimeStatus.runtime == 'remote' ||
                   _agentRuntimeStatus.remoteEnabled) {

@@ -11,11 +11,18 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
 
   bool get _shouldShowModelPicker => widget.modelPickerSettings != null;
 
+  String _agentControlText(String en, String zh, String ru) =>
+      LegacyTextLocalizer.pick(
+        en,
+        zh,
+        ru: ru,
+        locale: Localizations.localeOf(context),
+      );
+
   Widget _buildModelPickerButton({required bool compact}) {
     final settings = widget.modelPickerSettings!;
     final palette = context.omniPalette;
     final modelId = settings.modelId.trim();
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final selectedColor = palette.accentPrimary;
     final enabled = settings.hasSelectableModels;
     final vendor = modelId.isEmpty ? null : ModelVendorCatalog.resolve(modelId);
@@ -40,10 +47,16 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
           onPointerDown: (_) => settings.onPointerDown?.call(),
           child: Tooltip(
             message: modelId.isEmpty
-                ? (english ? 'Select Provider / model' : '选择 Provider / 模型')
-                : (english
-                      ? 'Switch Provider / model: $modelId'
-                      : '切换服务商 / 模型：$modelId'),
+                ? _agentControlText(
+                    'Select Provider / model',
+                    '选择 Provider / 模型',
+                    'Выбрать провайдера / модель',
+                  )
+                : _agentControlText(
+                    'Switch Provider / model: $modelId',
+                    '切换服务商 / 模型：$modelId',
+                    'Сменить провайдера / модель: $modelId',
+                  ),
             waitDuration: const Duration(milliseconds: 400),
             child: InkWell(
               key: const ValueKey('chat-input-model-picker-button'),
@@ -79,7 +92,6 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
     final modelId = settings.modelId.trim();
     final effort = settings.reasoningEffort.trim();
     final agentName = settings.agentName.trim();
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final selectedColor = palette.accentPrimary;
     final menuTextColor = context.isDarkTheme
         ? palette.textPrimary
@@ -101,9 +113,8 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
       final opened = widget.onAgentRunSettingsOpened;
       if (opened != null) {
         unawaited(
-          Future<void>.sync(
-            opened,
-          ).catchError((Object error, StackTrace stackTrace) {}),
+          Future<void>.sync(opened)
+              .catchError((Object error, StackTrace stackTrace) {}),
         );
       }
       if (!mounted) {
@@ -129,10 +140,14 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
       );
       final effortOptions = refreshedSettings.reasoningEffortOptions;
       final disabledModelLabel = refreshedSettings.isLoadingModels
-          ? (english ? 'Loading...' : '正在获取模型...')
+          ? _agentControlText('Loading...', '正在获取模型...', 'Загрузка...')
           : (refreshedSettings.modelListError?.trim().isNotEmpty ?? false)
-          ? (english ? 'Load failed' : '模型获取失败')
-          : (english ? 'No models available' : '未获取到可用模型');
+          ? _agentControlText('Load failed', '模型获取失败', 'Не удалось загрузить')
+          : _agentControlText(
+              'No models available',
+              '未获取到可用模型',
+              'Нет доступных моделей',
+            );
       final handle = showOverlayGlassPopup<_AgentRunSettingsMenuAction>(
         context: anchorContext,
         anchor: anchor,
@@ -141,10 +156,22 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
         builder: (handle) => _AgentRunSettingsMenuContent(
           width: 280,
           maxHeight: 420,
-          modelHeader: english ? 'Model' : '模型',
-          reasoningHeader: english ? 'Reasoning' : '推理强度',
-          searchHint: english ? 'Search models' : '搜索模型',
-          noMatchesLabel: english ? 'No matching models' : '没有匹配的模型',
+          modelHeader: _agentControlText('Model', '模型', 'Модель'),
+          reasoningHeader: _agentControlText(
+            'Reasoning',
+            '推理强度',
+            'Уровень рассуждений',
+          ),
+          searchHint: _agentControlText(
+            'Search models',
+            '搜索模型',
+            'Поиск моделей',
+          ),
+          noMatchesLabel: _agentControlText(
+            'No matching models',
+            '没有匹配的模型',
+            'Подходящие модели не найдены',
+          ),
           emptyModelsLabel: disabledModelLabel,
           modelOptions: modelOptions,
           currentModelId: refreshedModelId,
@@ -259,19 +286,25 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
 
   String _agentReasoningEffortLabel(String effort, {bool compact = false}) {
     final normalized = effort.trim().toLowerCase();
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return switch (normalized) {
-      'none' || 'no' => english ? 'No reasoning' : (compact ? '无' : '无推理'),
-      'minimal' || 'min' => english ? 'Minimal' : '极低',
-      'low' => english ? 'Low' : '低',
-      'medium' || 'med' => english ? 'Medium' : '中',
-      'high' => english ? 'High' : '高',
+      'none' || 'no' => _agentControlText(
+        'No reasoning',
+        compact ? '无' : '无推理',
+        compact ? 'Нет' : 'Без рассуждений',
+      ),
+      'minimal' || 'min' => _agentControlText('Minimal', '极低', 'Минимальный'),
+      'low' => _agentControlText('Low', '低', 'Низкий'),
+      'medium' || 'med' => _agentControlText('Medium', '中', 'Средний'),
+      'high' => _agentControlText('High', '高', 'Высокий'),
       'xhigh' ||
       'extra_high' ||
       'extra-high' ||
       'very_high' ||
-      'very-high' => english ? 'XHigh' : '超高',
-      _ => effort.trim().isEmpty ? (english ? 'Reasoning' : '推理') : effort,
+      'very-high' => _agentControlText('XHigh', '超高', 'Очень высокий'),
+      _ =>
+        effort.trim().isEmpty
+            ? _agentControlText('Reasoning', '推理', 'Уровень рассуждений')
+            : effort,
     };
   }
 
@@ -404,18 +437,35 @@ extension _ChatInputAgentControls on _ChatInputAreaStateBase {
   String _agentPermissionTooltip() {
     final agentName = widget.agentRunSettings?.agentName.trim() ?? '';
     final displayName = agentName.isNotEmpty ? agentName : 'Agent';
-    return Localizations.localeOf(context).languageCode == 'en'
-        ? '$displayName permissions'
-        : '$displayName 权限';
+    return _agentControlText(
+      '$displayName permissions',
+      '$displayName 权限',
+      'Разрешения для $displayName',
+    );
   }
 
   String _agentPermissionLabel(AgentPermissionMode mode) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return switch (mode) {
-      AgentPermissionMode.readOnly => english ? 'Read only' : '只读',
-      AgentPermissionMode.defaultMode => english ? 'Workspace write' : '工作区读写',
-      AgentPermissionMode.autoReview => english ? 'Auto review' : '自动审查',
-      AgentPermissionMode.fullAccess => english ? 'Full access' : '完全访问权限',
+      AgentPermissionMode.readOnly => _agentControlText(
+        'Read only',
+        '只读',
+        'Только чтение',
+      ),
+      AgentPermissionMode.defaultMode => _agentControlText(
+        'Workspace write',
+        '工作区读写',
+        'Запись в рабочее пространство',
+      ),
+      AgentPermissionMode.autoReview => _agentControlText(
+        'Auto review',
+        '自动审查',
+        'Автопроверка',
+      ),
+      AgentPermissionMode.fullAccess => _agentControlText(
+        'Full access',
+        '完全访问权限',
+        'Полный доступ',
+      ),
     };
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 
 /// Whether the active locale should show English onboarding copy.
 bool onboardingIsEnglish(BuildContext context) =>
@@ -6,7 +7,7 @@ bool onboardingIsEnglish(BuildContext context) =>
 
 /// Picks the Chinese or English copy for the current locale.
 String onbTr(BuildContext context, String zh, String en) =>
-    onboardingIsEnglish(context) ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
 /// Signature for the localization resolver passed into controllers.
 typedef OnboardingTranslator = String Function(String zh, String en);

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ui/core/router/go_router_manager.dart';
 import 'package:ui/features/home/pages/command_overlay/services/manual_recording_permission_guard.dart';
 import 'package:ui/features/task/run_log/omniflow_tool_client.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/screen_dialog_service.dart';
 import 'package:ui/utils/ui.dart';
 
@@ -19,12 +20,11 @@ class ManualRecordingFlowMessageIds {
 
 typedef ManualRecordingAuthorizer = Future<bool> Function(BuildContext context);
 
-typedef ManualRecordingNativeStarter =
-    Future<Map<String, dynamic>> Function({
-      required String name,
-      required String description,
-      required bool enableDebugScreenshots,
-    });
+typedef ManualRecordingNativeStarter = Future<Map<String, dynamic>> Function({
+  required String name,
+  required String description,
+  required bool enableDebugScreenshots,
+});
 
 class ManualRecordingFlowController {
   const ManualRecordingFlowController._();
@@ -238,5 +238,5 @@ class ManualRecordingFlowController {
   }
 
   static String _text(Locale locale, String zh, String en) =>
-      locale.languageCode == 'en' ? en : zh;
+      LegacyTextLocalizer.pick(en, zh, locale: locale);
 }

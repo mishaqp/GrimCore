@@ -117,6 +117,9 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -207,6 +210,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -249,6 +255,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -290,6 +299,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -312,6 +324,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: DefaultAssetBundle(
             bundle: _SvgTestAssetBundle(),
             child: _buildProviderScope(
@@ -362,6 +377,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -413,6 +431,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -516,6 +537,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -547,6 +571,9 @@ void main() {
   testWidgets('unfocuses search field when tapping outside', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -585,6 +612,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -774,6 +804,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -864,6 +897,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -940,6 +976,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -1017,6 +1056,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -1143,6 +1185,9 @@ void main() {
 
     Widget drawerWidget() {
       return MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -1270,6 +1315,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -1338,6 +1386,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: DefaultAssetBundle(
           bundle: _SvgTestAssetBundle(),
           child: _buildProviderScope(
@@ -1381,6 +1432,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: DefaultAssetBundle(
             bundle: _SvgTestAssetBundle(),
             child: _buildProviderScope(

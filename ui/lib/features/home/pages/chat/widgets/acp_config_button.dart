@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/services/agent_runtime_service.dart';
@@ -14,6 +15,27 @@ String acpConfigLabel(Map<String, dynamic> option, {bool english = false}) {
   final name = option['name']?.toString() ?? option['id'].toString();
   if (english) return name;
   final category = option['category'];
+  if (LegacyTextLocalizer.isRussian) {
+    if (category == 'thought_level') return 'Глубина рассуждений';
+    if (category == 'model') return 'Модель';
+    if (category == 'mode') return 'Режим работы';
+    return const <String, String>{
+          'reasoning_effort': 'Глубина рассуждений',
+          'thinking_budget': 'Бюджет рассуждений',
+          'enable_thinking': 'Включить рассуждения',
+          'temperature': 'Вариативность ответа',
+          'top_p': 'Диапазон выборки',
+          'max_tokens': 'Максимальная длина ответа',
+          'max_output_tokens': 'Максимальная длина ответа',
+          'max_completion_tokens': 'Максимальная длина ответа',
+          'model': 'Модель',
+          'mode': 'Режим работы',
+          'approval_policy': 'Подтверждение действий',
+          'sandbox_mode': 'Права выполнения',
+          'collaboration_mode': 'Режим совместной работы',
+        }[option['id']] ??
+        name;
+  }
   if (category == 'thought_level') return '思考强度';
   if (category == 'model') return '模型';
   if (category == 'mode') return '运行模式';
@@ -41,12 +63,11 @@ List<Map<String, dynamic>> acpConfigOptions(Map<String, dynamic> response) =>
         .map((option) => Map<String, dynamic>.from(option))
         .toList();
 
-typedef AcpConfigWriter =
-    Future<Map<String, dynamic>> Function(
-      String sessionId,
-      String configId,
-      Object value,
-    );
+typedef AcpConfigWriter = Future<Map<String, dynamic>> Function(
+  String sessionId,
+  String configId,
+  Object value,
+);
 
 class AcpConfigButton extends StatefulWidget {
   const AcpConfigButton({
@@ -123,9 +144,12 @@ class _AcpConfigButtonState extends State<AcpConfigButton> {
   Widget build(BuildContext context) => TextFieldTapRegion(
     child: Builder(
       builder: (anchor) => Tooltip(
-        message: Localizations.localeOf(context).languageCode == 'en'
-            ? 'Model & settings'
-            : '模型与参数',
+        message: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Model & settings',
+          '模型与参数',
+          ru: 'Модель и настройки',
+        ),
         child: InkWell(
           key: const ValueKey('chat-acp-config-button'),
           borderRadius: BorderRadius.circular(8),
@@ -219,6 +243,22 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
 
   String _valueLabel(Map<String, dynamic> option, Map value) {
     final raw = value['value']?.toString() ?? '';
+    if (LegacyTextLocalizer.isRussian &&
+        (option['category'] == 'thought_level' ||
+            option['id'] == 'reasoning_effort')) {
+      return const {
+            'default': 'По умолчанию для модели',
+            'none': 'Выключено',
+            'minimal': 'Минимальная',
+            'low': 'Низкая',
+            'medium': 'Средняя',
+            'high': 'Высокая',
+            'xhigh': 'Очень высокая',
+            'max': 'Максимальная',
+          }[raw] ??
+          value['name']?.toString() ??
+          raw;
+    }
     if (!_english &&
         (option['category'] == 'thought_level' ||
             option['id'] == 'reasoning_effort')) {
@@ -375,7 +415,12 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
         showVendorIcons: selected['category'] == 'model',
         showSearchField: selected['category'] == 'model',
         emptyMatchesLabel: _loading
-            ? (_english ? 'Loading models…' : '正在实时获取模型…')
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                _english,
+                'Loading models…',
+                '正在实时获取模型…',
+                ru: 'Загрузка моделей…',
+              ))
             : null,
         onSelectValue: _loading || _saving || widget.readOnly
             ? null
@@ -456,7 +501,12 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
                         child: Text(
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          _english ? 'Model & settings' : '模型与参数',
+                          LegacyTextLocalizer.pickForEnglishFlag(
+                            _english,
+                            'Model & settings',
+                            '模型与参数',
+                            ru: 'Модель и настройки',
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -467,8 +517,18 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
                       const SizedBox(width: 8),
                       Text(
                         widget.readOnly
-                            ? (_english ? 'Running' : '运行中')
-                            : (_english ? 'Next turn' : '下一轮生效'),
+                            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                                _english,
+                                'Running',
+                                '运行中',
+                                ru: 'Выполняется',
+                              ))
+                            : (LegacyTextLocalizer.pickForEnglishFlag(
+                                _english,
+                                'Next turn',
+                                '下一轮生效',
+                                ru: 'Со следующего хода',
+                              )),
                         style: TextStyle(
                           fontSize: 11,
                           color: palette.textTertiary,
@@ -489,9 +549,12 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
                   Padding(
                     padding: const EdgeInsets.all(12),
                     child: Text(
-                      _english
-                          ? 'This Agent exposes no configurable options'
-                          : '当前 Agent 未提供可调整参数',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _english,
+                        'This Agent exposes no configurable options',
+                        '当前 Agent 未提供可调整参数',
+                        ru: 'У этого агента нет настраиваемых параметров',
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: palette.textSecondary,
@@ -528,14 +591,24 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
                       color: palette.textSecondary,
                     ),
                     title: Text(
-                      _english ? 'Reasoning effort' : '思考强度',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _english,
+                        'Reasoning effort',
+                        '思考强度',
+                        ru: 'Уровень рассуждений',
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: palette.textPrimary,
                       ),
                     ),
                     trailing: Text(
-                      _english ? 'Model default' : '模型默认',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _english,
+                        'Model default',
+                        '模型默认',
+                        ru: 'По умолчанию для модели',
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: palette.textSecondary,
@@ -557,12 +630,26 @@ class _AcpConfigPanelState extends State<AcpConfigPanel> {
                     widget.configureModel != null)
                   TextButton(
                     onPressed: widget.readOnly ? null : widget.configureModel,
-                    child: Text(_english ? 'Choose model' : '选择模型'),
+                    child: Text(
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _english,
+                        'Choose model',
+                        '选择模型',
+                        ru: 'Выбрать модель',
+                      ),
+                    ),
                   ),
                 if (_error != null && _options.isEmpty)
                   TextButton(
                     onPressed: _load,
-                    child: Text(_english ? 'Reload' : '重新加载'),
+                    child: Text(
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _english,
+                        'Reload',
+                        '重新加载',
+                        ru: 'Перезагрузить',
+                      ),
+                    ),
                   ),
               ],
             ),

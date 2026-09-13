@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ui/features/task/run_log/run_log_metrics.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/theme/theme_context.dart';
 
 class RunLogOverviewPanel extends StatelessWidget {
@@ -831,4 +832,4 @@ String _firstText(Iterable<dynamic> values) {
 }
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
