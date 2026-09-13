@@ -139,3 +139,11 @@ jobs:
           :app:lintDevelopStandardDebug
           :app:assembleDevelopStandardDebug
           -Ptarget=lib/main_standard.dart
+
+      - name: Upload arm64-v8a debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GrimCore-${{ github.sha }}-arm64-v8a-debug
+          path: app/build/outputs/apk/developStandard/debug/app-develop-standard-debug.apk
+          if-no-files-found: error
+          retention-days: 14
