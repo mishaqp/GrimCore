@@ -53,23 +53,23 @@ owner's explicit confirmation in order to free the single per-network fork slot
 
 ## Upstream CI inventory (as found)
 
-`.github/workflows/`: `ci.yml` (Pull Request CI), `release.yml` (Release APK),
-`codex-bot.yml`, `sync-models-dev.yml`, `sync-to-cnb.yml` + further org-level
-workflows (`Local Model Quality`, `OmniLink Control Plane`,
-`OmniLink Release Contract`, `VLM Core Standard`, Copilot ones).
+The upstream tree contained `release.yml`, `sync-models-dev.yml`, and
+`sync-to-cnb.yml` alongside `ci.yml`. The fork retires those workflows and the
+Cloudflare update Worker; GrimCore updates are served only from its GitHub
+Release assets.
 
-`ci.yml` runs: gitleaks secret scan, `workers/app-update-worker` npm tests,
-Gradle wrapper validation, `flutter test`, `flutter analyze`, then
+`ci.yml` runs: gitleaks secret scan, Gradle wrapper validation, `flutter test`,
+`flutter analyze`, then
 `./gradlew :app:testDevelopStandardDebugUnitTest :app:lintDevelopStandardDebug
 :app:assembleDevelopStandardDebug -Ptarget=lib/main_standard.dart`.
 
 Toolchain pinned by upstream: JDK21, Flutter3.47.2, Node22, pnpm10.28.0,
 Android platform37.0, NDK28.2.13676358.
 
-`release.yml` needs repository secrets `RELEASE_KEYSTORE`, `RELEASE_PASSWORD`,
-`RELEASE_KEY_ALIAS` (plus `APP_UPDATE_WORKER_URL` / `APP_UPDATE_WORKER_TOKEN`
-for the upstream CDN). Those secrets do not exist in the fork and must not exist
-— GrimCore has its own keystore and its own secrets (`GRIM_*`).
+The retired upstream release pipeline required `RELEASE_KEYSTORE`,
+`RELEASE_PASSWORD`, and `RELEASE_KEY_ALIAS`. Those secrets do not exist in the
+fork and must not exist — GrimCore has its own keystore and its own secrets
+(`GRIM_*`).
 
 ## Upstream build facts
 

@@ -116,11 +116,7 @@ class SkillRuntimeBehaviorTest {
     }
 
     @Test
-    fun imageGenerationDefaultsUseOmnimindImageProvider() {
-        assertEquals(
-            "https://cloud.omnimind.com.cn",
-            ImageGenerationToolHandler.DEFAULT_IMAGE_BASE_URL
-        )
+    fun imageGenerationUsesOnlyAConfiguredByokProvider() {
         assertEquals("gpt-image-2", ImageGenerationToolHandler.DEFAULT_IMAGE_MODEL)
         assertTrue(AgentToolDefinitions.imageGenerateTool.toString().contains("gpt-image-2"))
     }
@@ -151,46 +147,24 @@ class SkillRuntimeBehaviorTest {
     @Test
     fun imageGenerationEndpointSupportsBaseAndFullEndpointUrls() {
         assertEquals(
-            "https://cloud.omnimind.com.cn/v1/images/generations",
+            "https://images.example/v1/images/generations",
             ImageGenerationToolHandler.resolveImageGenerationEndpoint(
-                "https://cloud.omnimind.com.cn",
+                "https://images.example",
                 "sk-test"
             )
         )
         assertEquals(
-            "https://cloud.omnimind.com.cn/v1/images/generations",
+            "https://images.example/v1/images/generations",
             ImageGenerationToolHandler.resolveImageGenerationEndpoint(
-                "https://cloud.omnimind.com.cn/v1/images/generations",
+                "https://images.example/v1/images/generations",
                 "sk-test"
             )
         )
         assertEquals(
-            "https://cloud.omnimind.com.cn/custom/images",
+            "https://images.example/custom/images",
             ImageGenerationToolHandler.resolveImageGenerationEndpoint(
-                "https://cloud.omnimind.com.cn/custom/images#",
+                "https://images.example/custom/images#",
                 "sk-test"
-            )
-        )
-    }
-
-    @Test
-    fun imageGenerationUsesBundledProviderOnlyWhenUserProviderHasNoKey() {
-        assertFalse(
-            ImageGenerationToolHandler.shouldUseBundledImageProvider(
-                profileApiKey = "dashscope-user-key",
-                bundledApiKey = "sk-bundled"
-            )
-        )
-        assertTrue(
-            ImageGenerationToolHandler.shouldUseBundledImageProvider(
-                profileApiKey = "",
-                bundledApiKey = "sk-bundled"
-            )
-        )
-        assertFalse(
-            ImageGenerationToolHandler.shouldUseBundledImageProvider(
-                profileApiKey = "",
-                bundledApiKey = ""
             )
         )
     }

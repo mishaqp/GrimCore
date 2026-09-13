@@ -8,27 +8,18 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import cn.com.omnimind.baselib.account.CloudServiceAccessState
-import cn.com.omnimind.baselib.llm.OpenAiWireApi
-import cn.com.omnimind.baselib.llm.OfficialVlmOperationConfig
-import cn.com.omnimind.baselib.llm.OfficialVlmOperationConfigStore
 import cn.com.omnimind.baselib.service.DeviceInfoService
 import cn.com.omnimind.baselib.util.OmniLog
 import cn.com.omnimind.bot.BuildConfig
 import cn.com.omnimind.bot.manager.ExternalApkInstallResult
 import cn.com.omnimind.bot.manager.ExternalApkInstaller
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.IOException
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -45,12 +36,6 @@ data class AppUpdateState(
     val releaseNotes: String,
     val apkName: String,
     val apkDownloadUrl: String,
-    val cloudServicePolicyKnown: Boolean = false,
-    val cloudServicePolicyEnabled: Boolean = false,
-    val cloudServiceAccessAllowed: Boolean = false,
-    val cloudServiceMinimumVersion: String = "",
-    val cloudServicePolicyMessage: String = "",
-    val cloudServicePolicyCheckedAt: Long = 0L,
 ) {
     fun toMap(): Map<String, Any> = mapOf(
         "currentVersion" to currentVersion,
@@ -62,12 +47,6 @@ data class AppUpdateState(
         "releaseNotes" to releaseNotes,
         "apkName" to apkName,
         "apkDownloadUrl" to apkDownloadUrl,
-        "cloudServicePolicyKnown" to cloudServicePolicyKnown,
-        "cloudServicePolicyEnabled" to cloudServicePolicyEnabled,
-        "cloudServiceAccessAllowed" to cloudServiceAccessAllowed,
-        "cloudServiceMinimumVersion" to cloudServiceMinimumVersion,
-        "cloudServicePolicyMessage" to cloudServicePolicyMessage,
-        "cloudServicePolicyCheckedAt" to cloudServicePolicyCheckedAt,
     )
 }
 
@@ -76,23 +55,6 @@ internal data class ReleaseAsset(
     val name: String,
     val downloadUrl: String
 )
-
-@VisibleForTesting
-internal enum class ApkDownloadSource(val value: String) {
-    WORKER("worker"),
-    GITHUB("github");
-
-    companion object {
-        fun fromValue(raw: String?): ApkDownloadSource {
-            return when (raw?.trim()?.lowercase(Locale.ROOT)) {
-                WORKER.value -> WORKER
-                // GrimCore has no update worker of its own, so GitHub is the
-                // default and an unknown value must not fall back to upstream.
-                else -> GITHUB
-            }
-        }
-    }
-}
 
 @VisibleForTesting
 internal enum class ReleaseTrack {
@@ -111,12 +73,6 @@ internal data class ReleaseCandidate(
     val assets: List<ReleaseAsset>
 )
 
-private data class ParsedCloudServicePolicy(
-    val enabled: Boolean,
-    val access: CloudServiceAccessState,
-    val checkedAt: Long,
-)
-
 object AppUpdateManager {
     private const val TAG = "AppUpdateManager"
     private const val PREFS_NAME = "app_update_state"
@@ -129,16 +85,6 @@ object AppUpdateManager {
     private const val KEY_RELEASE_NOTES = "release_notes"
     private const val KEY_APK_NAME = "apk_name"
     private const val KEY_APK_DOWNLOAD_URL = "apk_download_url"
-    private const val KEY_APK_DOWNLOAD_SOURCE = "apk_download_source"
-    private const val KEY_INSTALL_ID = "install_id"
-    private const val KEY_CLOUD_SERVICE_POLICY_KNOWN = "cloud_service_policy_known"
-    private const val KEY_CLOUD_SERVICE_POLICY_ENABLED = "cloud_service_policy_enabled"
-    private const val KEY_CLOUD_SERVICE_MINIMUM_VERSION = "cloud_service_minimum_version"
-    private const val KEY_CLOUD_SERVICE_POLICY_MESSAGE = "cloud_service_policy_message"
-    private const val KEY_CLOUD_SERVICE_POLICY_CHECKED_AT = "cloud_service_policy_checked_at"
-
-    private const val WORKER_UPDATES_PATH = "updates"
-    private const val WORKER_DOWNLOADS_PATH = "downloads"
     // GrimCore publishes its own releases. Update metadata is read from this
     // repository only, so the updater can never offer an upstream OmniBot APK.
     private const val GRIMCORE_RELEASES_API =
@@ -148,7 +94,6 @@ object AppUpdateManager {
     private const val WORK_NAME = "app_update_periodic_check"
     private const val PERIODIC_CHECK_HOURS = 12L
     private const val SILENT_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
-    private const val CLOUD_SERVICE_POLICY_MAX_AGE_MS = 24 * 60 * 60 * 1000L
     private const val USER_AGENT = "GrimCore-App"
     private const val EDITION_STANDARD = "standard"
     private val grimCoreVersionPattern =
@@ -206,33 +151,10 @@ object AppUpdateManager {
         )
     }
 
-    fun getCloudServiceAccessState(context: Context): CloudServiceAccessState {
-        val appContext = context.applicationContext
-        val state = readState(
-            context = appContext,
-            currentVersion = currentVersion(appContext),
-            includeBeta = isBetaOptIn(appContext),
-        )
-        return CloudServiceAccessState(
-            allowed = state.cloudServiceAccessAllowed,
-            policyKnown = state.cloudServicePolicyKnown,
-            currentVersion = state.currentVersion,
-            minimumVersion = state.cloudServiceMinimumVersion,
-            message = state.cloudServicePolicyMessage,
-        )
-    }
-
     fun isBetaOptIn(context: Context): Boolean {
         return context.applicationContext
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getBoolean(KEY_BETA_OPT_IN, false)
-    }
-
-    internal fun getApkDownloadSource(context: Context): ApkDownloadSource {
-        val rawValue = context.applicationContext
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString(KEY_APK_DOWNLOAD_SOURCE, null)
-        return ApkDownloadSource.fromValue(rawValue)
     }
 
     fun setBetaOptIn(context: Context, enabled: Boolean): Boolean {
@@ -247,22 +169,11 @@ object AppUpdateManager {
         return enabled
     }
 
-    internal fun setApkDownloadSource(context: Context, rawValue: String?): ApkDownloadSource {
-        val source = ApkDownloadSource.fromValue(rawValue)
-        context.applicationContext
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_APK_DOWNLOAD_SOURCE, source.value)
-            .apply()
-        return source
-    }
-
     suspend fun checkNow(context: Context, force: Boolean): AppUpdateState {
         val appContext = context.applicationContext
         val now = System.currentTimeMillis()
         val currentVersion = currentVersion(appContext)
         val includeBeta = isBetaOptIn(appContext)
-        val downloadSource = getApkDownloadSource(appContext)
         val cached = readState(appContext, currentVersion, includeBeta)
         if (!force && now - cached.checkedAt < SILENT_CHECK_INTERVAL_MS) {
             return cached
@@ -271,8 +182,6 @@ object AppUpdateManager {
         val fetched = fetchLatestReleaseState(
             currentVersion = currentVersion,
             includeBeta = includeBeta,
-            downloadSource = downloadSource,
-            deviceStatsParams = buildDeviceStatsParams(appContext)
         ).copy(checkedAt = now)
         saveState(appContext, fetched)
         return fetched
@@ -401,16 +310,6 @@ object AppUpdateManager {
 
     private fun readState(context: Context, currentVersion: String, includeBeta: Boolean): AppUpdateState {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val policyEnabled = prefs.getBoolean(KEY_CLOUD_SERVICE_POLICY_ENABLED, false)
-        val policyCheckedAt = prefs.getLong(KEY_CLOUD_SERVICE_POLICY_CHECKED_AT, 0L)
-        val cloudServiceAccess = resolveCloudServiceAccessState(
-            currentVersion = currentVersion,
-            policyKnown = prefs.getBoolean(KEY_CLOUD_SERVICE_POLICY_KNOWN, false),
-            policyEnabled = policyEnabled,
-            minimumVersion = prefs.getString(KEY_CLOUD_SERVICE_MINIMUM_VERSION, "").orEmpty(),
-            message = prefs.getString(KEY_CLOUD_SERVICE_POLICY_MESSAGE, "").orEmpty(),
-            checkedAt = policyCheckedAt,
-        )
         val storedState = AppUpdateState(
             currentVersion = currentVersion,
             latestVersion = prefs.getString(KEY_LATEST_VERSION, currentVersion).orEmpty().ifBlank {
@@ -423,17 +322,8 @@ object AppUpdateManager {
             releaseNotes = prefs.getString(KEY_RELEASE_NOTES, "").orEmpty(),
             apkName = prefs.getString(KEY_APK_NAME, "").orEmpty(),
             apkDownloadUrl = prefs.getString(KEY_APK_DOWNLOAD_URL, "").orEmpty(),
-            cloudServicePolicyKnown = cloudServiceAccess.policyKnown,
-            cloudServicePolicyEnabled = policyEnabled,
-            cloudServiceAccessAllowed = cloudServiceAccess.allowed,
-            cloudServiceMinimumVersion = cloudServiceAccess.minimumVersion,
-            cloudServicePolicyMessage = cloudServiceAccess.message,
-            cloudServicePolicyCheckedAt = policyCheckedAt,
         )
-        val stateWithPreferredSource = applyPreferredDownloadSource(
-            storedState,
-            getApkDownloadSource(context)
-        )
+        val stateWithPreferredSource = applyPreferredDownloadSource(storedState)
         if (!shouldIncludeTrack(classifyReleaseTrack(stateWithPreferredSource.latestVersion), includeBeta)) {
             return clearReleaseState(stateWithPreferredSource)
         }
@@ -454,11 +344,6 @@ object AppUpdateManager {
             .putString(KEY_RELEASE_NOTES, state.releaseNotes)
             .putString(KEY_APK_NAME, state.apkName)
             .putString(KEY_APK_DOWNLOAD_URL, state.apkDownloadUrl)
-            .putBoolean(KEY_CLOUD_SERVICE_POLICY_KNOWN, state.cloudServicePolicyKnown)
-            .putBoolean(KEY_CLOUD_SERVICE_POLICY_ENABLED, state.cloudServicePolicyEnabled)
-            .putString(KEY_CLOUD_SERVICE_MINIMUM_VERSION, state.cloudServiceMinimumVersion)
-            .putString(KEY_CLOUD_SERVICE_POLICY_MESSAGE, state.cloudServicePolicyMessage)
-            .putLong(KEY_CLOUD_SERVICE_POLICY_CHECKED_AT, state.cloudServicePolicyCheckedAt)
             .apply()
     }
 
@@ -472,66 +357,23 @@ object AppUpdateManager {
     private fun fetchLatestReleaseState(
         currentVersion: String,
         includeBeta: Boolean,
-        downloadSource: ApkDownloadSource,
-        deviceStatsParams: Map<String, String> = emptyMap()
     ): AppUpdateState {
         val checkedAt = System.currentTimeMillis()
-        val updatesUrl = buildWorkerCheckUrl(
-            workerUrl = BuildConfig.APP_UPDATE_WORKER_URL,
+        return fetchGrimcoreReleaseState(
             currentVersion = currentVersion,
             includeBeta = includeBeta,
-            downloadSource = downloadSource,
-            edition = BuildConfig.APP_EDITION,
-            deviceStatsParams = deviceStatsParams
+            checkedAt = checkedAt,
         )
-        if (updatesUrl == null) {
-            OmniLog.i(TAG, "No update worker configured, reading GrimCore releases")
-            return fetchGrimcoreReleaseState(
-                currentVersion = currentVersion,
-                includeBeta = includeBeta,
-                downloadSource = downloadSource,
-                checkedAt = checkedAt
-            )
-        }
-
-        val request = Request.Builder()
-            .url(updatesUrl)
-            .addHeader("Accept", "application/json")
-            .addHeader("User-Agent", USER_AGENT)
-            .get()
-            .build()
-
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("App update worker request failed with code ${response.code}")
-            }
-
-            val body = response.body?.string().orEmpty()
-            if (body.isBlank()) {
-                throw IOException("App update worker response body is empty")
-            }
-            val payload = JSONObject(body)
-            cacheOfficialVlmOperationConfig(body)
-            return parseWorkerUpdateState(
-                payload = payload,
-                currentVersion = currentVersion,
-                includeBeta = includeBeta,
-                downloadSource = downloadSource,
-                edition = BuildConfig.APP_EDITION,
-                checkedAt = checkedAt
-            )
-        }
     }
 
     /**
      * Reads https://api.github.com/repos/mishaqp/GrimCore/releases and feeds the
-     * newest installable release into the existing worker payload parser, so the
+     * newest installable release into the shared release payload parser, so the
      * version comparison, track handling and asset selection stay unchanged.
      */
     private fun fetchGrimcoreReleaseState(
         currentVersion: String,
         includeBeta: Boolean,
-        downloadSource: ApkDownloadSource,
         checkedAt: Long
     ): AppUpdateState {
         val request = Request.Builder()
@@ -559,11 +401,10 @@ object AppUpdateManager {
             for (index in 0 until releases.length()) {
                 val release = releases.optJSONObject(index) ?: continue
                 if (release.optBoolean("draft", false)) continue
-                val state = parseWorkerUpdateState(
+                val state = parseReleaseUpdateState(
                     payload = release,
                     currentVersion = currentVersion,
                     includeBeta = includeBeta,
-                    downloadSource = downloadSource,
                     edition = BuildConfig.APP_EDITION,
                     checkedAt = checkedAt
                 )
@@ -575,155 +416,35 @@ object AppUpdateManager {
         }
     }
 
-    private fun cacheOfficialVlmOperationConfig(payloadJson: String) {
-        val config = parseOfficialVlmOperationConfig(payloadJson) ?: return
-        val saved = OfficialVlmOperationConfigStore.saveConfig(config)
-        OmniLog.i(
-            TAG,
-            "Official VLM config cached: enabled=${saved.enabled}, " +
-                "configured=${saved.isConfigured()}"
-        )
-    }
-
     @VisibleForTesting
-    internal fun parseOfficialVlmOperationConfig(
-        payloadJson: String
-    ): OfficialVlmOperationConfig? {
-        val payload = runCatching {
-            JsonParser.parseString(payloadJson).asJsonObject
-        }.getOrNull() ?: return null
-        val raw = firstJsonObject(
-            payload,
-            "officialVlmOperation",
-            "official_vlm_operation",
-            "officialVLMOperation"
-        ) ?: return null
-        return OfficialVlmOperationConfig(
-            enabled = raw.get("enabled")?.runCatching { asBoolean }?.getOrNull() ?: false,
-            apiBase = firstJsonString(
-                raw,
-                "apiBase",
-                "api_base",
-                "baseUrl",
-                "base_url",
-                "url"
-            ),
-            model = firstJsonString(raw, "model", "modelId", "model_id"),
-            wireApi = firstJsonString(raw, "wireApi", "wire_api")
-                .ifEmpty { OpenAiWireApi.CHAT_COMPLETIONS }
-        )
-    }
-
-    private fun firstJsonObject(raw: JsonObject, vararg keys: String): JsonObject? {
-        return keys.firstNotNullOfOrNull { key ->
-            raw.get(key)?.takeIf { it.isJsonObject }?.asJsonObject
-        }
-    }
-
-    private fun firstJsonString(raw: JsonObject, vararg keys: String): String {
-        return keys.firstNotNullOfOrNull { key ->
-            raw.get(key)
-                ?.takeUnless { it.isJsonNull }
-                ?.runCatching { asString.trim() }
-                ?.getOrNull()
-                ?.takeIf(String::isNotEmpty)
-        }.orEmpty()
-    }
-
-    @VisibleForTesting
-    internal fun buildWorkerCheckUrl(
-        workerUrl: String,
-        currentVersion: String,
-        includeBeta: Boolean,
-        downloadSource: ApkDownloadSource,
-        edition: String,
-        deviceStatsParams: Map<String, String> = emptyMap()
-    ): HttpUrl? {
-        val normalizedBase = workerUrl.trim().trimEnd('/')
-        if (normalizedBase.isBlank()) return null
-
-        val updatesUrl = if (normalizedBase.endsWith("/$WORKER_UPDATES_PATH", ignoreCase = true)) {
-            normalizedBase
-        } else {
-            "$normalizedBase/$WORKER_UPDATES_PATH"
-        }
-        val builder = updatesUrl.toHttpUrlOrNull()
-            ?.newBuilder()
-            ?.addQueryParameter("currentVersion", normalizeVersion(currentVersion))
-            ?.addQueryParameter("includeBeta", includeBeta.toString())
-            ?.addQueryParameter("edition", normalizeEdition(edition))
-            ?.addQueryParameter("source", downloadSource.value)
-            ?: return null
-        deviceStatsParams.forEach { (key, value) ->
-            if (key.isNotBlank() && value.isNotBlank()) {
-                builder.addQueryParameter(key, value)
-            }
-        }
-        return builder.build()
-    }
-
-    /**
-     * Anonymous, per-install statistics sent to the update worker so the admin
-     * console can chart device models, OS versions and daily active checks via
-     * Cloudflare Analytics Engine. Contains no account or hardware identifiers;
-     * the install id is a random UUID generated on first use.
-     */
-    private fun buildDeviceStatsParams(context: Context): Map<String, String> {
-        return mapOf(
-            "deviceBrand" to (android.os.Build.BRAND ?: ""),
-            "deviceModel" to (android.os.Build.MODEL ?: ""),
-            "osVersion" to (android.os.Build.VERSION.RELEASE ?: ""),
-            "sdkInt" to android.os.Build.VERSION.SDK_INT.toString(),
-            "installId" to installId(context)
-        )
-    }
-
-    private fun installId(context: Context): String {
-        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.getString(KEY_INSTALL_ID, null)?.takeIf { it.isNotBlank() }?.let { return it }
-        val generated = java.util.UUID.randomUUID().toString()
-        prefs.edit().putString(KEY_INSTALL_ID, generated).apply()
-        return generated
-    }
-
-    @VisibleForTesting
-    internal fun parseWorkerUpdateState(
+    internal fun parseReleaseUpdateState(
         payload: JSONObject,
         currentVersion: String,
         includeBeta: Boolean,
-        downloadSource: ApkDownloadSource,
         edition: String = BuildConfig.APP_EDITION,
         checkedAt: Long = System.currentTimeMillis()
     ): AppUpdateState {
-        val cloudServicePolicy = parseCloudServicePolicy(
-            payload = payload,
-            currentVersion = currentVersion,
-            checkedAt = checkedAt,
-        )
         val release = payload.optJSONObject("release") ?: payload
         val version = normalizeVersion(
             firstString(release, "latestVersion", "version", "tag", "tagName", "tag_name")
         )
         val track = parseReleaseTrack(release, version)
         if (version.isBlank() || !shouldIncludeTrack(track, includeBeta)) {
-            return applyCloudServicePolicy(
-                emptyState(currentVersion, checkedAt = checkedAt),
-                cloudServicePolicy,
-            )
+            return emptyState(currentVersion, checkedAt = checkedAt)
         }
 
-        val assets = parseWorkerAssets(release.optJSONArray("assets"), downloadSource)
-        val payloadAsset = releaseAssetFromPayload(release, downloadSource)
+        val assets = parseReleaseAssets(release.optJSONArray("assets"))
+        val payloadAsset = releaseAssetFromPayload(release)
         val preferredAsset = selectPreferredApkAsset(assets, edition) ?: payloadAsset
         val hasInstallableUpdate = preferredAsset != null &&
             compareVersions(version, currentVersion) > 0
         val downloadUrl = preferredAsset?.let { asset ->
             asset.downloadUrl.ifBlank {
-                resolveApkDownloadUrl(downloadSource, version, asset)
+                resolveApkDownloadUrl(version, asset)
             }
         }.orEmpty()
 
-        return applyCloudServicePolicy(AppUpdateState(
+        return AppUpdateState(
             currentVersion = currentVersion,
             latestVersion = version,
             hasUpdate = hasInstallableUpdate,
@@ -735,133 +456,6 @@ object AppUpdateManager {
             releaseNotes = firstString(release, "releaseNotes", "notes", "body"),
             apkName = preferredAsset?.name.orEmpty(),
             apkDownloadUrl = downloadUrl
-        ), cloudServicePolicy)
-    }
-
-    private fun parseCloudServicePolicy(
-        payload: JSONObject,
-        currentVersion: String,
-        checkedAt: Long,
-    ): ParsedCloudServicePolicy {
-        val raw = payload.optJSONObject("cloudServicePolicy")
-        if (raw == null) {
-            return ParsedCloudServicePolicy(
-                enabled = false,
-                access = resolveCloudServiceAccessState(
-                    currentVersion = currentVersion,
-                    policyKnown = false,
-                    policyEnabled = false,
-                    minimumVersion = "",
-                    message = "",
-                    checkedAt = checkedAt,
-                    now = checkedAt,
-                ),
-                checkedAt = checkedAt,
-            )
-        }
-        val enabledValue = raw.opt("enabled")
-        if (raw.optInt("schemaVersion", 0) != 1 || enabledValue !is Boolean) {
-            return ParsedCloudServicePolicy(
-                enabled = false,
-                access = resolveCloudServiceAccessState(
-                    currentVersion = currentVersion,
-                    policyKnown = false,
-                    policyEnabled = false,
-                    minimumVersion = "",
-                    message = "云服务最低版本策略无效，请稍后重试",
-                    checkedAt = checkedAt,
-                    now = checkedAt,
-                ),
-                checkedAt = checkedAt,
-            )
-        }
-        val enabled = enabledValue
-        val minimumVersion = normalizeVersion(
-            firstString(raw, "minimumVersion", "minimum_version", "minVersion", "min_version")
-        )
-        val message = firstString(raw, "message", "reason")
-        return ParsedCloudServicePolicy(
-            enabled = enabled,
-            access = resolveCloudServiceAccessState(
-                currentVersion = currentVersion,
-                policyKnown = true,
-                policyEnabled = enabled,
-                minimumVersion = minimumVersion,
-                message = message,
-                checkedAt = checkedAt,
-                now = checkedAt,
-            ),
-            checkedAt = checkedAt,
-        )
-    }
-
-    private fun applyCloudServicePolicy(
-        state: AppUpdateState,
-        policy: ParsedCloudServicePolicy,
-    ): AppUpdateState = state.copy(
-        cloudServicePolicyKnown = policy.access.policyKnown,
-        cloudServicePolicyEnabled = policy.enabled,
-        cloudServiceAccessAllowed = policy.access.allowed,
-        cloudServiceMinimumVersion = policy.access.minimumVersion,
-        cloudServicePolicyMessage = policy.access.message,
-        cloudServicePolicyCheckedAt = policy.checkedAt,
-    )
-
-    @VisibleForTesting
-    internal fun resolveCloudServiceAccessState(
-        currentVersion: String,
-        policyKnown: Boolean,
-        policyEnabled: Boolean,
-        minimumVersion: String,
-        message: String,
-        checkedAt: Long,
-        now: Long = System.currentTimeMillis(),
-    ): CloudServiceAccessState {
-        val normalizedCurrent = normalizeVersion(currentVersion)
-        val normalizedMinimum = normalizeVersion(minimumVersion)
-        val policyFresh = checkedAt > 0L && now >= checkedAt &&
-            now - checkedAt <= CLOUD_SERVICE_POLICY_MAX_AGE_MS
-        if (!policyKnown || !policyFresh) {
-            return CloudServiceAccessState(
-                allowed = false,
-                policyKnown = false,
-                currentVersion = normalizedCurrent,
-                minimumVersion = normalizedMinimum,
-                message = "无法验证云服务最低版本，请联网检查更新",
-            )
-        }
-        if (!policyEnabled) {
-            return CloudServiceAccessState(
-                allowed = true,
-                policyKnown = true,
-                currentVersion = normalizedCurrent,
-            )
-        }
-        if (
-            parseNumericVersionParts(normalizedCurrent) == null ||
-            parseNumericVersionParts(normalizedMinimum) == null
-        ) {
-            return CloudServiceAccessState(
-                allowed = false,
-                policyKnown = false,
-                currentVersion = normalizedCurrent,
-                minimumVersion = normalizedMinimum,
-                message = "云服务最低版本策略无效，请稍后重试",
-            )
-        }
-        val allowed = compareVersions(normalizedCurrent, normalizedMinimum) >= 0
-        return CloudServiceAccessState(
-            allowed = allowed,
-            policyKnown = true,
-            currentVersion = normalizedCurrent,
-            minimumVersion = normalizedMinimum,
-            message = if (allowed) {
-                ""
-            } else {
-                message.ifBlank {
-                    "当前版本过旧，请升级至 v$normalizedMinimum 或更高版本后使用账号与官方云服务"
-                }
-            },
         )
     }
 
@@ -876,89 +470,44 @@ object AppUpdateManager {
         }
     }
 
-    private fun parseWorkerAssets(
-        array: JSONArray?,
-        downloadSource: ApkDownloadSource
-    ): List<ReleaseAsset> {
+    private fun parseReleaseAssets(array: JSONArray?): List<ReleaseAsset> {
         if (array == null) return emptyList()
         val assets = mutableListOf<ReleaseAsset>()
         for (index in 0 until array.length()) {
             val raw = array.optJSONObject(index) ?: continue
             val name = firstString(raw, "name", "fileName", "filename")
             if (!name.lowercase(Locale.ROOT).endsWith(".apk")) continue
-            val downloadUrl = when (downloadSource) {
-                ApkDownloadSource.WORKER -> firstString(
-                    raw,
-                    "workerDownloadUrl",
-                    "worker_download_url",
-                    "r2DownloadUrl",
-                    "r2_download_url",
-                    "downloadUrl",
-                    "apkDownloadUrl",
-                    "cnbDownloadUrl",
-                    "cnb_download_url",
-                    "browser_download_url",
-                    "githubDownloadUrl",
-                    "github_download_url"
-                )
-                ApkDownloadSource.GITHUB -> firstString(
-                    raw,
-                    "githubDownloadUrl",
-                    "github_download_url",
-                    "browser_download_url",
-                    "downloadUrl",
-                    "cnbDownloadUrl",
-                    "cnb_download_url"
-                )
-            }
+            val downloadUrl = firstString(
+                raw,
+                "githubDownloadUrl",
+                "github_download_url",
+                "browser_download_url",
+                "downloadUrl",
+            )
             assets += ReleaseAsset(name = name, downloadUrl = downloadUrl)
         }
         return assets
     }
 
-    private fun releaseAssetFromPayload(
-        payload: JSONObject,
-        downloadSource: ApkDownloadSource
-    ): ReleaseAsset? {
+    private fun releaseAssetFromPayload(payload: JSONObject): ReleaseAsset? {
         val name = firstString(payload, "apkName", "assetName")
         if (!name.lowercase(Locale.ROOT).endsWith(".apk")) return null
-        val downloadUrl = when (downloadSource) {
-            ApkDownloadSource.WORKER -> firstString(
-                payload,
-                "workerDownloadUrl",
-                "worker_download_url",
-                "r2DownloadUrl",
-                "r2_download_url",
-                "apkDownloadUrl",
-                "downloadUrl",
-                "cnbDownloadUrl",
-                "cnb_download_url",
-                "githubDownloadUrl",
-                "github_download_url"
-            )
-            ApkDownloadSource.GITHUB -> firstString(
-                payload,
-                "githubDownloadUrl",
-                "github_download_url",
-                "apkDownloadUrl",
-                "downloadUrl",
-                "cnbDownloadUrl",
-                "cnb_download_url"
-            )
-        }
+        val downloadUrl = firstString(
+            payload,
+            "githubDownloadUrl",
+            "github_download_url",
+            "apkDownloadUrl",
+            "downloadUrl",
+        )
         return ReleaseAsset(name = name, downloadUrl = downloadUrl)
     }
 
-    private fun applyPreferredDownloadSource(
-        state: AppUpdateState,
-        downloadSource: ApkDownloadSource
-    ): AppUpdateState {
+    private fun applyPreferredDownloadSource(state: AppUpdateState): AppUpdateState {
         if (state.latestVersion.isBlank() || state.apkName.isBlank()) {
             return state
         }
         return state.copy(
             apkDownloadUrl = resolveApkDownloadUrl(
-                downloadSource = downloadSource,
                 version = state.latestVersion,
                 asset = ReleaseAsset(
                     name = state.apkName,
@@ -969,11 +518,7 @@ object AppUpdateManager {
     }
 
     @VisibleForTesting
-    internal fun resolveApkDownloadUrl(
-        downloadSource: ApkDownloadSource,
-        version: String,
-        asset: ReleaseAsset
-    ): String {
+    internal fun resolveApkDownloadUrl(version: String, asset: ReleaseAsset): String {
         if (asset.name.isBlank()) {
             return asset.downloadUrl
         }
@@ -983,25 +528,8 @@ object AppUpdateManager {
         }
         val releaseTag = "v${encodePathSegment(normalizedVersion)}"
         val fileName = encodePathSegment(asset.name)
-        val prefix = when (downloadSource) {
-            ApkDownloadSource.WORKER -> normalizedWorkerBaseUrl()?.let {
-                "$it/$WORKER_DOWNLOADS_PATH"
-            } ?: return asset.downloadUrl
-            ApkDownloadSource.GITHUB -> GITHUB_RELEASE_DOWNLOAD_PREFIX
-        }
+        val prefix = GITHUB_RELEASE_DOWNLOAD_PREFIX
         return "$prefix/$releaseTag/$fileName"
-    }
-
-    private fun normalizedWorkerBaseUrl(): String? {
-        var normalizedBase = BuildConfig.APP_UPDATE_WORKER_URL.trim().trimEnd('/')
-        if (normalizedBase.isBlank()) return null
-        if (normalizedBase.endsWith("/$WORKER_UPDATES_PATH", ignoreCase = true)) {
-            normalizedBase = normalizedBase.dropLast(WORKER_UPDATES_PATH.length + 1)
-        }
-        if (normalizedBase.endsWith("/admin/releases", ignoreCase = true)) {
-            normalizedBase = normalizedBase.dropLast("/admin/releases".length)
-        }
-        return normalizedBase.ifBlank { null }
     }
 
     private fun firstString(raw: JSONObject, vararg keys: String): String {

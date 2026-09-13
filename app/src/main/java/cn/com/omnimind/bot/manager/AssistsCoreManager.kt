@@ -28,16 +28,12 @@ import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.ModelSceneRegistry
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.SceneModelCatalogResolver
 import cn.com.omnimind.baselib.llm.SceneCatalogItem
 import cn.com.omnimind.baselib.llm.SceneModelBindingEntry
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
 import cn.com.omnimind.baselib.llm.SceneModelOverrideEntry
 import cn.com.omnimind.baselib.llm.SceneModelOverrideStore
-import cn.com.omnimind.baselib.llm.SceneOperationConfig
-import cn.com.omnimind.baselib.llm.SceneOperationConfigStore
 import cn.com.omnimind.baselib.llm.SceneVoiceConfig
 import cn.com.omnimind.baselib.llm.SceneVoiceConfigStore
 import cn.com.omnimind.baselib.util.APPPackageUtil
@@ -246,8 +242,6 @@ class AssistsCoreManager(private val context: Context) {
 
     private fun lookupRuntimeProviderProfile(profileId: String): ModelProviderProfile? =
         ModelProviderConfigStore.getProfile(profileId)
-            ?: PlatformAiProvisioner.officialProfileOrNull()
-                ?.takeIf { OmniOfficialProvider.isOfficialProfile(profileId) }
 
     companion object {
         private const val SUMMARY_TASK_PREFIX_TASK = "task-summary-"
@@ -338,15 +332,14 @@ class AssistsCoreManager(private val context: Context) {
     private var currentConversationMode: String = "agent"
 
     private fun ModelProviderConfig.toMap(): Map<String, Any?> {
-        val official = OmniOfficialProvider.isOfficialProfile(id)
         return mapOf(
             "id" to id,
             "name" to name,
-            "baseUrl" to if (official) "" else baseUrl,
-            "apiKey" to if (official) "" else apiKey,
+            "baseUrl" to baseUrl,
+            "apiKey" to apiKey,
             "customHeaders" to emptyMap<String, String>(),
-            "hasApiKey" to (!official && apiKey.isNotBlank()),
-            "hasCustomHeaders" to (!official && customHeaders.isNotEmpty()),
+            "hasApiKey" to apiKey.isNotBlank(),
+            "hasCustomHeaders" to customHeaders.isNotEmpty(),
             "source" to source,
             "providerType" to providerType,
             "readOnly" to readOnly,
@@ -358,15 +351,14 @@ class AssistsCoreManager(private val context: Context) {
     }
 
     private fun ModelProviderProfile.toMap(): Map<String, Any?> {
-        val official = OmniOfficialProvider.isOfficialProfile(id)
         return mapOf(
             "id" to id,
             "name" to name,
-            "baseUrl" to if (official) "" else baseUrl,
-            "apiKey" to if (official) "" else apiKey,
+            "baseUrl" to baseUrl,
+            "apiKey" to apiKey,
             "customHeaders" to emptyMap<String, String>(),
-            "hasApiKey" to (!official && apiKey.isNotBlank()),
-            "hasCustomHeaders" to (!official && customHeaders.isNotEmpty()),
+            "hasApiKey" to apiKey.isNotBlank(),
+            "hasCustomHeaders" to customHeaders.isNotEmpty(),
             "sourceType" to sourceType,
             "readOnly" to readOnly,
             "ready" to ready,
@@ -434,10 +426,6 @@ class AssistsCoreManager(private val context: Context) {
             "providerProfileId" to providerProfileId,
             "modelId" to modelId
         )
-    }
-
-    private fun SceneOperationConfig.toMap(): Map<String, Any?> {
-        return mapOf("useOfficialService" to useOfficialService)
     }
 
     private fun SceneVoiceConfig.toMap(): Map<String, Any?> {
@@ -1077,19 +1065,7 @@ class AssistsCoreManager(private val context: Context) {
     fun getModelProviderConfig(call: MethodCall, result: MethodChannel.Result) {
         workJob.launch {
             try {
-                val config = PlatformAiProvisioner.officialProfileOrNull()?.let { profile ->
-                    ModelProviderConfig(
-                        id = profile.id,
-                        name = profile.name,
-                        baseUrl = profile.baseUrl,
-                        source = "platform",
-                        providerType = profile.sourceType,
-                        readOnly = profile.readOnly,
-                        ready = profile.ready,
-                        statusText = profile.statusText,
-                        wireApi = profile.wireApi,
-                    )
-                } ?: ModelProviderConfigStore.getConfig()
+                val config = ModelProviderConfigStore.getConfig()
                 withContext(Dispatchers.Main) {
                     result.success(config.toMap())
                 }
@@ -1361,12 +1337,7 @@ class AssistsCoreManager(private val context: Context) {
     fun listModelProviderProfiles(call: MethodCall, result: MethodChannel.Result) {
         workJob.launch {
             try {
-                val allProfiles = ModelProviderConfigStore.listProfiles()
-                val official = PlatformAiProvisioner.officialProfileOrNull()
-                val profiles = allProfiles
-                    .filterNot { OmniOfficialProvider.isOfficialProfile(it.id) }
-                    .toMutableList()
-                    .apply { if (official != null) add(official) }
+                val profiles = ModelProviderConfigStore.listProfiles()
                 withContext(Dispatchers.Main) {
                     result.success(
                         mapOf(
@@ -1604,24 +1575,12 @@ class AssistsCoreManager(private val context: Context) {
         val useProvidedApiKey = call.argument<Boolean>("useProvidedApiKey") == true
         val useProvidedCustomHeaders = call.argument<Boolean>("useProvidedCustomHeaders") == true
         val profileId = call.argument<String>("profileId")?.trim()
-        val capability = call.argument<String>("capability")?.trim()
         val forceRefresh = call.argument<Boolean>("forceRefresh") == true
         val expectedProfileRevision = call.argument<Number>("expectedProfileRevision")?.toLong()
         val expectedProfileBaseUrl = call.argument<String>("expectedProfileBaseUrl")?.trim().orEmpty()
 
         workJob.launch {
             try {
-                if (OmniOfficialProvider.isOfficialProfile(profileId)) {
-                    val models = if (forceRefresh) {
-                        PlatformAiProvisioner.refreshAndGetModels(capability)
-                    } else {
-                        PlatformAiProvisioner.ensureReadyAndGetModels(capability)
-                    }
-                    withContext(Dispatchers.Main) {
-                        result.success(models.map { it.toMap() })
-                    }
-                    return@launch
-                }
                 val profile = profileId?.let(ModelProviderConfigStore::getProfile)
                     ?: ModelProviderConfigStore.getEditingProfile()
                 require(expectedProfileRevision != null && expectedProfileRevision >= 0L) {
@@ -1699,24 +1658,9 @@ class AssistsCoreManager(private val context: Context) {
         val useProvidedApiKey = call.argument<Boolean>("useProvidedApiKey") == true
         val useProvidedCustomHeaders = call.argument<Boolean>("useProvidedCustomHeaders") == true
         val profileId = call.argument<String>("profileId")?.trim()
-        val capability = call.argument<String>("capability")?.trim()
 
         workJob.launch {
             try {
-                if (OmniOfficialProvider.isOfficialProfile(profileId)) {
-                    val available = PlatformAiProvisioner.ensureReadyAndGetModels(capability)
-                        .any { it.id == model }
-                    withContext(Dispatchers.Main) {
-                        result.success(
-                            mapOf(
-                                "available" to available,
-                                "code" to if (available) 200 else 404,
-                                "message" to if (available) "OK" else "该模型不在当前官方模型列表中"
-                            )
-                        )
-                    }
-                    return@launch
-                }
                 val profile = profileId?.let(ModelProviderConfigStore::getProfile)
                     ?: ModelProviderConfigStore.getEditingProfile()
                 val apiBase = if (baseUrlArg.isNotEmpty()) baseUrlArg else profile.baseUrl
@@ -1800,11 +1744,6 @@ class AssistsCoreManager(private val context: Context) {
                 val previousProviderId = SceneModelBindingStore.getBinding(sceneId)
                     ?.providerProfileId
                 SceneModelBindingStore.saveBinding(sceneId, providerProfileId, modelId)
-                if (sceneId == SceneOperationConfigStore.SCENE_ID) {
-                    SceneOperationConfigStore.saveConfig(
-                        SceneOperationConfig(useOfficialService = false)
-                    )
-                }
                 // A model selection is session configuration, not a change of
                 // credentials or endpoint. Preserve the live ACP session that
                 // has just accepted session/set_config_option for this model.
@@ -1842,43 +1781,6 @@ class AssistsCoreManager(private val context: Context) {
                 OmniLog.e(TAG, "clearSceneModelBinding error: ${e.message}")
                 withContext(Dispatchers.Main) {
                     result.error("CLEAR_SCENE_MODEL_BINDING_ERROR", e.message, null)
-                }
-            }
-        }
-    }
-
-    fun getSceneOperationConfig(call: MethodCall, result: MethodChannel.Result) {
-        workJob.launch {
-            try {
-                withContext(Dispatchers.Main) {
-                    result.success(SceneOperationConfigStore.getConfig().toMap())
-                }
-            } catch (e: Exception) {
-                OmniLog.e(TAG, "getSceneOperationConfig error: ${e.message}")
-                withContext(Dispatchers.Main) {
-                    result.error("GET_SCENE_OPERATION_CONFIG_ERROR", e.message, null)
-                }
-            }
-        }
-    }
-
-    fun saveSceneOperationConfig(call: MethodCall, result: MethodChannel.Result) {
-        val useOfficialService = call.argument<Boolean>("useOfficialService") == true
-        workJob.launch {
-            try {
-                if (useOfficialService) {
-                    SceneModelBindingStore.clearBinding(SceneOperationConfigStore.SCENE_ID)
-                }
-                val saved = SceneOperationConfigStore.saveConfig(
-                    SceneOperationConfig(useOfficialService = useOfficialService)
-                )
-                withContext(Dispatchers.Main) {
-                    result.success(saved.toMap())
-                }
-            } catch (e: Exception) {
-                OmniLog.e(TAG, "saveSceneOperationConfig error: ${e.message}")
-                withContext(Dispatchers.Main) {
-                    result.error("SAVE_SCENE_OPERATION_CONFIG_ERROR", e.message, null)
                 }
             }
         }
@@ -2270,8 +2172,7 @@ class AssistsCoreManager(private val context: Context) {
                             "providerProfileName" to config.providerProfileName,
                             "modelId" to config.modelId,
                             "apiBase" to config.apiBase,
-                            "hasApiKey" to config.hasApiKey,
-                            "usesPlatform" to config.usesPlatform
+                            "hasApiKey" to config.hasApiKey
                         )
                     )
                 }
@@ -2304,8 +2205,7 @@ class AssistsCoreManager(private val context: Context) {
                             "providerProfileName" to config.providerProfileName,
                             "modelId" to config.modelId,
                             "apiBase" to config.apiBase,
-                            "hasApiKey" to config.hasApiKey,
-                            "usesPlatform" to config.usesPlatform
+                            "hasApiKey" to config.hasApiKey
                         )
                     )
                 }

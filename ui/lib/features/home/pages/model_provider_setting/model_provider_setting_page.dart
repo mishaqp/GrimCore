@@ -155,12 +155,6 @@ class ModelProviderSettingPage extends StatefulWidget {
 }
 
 class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
-  static List<ModelProviderProfileSummary> _byokProfiles(
-    List<ModelProviderProfileSummary> profiles,
-  ) => profiles
-      .where((profile) => profile.sourceType != 'omnibot_official')
-      .toList(growable: false);
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _baseUrlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
@@ -631,11 +625,10 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     try {
       final payload = await ModelProviderConfigService.listProfiles();
       if (!mounted) return;
-      final profiles = _byokProfiles(payload.profiles);
+      final profiles = payload.profiles;
       if (profiles.isEmpty) {
-        // The native store may contain only the read-only official profile on
-        // a clean install.  Keep the editor alive with a real draft so the
-        // first Provider can be registered from this page.
+        // Keep the editor alive with a real draft so the first Provider can
+        // be registered from this page.
         const draft = ModelProviderProfileSummary(
           id: 'profile-1',
           name: 'Provider 1',
@@ -1247,7 +1240,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
         current.id,
       );
       if (!mounted) return;
-      final profiles = _byokProfiles(payload.profiles);
+      final profiles = payload.profiles;
       if (profiles.isEmpty) {
         throw StateError('No editable BYOK provider profile is available');
       }

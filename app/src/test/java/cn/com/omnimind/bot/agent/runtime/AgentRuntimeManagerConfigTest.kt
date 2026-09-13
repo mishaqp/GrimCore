@@ -1,7 +1,6 @@
 package cn.com.omnimind.bot.agent.runtime
 
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
@@ -26,23 +25,6 @@ class AgentRuntimeManagerConfigTest {
     }
 
     @Test
-    fun `official provider binding resolves when it is absent from persisted profiles`() {
-        val officialProfile = ModelProviderProfile(
-            id = OmniOfficialProvider.PROFILE_ID,
-            name = OmniOfficialProvider.PROFILE_NAME,
-            baseUrl = "https://gateway.example",
-        )
-
-        assertEquals(
-            officialProfile,
-            resolveAgentProviderProfile(
-                boundProviderProfileId = OmniOfficialProvider.PROFILE_ID,
-                configuredProfile = null,
-                officialProfile = officialProfile,
-            ),
-        )
-    }
-
     @Test
     fun `Dispatch Provider falls back to the editing profile without a scene binding`() {
         val editingProfile = ModelProviderProfile(
@@ -57,7 +39,6 @@ class AgentRuntimeManagerConfigTest {
                 boundProviderProfileId = null,
                 configuredProfile = null,
                 editingProfile = editingProfile,
-                officialProfile = null,
             ),
         )
     }
@@ -81,19 +62,6 @@ class AgentRuntimeManagerConfigTest {
     }
 
     @Test
-    fun `official provider uses the account bearer token as harness credential`() {
-        val officialProfile = ModelProviderProfile(
-            id = OmniOfficialProvider.PROFILE_ID,
-            name = OmniOfficialProvider.PROFILE_NAME,
-            baseUrl = "https://gateway.example",
-        )
-
-        assertEquals(
-            "account-token",
-            resolveAgentProviderApiKey(officialProfile, " account-token "),
-        )
-    }
-
     @Test
     fun `custom provider keeps its configured api key`() {
         val customProfile = ModelProviderProfile(
@@ -105,7 +73,7 @@ class AgentRuntimeManagerConfigTest {
 
         assertEquals(
             "configured-key",
-            resolveAgentProviderApiKey(customProfile, "account-token"),
+            resolveAgentProviderApiKey(customProfile),
         )
     }
 

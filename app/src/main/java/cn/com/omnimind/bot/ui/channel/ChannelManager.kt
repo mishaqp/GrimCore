@@ -32,7 +32,6 @@ class ChannelManager {
     private var agentRuntimeChannel: AgentRuntimeChannel = AgentRuntimeChannel()
     private var pluginPlatformChannel: PluginPlatformChannel = PluginPlatformChannel()
     private var omniLinkPluginChannel: OmniLinkPluginChannel = OmniLinkPluginChannel()
-    private var accountChannel: AccountChannel = AccountChannel()
     private var voicePlaybackChannel: VoicePlaybackChannel = VoicePlaybackChannel()
     fun getUIRouterChannel(): UIRouterChannel {
         return uiRouterChannel
@@ -64,7 +63,6 @@ class ChannelManager {
         agentRuntimeChannel.setChannel(flutterEngine)
         pluginPlatformChannel.setChannel(flutterEngine)
         omniLinkPluginChannel.setChannel(flutterEngine)
-        accountChannel.setChannel(flutterEngine)
         // Flutter may configure the engine before Activity.onCreate reaches
         // ChannelManager.onCreate.  Ensure the voice manager exists in either
         // lifecycle order so the event channel is never silently unbound.
@@ -114,7 +112,6 @@ class ChannelManager {
         agentRuntimeChannel.clear()
         pluginPlatformChannel.clear()
         omniLinkPluginChannel.clear()
-        accountChannel.clear()
         voicePlaybackChannel.clear()
     }
 

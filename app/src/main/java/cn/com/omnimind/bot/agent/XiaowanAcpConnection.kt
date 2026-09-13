@@ -8,7 +8,6 @@ import android.content.Context
 import cn.com.omnimind.baselib.llm.ChatCompletionMessage
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.SceneModelBindingEntry
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
@@ -516,7 +515,6 @@ private class XiaowanAgentSupport(
             configuredProfile = usableBinding.providerProfileId
                 .let(ModelProviderConfigStore::getProfile),
             editingProfile = ModelProviderConfigStore.getEditingProfile(),
-            officialProfile = PlatformAiProvisioner.officialProfileOrNull(),
         ) ?: throw IllegalStateException(
             "Dispatch Model Provider is not configured. Configure the default Provider and retry."
         )

@@ -4,8 +4,6 @@ import android.content.Context
 import android.content.res.AssetManager
 import cn.com.omnimind.bot.terminal.EmbeddedTerminalRuntime
 import cn.com.omnimind.bot.termux.TermuxCommandBuilder
-import cn.com.omnimind.bot.update.ApkDownloadSource
-import cn.com.omnimind.bot.update.AppUpdateManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -19,7 +17,6 @@ private const val INSTALL_STATE_INSTALLED = "installed"
 private const val INSTALL_STATE_REMOVED_BUILTIN = "removed_builtin"
 private const val SKILL_REGISTRY_FILE_NAME = ".skill_registry.json"
 private const val OFFICIAL_SKILLS_GITHUB_REPOSITORY_URL = "https://github.com/omnimind-ai/OmniBotSkills"
-private const val OFFICIAL_SKILLS_CNB_REPOSITORY_URL = "https://cnb.cool/o.a/OmniBotSkills"
 private const val OFFICIAL_SKILLS_DIRECTORY_NAME = "OmniBotSkills"
 private val RETIRED_BUILTIN_SKILL_IDS = setOf("hatch-pet")
 private val SKILL_INDEX_LOCK = Any()
@@ -454,12 +451,8 @@ class SkillIndexService(
         )
     }
 
-    private fun resolveOfficialSkillsRepositoryUrl(): String {
-        return when (AppUpdateManager.getApkDownloadSource(context.applicationContext)) {
-            ApkDownloadSource.WORKER -> OFFICIAL_SKILLS_CNB_REPOSITORY_URL
-            ApkDownloadSource.GITHUB -> OFFICIAL_SKILLS_GITHUB_REPOSITORY_URL
-        }
-    }
+    private fun resolveOfficialSkillsRepositoryUrl(): String =
+        OFFICIAL_SKILLS_GITHUB_REPOSITORY_URL
 
     private fun scanInstalledEntries(
         registry: Map<String, SkillRegistryEntry>,

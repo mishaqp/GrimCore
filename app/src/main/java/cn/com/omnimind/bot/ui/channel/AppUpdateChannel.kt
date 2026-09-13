@@ -39,18 +39,9 @@ class AppUpdateChannel {
                 result.success(AppUpdateManager.isBetaOptIn(safeContext))
             }
 
-            "getApkDownloadSource" -> {
-                result.success(AppUpdateManager.getApkDownloadSource(safeContext).value)
-            }
-
             "setBetaOptIn" -> {
                 val enabled = call.argument<Boolean>("enabled") == true
                 result.success(AppUpdateManager.setBetaOptIn(safeContext, enabled))
-            }
-
-            "setApkDownloadSource" -> {
-                val source = call.argument<String>("source")
-                result.success(AppUpdateManager.setApkDownloadSource(safeContext, source).value)
             }
 
             "getCachedStatus" -> {
