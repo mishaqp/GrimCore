@@ -353,6 +353,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.20.0")
     testImplementation(libs.okhttp.mockwebserver)
+    // Local JVM tests otherwise receive Android's default-returning org.json stubs.
+    testImplementation("org.json:json:20240205")
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest )
 }
