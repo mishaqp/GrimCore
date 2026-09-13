@@ -65,32 +65,32 @@ def main():
     if CJK.search(value) and key not in CJK_ALLOWED:
       errors.append('ru: Chinese text left in %s: %s' % (key, value[:40]))
 
-@@# The legacy literal localizer must cover Russian as well: it is what turns the
-@@# remaining hard-coded Chinese literals on user-facing screens into Russian.
-@@legacy = L10N / 'legacy_text_localizer.dart'
-@@if not legacy.is_file():
-@@@@errors.append('missing file: %s' % legacy)
-@@else:
-@@@@legacy_text = legacy.read_text(encoding='utf-8')
-@@@@for table in ('_exactEn', '_exactRu', '_regexEn', '_regexRu'):
-@@@@@@if table not in legacy_text:
-@@@@@@@@errors.append('legacy_text_localizer.dart is missing %s' % table)
-@@@@en_block = legacy_text[legacy_text.index('_exactEn'):legacy_text.index('_exactRu')]
-@@@@ru_block = legacy_text[legacy_text.index('_exactRu'):legacy_text.index('_regexEn')]
-@@@@key_re = re.compile(r"(?m)^    '((?:[^'\\\\]|\\\\.)*)':")
-@@@@en_keys = key_re.findall(en_block)
-@@@@ru_keys = set(key_re.findall(ru_block))
-@@@@if len(en_keys) != len(ru_keys):
-@@@@@@errors.append('legacy localizer: %d en literals vs %d ru literals'
-@@@@@@@@@@% (len(en_keys), len(ru_keys)))
-@@@@@@missing_keys = [k for k in en_keys if k not in ru_keys]
-@@@@@@if missing_keys:
-@@@@@@@@errors.append('legacy localizer: no Russian for %s' % ', '.join(missing_keys[:10]))
-@@@@ru_only = ru_block
-@@@@if CJK.search(ru_only):
-@@@@@@errors.append('legacy localizer: Chinese text left in the Russian table')
+  # The legacy literal localizer must cover Russian as well: it is what turns the
+  # remaining hard-coded Chinese literals on user-facing screens into Russian.
+  legacy = L10N / 'legacy_text_localizer.dart'
+  if not legacy.is_file():
+    errors.append('missing file: %s' % legacy)
+  else:
+    legacy_text = legacy.read_text(encoding='utf-8')
+    for table in ('_exactEn', '_exactRu', '_regexEn', '_regexRu'):
+      if table not in legacy_text:
+        errors.append('legacy_text_localizer.dart is missing %s' % table)
+    en_block = legacy_text[legacy_text.index('_exactEn'):legacy_text.index('_exactRu')]
+    ru_block = legacy_text[legacy_text.index('_exactRu'):legacy_text.index('_regexEn')]
+    key_re = re.compile(r"(?m)^    '((?:[^'\\\\]|\\\\.)*)':")
+    en_keys = key_re.findall(en_block)
+    ru_keys = set(key_re.findall(ru_block))
+    if len(en_keys) != len(ru_keys):
+      errors.append('legacy localizer: %d en literals vs %d ru literals'
+          % (len(en_keys), len(ru_keys)))
+      missing_keys = [k for k in en_keys if k not in ru_keys]
+      if missing_keys:
+        errors.append('legacy localizer: no Russian for %s' % ', '.join(missing_keys[:10]))
+    ru_only = ru_block
+    if CJK.search(ru_only):
+      errors.append('legacy localizer: Chinese text left in the Russian table')
 
-@@# Android resources
+  # Android resources
   default = RES / 'values/strings.xml'
   en_res = RES / 'values-en/strings.xml'
   ru_res = RES / 'values-ru/strings.xml'
