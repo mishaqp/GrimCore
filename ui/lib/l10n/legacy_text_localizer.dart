@@ -896,8 +896,7 @@ class LegacyTextLocalizer {
     '初次使用教程': 'Обучение для новых пользователей',
     '重新查看应用首次启动时的引导页面': 'Показать экран первого запуска заново',
   };
-  static final List<(RegExp, _TextRewriter)>
-    /// Russian counterparts of [_regexEn].
+  /// Russian counterparts of [_regexEn].
   static final List<(RegExp, _TextRewriter)>
   _regexRu = <(RegExp, _TextRewriter)>[
     (
