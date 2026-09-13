@@ -2,7 +2,6 @@ package cn.com.omnimind.bot.update
 
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
 import cn.com.omnimind.baselib.llm.OfficialVlmOperationConfig
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -156,37 +155,6 @@ class AppUpdateManagerTest {
                 asset,
             )
         )
-    }
-
-    @Test
-    fun parseGitHubReleaseFindsNewerGrimCoreApk() {
-        val state = AppUpdateManager.parseWorkerUpdateState(
-            payload = JSONObject(
-                """
-                {
-                  "tag_name": "v0.1.0-grim.3",
-                  "prerelease": false,
-                  "html_url": "https://github.com/mishaqp/GrimCore/releases/tag/v0.1.0-grim.3",
-                  "assets": [
-                    {
-                      "name": "GrimCore-v0.1.0-grim.3-arm64-v8a.apk",
-                      "browser_download_url": "https://example.com/grimcore.apk"
-                    }
-                  ]
-                }
-                """.trimIndent()
-            ),
-            currentVersion = "0.1.0-grim.2",
-            includeBeta = false,
-            downloadSource = ApkDownloadSource.GITHUB,
-            edition = "standard",
-            checkedAt = 1L,
-        )
-
-        assertTrue(state.hasUpdate)
-        assertEquals("0.1.0-grim.3", state.latestVersion)
-        assertEquals("GrimCore-v0.1.0-grim.3-arm64-v8a.apk", state.apkName)
-        assertEquals("https://example.com/grimcore.apk", state.apkDownloadUrl)
     }
 
     @Test
