@@ -20,6 +20,13 @@ fun buildConfigString(value: String): String {
     return "\"$escaped\""
 }
 
+val omnibotImageBaseUrl = prop("OMNIBOT_IMAGE_BASE_URL")
+    .ifBlank { "https://cloud.omnimind.com.cn" }
+val omnibotImageModel = prop("OMNIBOT_IMAGE_MODEL")
+    .ifBlank { "gpt-image-2" }
+val omnibotImageApiKey = prop("OMNIBOT_IMAGE_API_KEY")
+val omnibotBaseUrl = prop("OMNIBOT_BASE_URL")
+val appUpdateWorkerUrl = prop("OMNIBOT_UPDATE_WORKER_URL")
 val llmThuApiBase = prop("LLMTHU_API_BASE")
     .ifBlank { "https://llmapi.paratera.com" }
 val llmThuApiKey = prop("LLMTHU_API_KEY")
@@ -33,6 +40,11 @@ require(omnibotProfile in setOf("main", "investor")) {
 val isInvestorProfile = omnibotProfile == "investor"
 val preferPackagedOmniFlowRuntime =
     prop("OOB_PREFER_PACKAGED_OMNIFLOW_RUNTIME") == "1"
+val omnibotAiGatewayUrl = prop("OMNIBOT_AI_GATEWAY_URL")
+val resolvedOmnibotBaseUrl = omnibotBaseUrl
+    .ifBlank { "https://account.omnimind.com.cn" }
+val resolvedOmnibotAiGatewayUrl = omnibotAiGatewayUrl
+    .ifBlank { "https://model-api.omnimind.com.cn" }
 
 val webChatSourceDir = rootProject.file("webchat")
 val webChatDistDir = File(webChatSourceDir, "dist")
@@ -163,6 +175,12 @@ android {
         // 0.1.0-grim.3 -> 10003
         versionCode = 10003
         versionName = "0.1.0-grim.3"
+        buildConfigField("String", "IMAGE_BASE_URL", buildConfigString(omnibotImageBaseUrl))
+        buildConfigField("String", "IMAGE_MODEL", buildConfigString(omnibotImageModel))
+        buildConfigField("String", "IMAGE_API_KEY", buildConfigString(omnibotImageApiKey))
+        buildConfigField("String", "DEBUG_OMNIMIND_API_BASE", buildConfigString(""))
+        buildConfigField("String", "DEBUG_OMNIMIND_API_KEY", buildConfigString(""))
+        buildConfigField("String", "DEBUG_OMNIMIND_MODEL", buildConfigString(""))
         buildConfigField("String", "DEBUG_LLMTHU_API_BASE", buildConfigString(""))
         buildConfigField("String", "DEBUG_LLMTHU_API_KEY", buildConfigString(""))
         buildConfigField("String", "DEBUG_LLMTHU_MODEL", buildConfigString(""))
@@ -193,12 +211,16 @@ android {
     productFlavors {
         create("develop") {
             dimension = "version"
-            // GrimCore has no upstream account or cloud gateway: every request
-            // is routed to a user-configured BYOK provider.
+            buildConfigField("String", "BASE_URL", buildConfigString(resolvedOmnibotBaseUrl))
+            buildConfigField("String", "AI_GATEWAY_URL", buildConfigString(resolvedOmnibotAiGatewayUrl))
+            buildConfigField("String", "APP_UPDATE_WORKER_URL", buildConfigString(appUpdateWorkerUrl))
         }
 
         create("production") {
             dimension = "version"
+            buildConfigField("String", "BASE_URL", buildConfigString(resolvedOmnibotBaseUrl))
+            buildConfigField("String", "AI_GATEWAY_URL", buildConfigString(resolvedOmnibotAiGatewayUrl))
+            buildConfigField("String", "APP_UPDATE_WORKER_URL", buildConfigString(appUpdateWorkerUrl))
         }
 
         create("standard") {
