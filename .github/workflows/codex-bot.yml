@@ -45,6 +45,9 @@ concurrency:
 
 jobs:
   guard:
+    # GrimCore: inherited upstream org automation. It needs upstream self-hosted
+    # runners and upstream tokens, so it stays in the tree but is inert here.
+    if: github.repository == 'omnimind-ai/OmniBot'
     name: Decide Codex scope
     runs-on:
       - self-hosted

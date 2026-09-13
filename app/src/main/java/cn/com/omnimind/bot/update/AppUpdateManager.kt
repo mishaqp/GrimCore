@@ -85,8 +85,10 @@ internal enum class ApkDownloadSource(val value: String) {
     companion object {
         fun fromValue(raw: String?): ApkDownloadSource {
             return when (raw?.trim()?.lowercase(Locale.ROOT)) {
-                GITHUB.value -> GITHUB
-                else -> WORKER
+                WORKER.value -> WORKER
+                // GrimCore has no update worker of its own, so GitHub is the
+                // default and an unknown value must not fall back to upstream.
+                else -> GITHUB
             }
         }
     }
@@ -137,16 +139,24 @@ object AppUpdateManager {
 
     private const val WORKER_UPDATES_PATH = "updates"
     private const val WORKER_DOWNLOADS_PATH = "downloads"
+    // GrimCore publishes its own releases. Update metadata is read from this
+    // repository only, so the updater can never offer an upstream OmniBot APK.
+    private const val GRIMCORE_RELEASES_API =
+        "https://api.github.com/repos/mishaqp/GrimCore/releases?per_page=15"
     private const val GITHUB_RELEASE_DOWNLOAD_PREFIX =
-        "https://github.com/omnimind-ai/OpenOmniBot/releases/download"
+        "https://github.com/mishaqp/GrimCore/releases/download"
     private const val WORK_NAME = "app_update_periodic_check"
     private const val PERIODIC_CHECK_HOURS = 12L
     private const val SILENT_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
     private const val CLOUD_SERVICE_POLICY_MAX_AGE_MS = 24 * 60 * 60 * 1000L
-    private const val USER_AGENT = "OpenOmniBot-App"
+    private const val USER_AGENT = "GrimCore-App"
     private const val EDITION_STANDARD = "standard"
-    private val editionApkNamePattern =
-        Regex("^openomnibot-.+-[a-z0-9_]+\\.apk$", RegexOption.IGNORE_CASE)
+    private val grimCoreVersionPattern =
+        Regex("^(\\d+)\\.(\\d+)\\.(\\d+)-grim\\.(\\d+)$", RegexOption.IGNORE_CASE)
+    private val grimCoreApkNamePattern = Regex(
+        "^grimcore-v\\d+\\.\\d+\\.\\d+-grim\\.\\d+-arm64-v8a\\.apk$",
+        RegexOption.IGNORE_CASE,
+    )
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -279,13 +289,13 @@ object AppUpdateManager {
         }
 
         val safeFileName = installState.apkName.ifBlank {
-            "OpenOmniBot-v${installState.latestVersion}.apk"
+            "GrimCore-v${installState.latestVersion}-arm64-v8a.apk"
         }
         return ExternalApkInstaller.downloadAndInstall(
             context = context,
             downloadUrl = installState.apkDownloadUrl,
             apkFileName = safeFileName,
-            displayName = "OpenOmniBot"
+            displayName = "GrimCore"
         )
     }
 
@@ -339,6 +349,9 @@ object AppUpdateManager {
         if (prerelease) {
             return ReleaseTrack.BETA
         }
+        if (grimCoreVersionPattern.matches(normalizeVersion(rawVersion))) {
+            return ReleaseTrack.STABLE
+        }
         return when (versionSegmentCount(rawVersion)) {
             3 -> ReleaseTrack.STABLE
             4 -> ReleaseTrack.BETA
@@ -374,25 +387,8 @@ object AppUpdateManager {
         assets: List<ReleaseAsset>,
         edition: String = BuildConfig.APP_EDITION,
     ): ReleaseAsset? {
-        val apkAssets = assets.filter { it.name.lowercase(Locale.ROOT).endsWith(".apk") }
-        if (apkAssets.isEmpty()) return null
-
-        val normalizedEdition = normalizeEdition(edition)
-        val editionAsset = apkAssets.firstOrNull {
-            isEditionApkAsset(it.name, normalizedEdition)
-        }
-        if (editionAsset != null) return editionAsset
-
-        if (apkAssets.any { isKnownEditionApkAsset(it.name) }) {
-            return null
-        }
-
-        val preferred = apkAssets.firstOrNull {
-            it.name.startsWith("OpenOmniBot-v", ignoreCase = true) &&
-                it.name.lowercase(Locale.ROOT).endsWith(".apk")
-        }
-        if (preferred != null) return preferred
-        return apkAssets.firstOrNull()
+        if (normalizeEdition(edition) != EDITION_STANDARD) return null
+        return assets.firstOrNull { grimCoreApkNamePattern.matches(it.name) }
     }
 
     private suspend fun resolveInstallState(context: Context): AppUpdateState {
@@ -489,8 +485,13 @@ object AppUpdateManager {
             deviceStatsParams = deviceStatsParams
         )
         if (updatesUrl == null) {
-            OmniLog.w(TAG, "App update worker URL is not configured")
-            return emptyState(currentVersion, checkedAt = checkedAt)
+            OmniLog.i(TAG, "No update worker configured, reading GrimCore releases")
+            return fetchGrimcoreReleaseState(
+                currentVersion = currentVersion,
+                includeBeta = includeBeta,
+                downloadSource = downloadSource,
+                checkedAt = checkedAt
+            )
         }
 
         val request = Request.Builder()
@@ -519,6 +520,58 @@ object AppUpdateManager {
                 edition = BuildConfig.APP_EDITION,
                 checkedAt = checkedAt
             )
+        }
+    }
+
+    /**
+     * Reads https://api.github.com/repos/mishaqp/GrimCore/releases and feeds the
+     * newest installable release into the existing worker payload parser, so the
+     * version comparison, track handling and asset selection stay unchanged.
+     */
+    private fun fetchGrimcoreReleaseState(
+        currentVersion: String,
+        includeBeta: Boolean,
+        downloadSource: ApkDownloadSource,
+        checkedAt: Long
+    ): AppUpdateState {
+        val request = Request.Builder()
+            .url(GRIMCORE_RELEASES_API)
+            .addHeader("Accept", "application/vnd.github+json")
+            .addHeader("User-Agent", USER_AGENT)
+            .get()
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                OmniLog.w(TAG, "GrimCore release lookup failed with code ${response.code}")
+                return emptyState(currentVersion, checkedAt = checkedAt)
+            }
+            val body = response.body?.string().orEmpty()
+            if (body.isBlank()) {
+                OmniLog.w(TAG, "GrimCore release lookup returned an empty body")
+                return emptyState(currentVersion, checkedAt = checkedAt)
+            }
+            val releases = runCatching { JSONArray(body) }.getOrNull()
+            if (releases == null) {
+                OmniLog.w(TAG, "GrimCore release lookup returned an unexpected payload")
+                return emptyState(currentVersion, checkedAt = checkedAt)
+            }
+            for (index in 0 until releases.length()) {
+                val release = releases.optJSONObject(index) ?: continue
+                if (release.optBoolean("draft", false)) continue
+                val state = parseWorkerUpdateState(
+                    payload = release,
+                    currentVersion = currentVersion,
+                    includeBeta = includeBeta,
+                    downloadSource = downloadSource,
+                    edition = BuildConfig.APP_EDITION,
+                    checkedAt = checkedAt
+                )
+                if (state.hasUpdate && state.apkDownloadUrl.isNotBlank()) {
+                    return state
+                }
+            }
+            return emptyState(currentVersion, checkedAt = checkedAt)
         }
     }
 
@@ -993,14 +1046,6 @@ object AppUpdateManager {
         return EDITION_STANDARD
     }
 
-    private fun isEditionApkAsset(name: String, edition: String): Boolean {
-        return name.lowercase(Locale.ROOT).endsWith("-$edition.apk")
-    }
-
-    private fun isKnownEditionApkAsset(name: String): Boolean {
-        return editionApkNamePattern.matches(name)
-    }
-
     private fun encodePathSegment(raw: String): String {
         return URLEncoder.encode(raw, StandardCharsets.UTF_8.toString())
             .replace("+", "%20")
@@ -1032,6 +1077,9 @@ object AppUpdateManager {
 
     private fun parseNumericVersionParts(raw: String): List<Int>? {
         if (raw.isBlank()) return null
+        grimCoreVersionPattern.matchEntire(raw)?.let { match ->
+            return match.groupValues.drop(1).map { it.toInt() }
+        }
         val parts = raw.split('.')
         if (parts.any { part -> part.isBlank() || part.any { !it.isDigit() } }) {
             return null

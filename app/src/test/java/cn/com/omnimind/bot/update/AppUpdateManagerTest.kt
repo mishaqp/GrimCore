@@ -21,6 +21,10 @@ class AppUpdateManagerTest {
         assertEquals(0, AppUpdateManager.compareVersions("v1.2.0", "1.2"))
         assertEquals(-1, AppUpdateManager.compareVersions("1.9.9", "2.0.0"))
         assertEquals(1, AppUpdateManager.compareVersions("1.6.1.2", "1.6.1"))
+        assertEquals(
+            1,
+            AppUpdateManager.compareVersions("0.1.0-grim.3", "0.1.0-grim.2")
+        )
     }
 
     @Test
@@ -28,16 +32,21 @@ class AppUpdateManagerTest {
         assertEquals(ReleaseTrack.STABLE, AppUpdateManager.classifyReleaseTrack("1.6.1"))
         assertEquals(ReleaseTrack.BETA, AppUpdateManager.classifyReleaseTrack("1.6.1.2"))
         assertEquals(
+            ReleaseTrack.STABLE,
+            AppUpdateManager.classifyReleaseTrack("0.1.0-grim.2")
+        )
+        assertEquals(
             ReleaseTrack.BETA,
             AppUpdateManager.classifyReleaseTrack("1.6.1", prerelease = true)
         )
     }
 
     @Test
-    fun apkDownloadSourceDefaultsLegacyCnbToWorker() {
-        assertEquals(ApkDownloadSource.WORKER, ApkDownloadSource.fromValue(null))
-        assertEquals(ApkDownloadSource.WORKER, ApkDownloadSource.fromValue("cnb"))
+    fun apkDownloadSourceDefaultsToGrimCoreGitHubReleases() {
+        assertEquals(ApkDownloadSource.GITHUB, ApkDownloadSource.fromValue(null))
+        assertEquals(ApkDownloadSource.GITHUB, ApkDownloadSource.fromValue("cnb"))
         assertEquals(ApkDownloadSource.GITHUB, ApkDownloadSource.fromValue("github"))
+        assertEquals(ApkDownloadSource.WORKER, ApkDownloadSource.fromValue("worker"))
     }
 
     @Test
@@ -77,17 +86,17 @@ class AppUpdateManagerTest {
                 downloadUrl = "https://example.com/app-production-release.apk"
             ),
             ReleaseAsset(
-                name = "OpenOmniBot-v0.0.2.apk",
-                downloadUrl = "https://example.com/OpenOmniBot-v0.0.2.apk"
+                name = "GrimCore-v0.1.0-grim.2-arm64-v8a.apk",
+                downloadUrl = "https://example.com/GrimCore-v0.1.0-grim.2-arm64-v8a.apk"
             )
         )
 
         val selected = AppUpdateManager.selectPreferredApkAsset(assets, "standard")
-        assertEquals("OpenOmniBot-v0.0.2.apk", selected?.name)
+        assertEquals("GrimCore-v0.1.0-grim.2-arm64-v8a.apk", selected?.name)
     }
 
     @Test
-    fun selectPreferredApkAssetSelectsMatchingEdition() {
+    fun selectPreferredApkAssetRejectsUpstreamEditions() {
         val assets = listOf(
             ReleaseAsset(
                 name = "OpenOmniBot-v0.4.0-standard.apk",
@@ -99,19 +108,16 @@ class AppUpdateManagerTest {
             )
         )
 
-        assertEquals(
-            "OpenOmniBot-v0.4.0-standard.apk",
-            AppUpdateManager.selectPreferredApkAsset(assets, "standard")?.name
-        )
+        assertNull(AppUpdateManager.selectPreferredApkAsset(assets, "standard"))
     }
 
     @Test
-    fun selectPreferredApkAssetDoesNotCrossInstallSplitEdition() {
+    fun selectPreferredApkAssetRejectsOtherArchitectures() {
         val selected = AppUpdateManager.selectPreferredApkAsset(
             listOf(
                 ReleaseAsset(
-                    name = "OpenOmniBot-v0.4.0-enterprise.apk",
-                    downloadUrl = "https://example.com/OpenOmniBot-v0.4.0-enterprise.apk"
+                    name = "GrimCore-v0.1.0-grim.2-x86_64.apk",
+                    downloadUrl = "https://example.com/GrimCore-v0.1.0-grim.2-x86_64.apk"
                 )
             ),
             "standard"
@@ -128,17 +134,26 @@ class AppUpdateManagerTest {
     @Test
     fun resolveApkDownloadUrlBuildsUrlForSelectedSource() {
         val asset = ReleaseAsset(
-            name = "OpenOmniBot-v0.3.7.5.apk",
-            downloadUrl = "https://example.com/OpenOmniBot-v0.3.7.5.apk"
+            name = "GrimCore-v0.1.0-grim.3-arm64-v8a.apk",
+            downloadUrl = "https://example.com/GrimCore-v0.1.0-grim.3-arm64-v8a.apk"
         )
 
         assertEquals(
-            "https://omni.1775885.xyz/downloads/v0.3.7.5/OpenOmniBot-v0.3.7.5.apk",
-            AppUpdateManager.resolveApkDownloadUrl(ApkDownloadSource.WORKER, "0.3.7.5", asset)
+            asset.downloadUrl,
+            AppUpdateManager.resolveApkDownloadUrl(
+                ApkDownloadSource.WORKER,
+                "0.1.0-grim.3",
+                asset,
+            )
         )
         assertEquals(
-            "https://github.com/omnimind-ai/OpenOmniBot/releases/download/v0.3.7.5/OpenOmniBot-v0.3.7.5.apk",
-            AppUpdateManager.resolveApkDownloadUrl(ApkDownloadSource.GITHUB, "0.3.7.5", asset)
+            "https://github.com/mishaqp/GrimCore/releases/download/v0.1.0-grim.3/" +
+                "GrimCore-v0.1.0-grim.3-arm64-v8a.apk",
+            AppUpdateManager.resolveApkDownloadUrl(
+                ApkDownloadSource.GITHUB,
+                "0.1.0-grim.3",
+                asset,
+            )
         )
     }
 

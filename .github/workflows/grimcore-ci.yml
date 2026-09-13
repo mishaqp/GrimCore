@@ -1,0 +1,47 @@
+name: GrimCore Contract CI
+
+# Fast, dependency-free contract checks for the GrimCore fork. The heavy
+# build/test matrix (flutter test, flutter analyze, gradle unit tests, lint,
+# debug APK) is executed by the inherited "Pull Request CI" workflow; this
+# workflow only asserts the things that make GrimCore GrimCore.
+
+on:
+  pull_request:
+   branches:
+    - main
+  workflow_dispatch:
+
+concurrency:
+  group: grimcore-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+   runs-on: ubuntu-latest
+   steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: App identity contract
+      run: python3 scripts/grimcore/check_contract.py
+
+    - name: Localization contract
+      run: python3 scripts/grimcore/check_localization.py
+
+    - name: Secret and keystore hygiene
+      run: python3 scripts/grimcore/check_no_secrets.py
+
+    - name: Shell syntax of the GrimCore scripts
+      run: |
+        set -euo pipefail
+        for f in scripts/grimcore/*.sh; do bash -n "$f"; done

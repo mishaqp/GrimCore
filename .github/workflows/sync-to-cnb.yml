@@ -18,6 +18,11 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
+    # GrimCore: this is an inherited upstream publishing pipeline. It needs
+    # upstream-only secrets and would publish upstream-branded artifacts, so it
+    # stays in the tree but is inert outside the upstream repository.
+    if: github.repository == 'omnimind-ai/OmniBot'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

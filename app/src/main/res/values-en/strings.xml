@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Omnibot</string>
-    <string name="omni_app_name">Omnibot</string>
+    <string name="app_name">GrimCore</string>
+    <string name="omni_app_name">GrimCore</string>
     <string name="quick_log_widget_title">Memory</string>
     <string name="quick_log_widget_description">Capture memories from the home screen and sync them to short-term memory</string>
     <string name="quick_log_widget_add">Add</string>
@@ -20,7 +20,7 @@
     <string name="quick_log_font_regular">Regular</string>
     <string name="quick_log_font_large">Large</string>
     <string name="quick_log_entry_title">Write memory</string>
-    <string name="quick_log_entry_subtitle">Write what you want to remember. Omnibot will sync it to short-term memory.</string>
+    <string name="quick_log_entry_subtitle">Write what you want to remember. GrimCore syncs it to short-term memory.</string>
     <string name="quick_log_entry_edit_title">Edit memory</string>
     <string name="quick_log_entry_edit_subtitle">Changes here will sync back into short memories.</string>
     <string name="quick_log_entry_hint">Write what you want to remember</string>
