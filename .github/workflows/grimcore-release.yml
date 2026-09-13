@@ -135,7 +135,7 @@ jobs:
         mkdir -p "${out_dir}"
         apk_src="$(find app/build/outputs/apk -name '*.apk' -path '*release*' | head -n 1)"
         test -n "${apk_src}"
-        apk="${out_dir}/GrimCore-${version_name}-arm64-v8a.apk"
+        apk="${out_dir}/GrimCore-v${version_name}-arm64-v8a.apk"
         cp "${apk_src}" "${apk}"
         echo "apk=${apk}" >> "$GITHUB_OUTPUT"
         echo "out_dir=${out_dir}" >> "$GITHUB_OUTPUT"
