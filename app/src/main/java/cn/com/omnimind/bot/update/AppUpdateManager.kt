@@ -151,8 +151,12 @@ object AppUpdateManager {
     private const val CLOUD_SERVICE_POLICY_MAX_AGE_MS = 24 * 60 * 60 * 1000L
     private const val USER_AGENT = "GrimCore-App"
     private const val EDITION_STANDARD = "standard"
-    private val editionApkNamePattern =
-        Regex("^grimcore-v?.+-arm64-v8a\\.apk$", RegexOption.IGNORE_CASE)
+    private val grimCoreVersionPattern =
+        Regex("^(\\d+)\\.(\\d+)\\.(\\d+)-grim\\.(\\d+)$", RegexOption.IGNORE_CASE)
+    private val grimCoreApkNamePattern = Regex(
+        "^grimcore-v\\d+\\.\\d+\\.\\d+-grim\\.\\d+-arm64-v8a\\.apk$",
+        RegexOption.IGNORE_CASE,
+    )
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -345,6 +349,9 @@ object AppUpdateManager {
         if (prerelease) {
             return ReleaseTrack.BETA
         }
+        if (grimCoreVersionPattern.matches(normalizeVersion(rawVersion))) {
+            return ReleaseTrack.STABLE
+        }
         return when (versionSegmentCount(rawVersion)) {
             3 -> ReleaseTrack.STABLE
             4 -> ReleaseTrack.BETA
@@ -380,25 +387,8 @@ object AppUpdateManager {
         assets: List<ReleaseAsset>,
         edition: String = BuildConfig.APP_EDITION,
     ): ReleaseAsset? {
-        val apkAssets = assets.filter { it.name.lowercase(Locale.ROOT).endsWith(".apk") }
-        if (apkAssets.isEmpty()) return null
-
-        val normalizedEdition = normalizeEdition(edition)
-        val editionAsset = apkAssets.firstOrNull {
-            isEditionApkAsset(it.name, normalizedEdition)
-        }
-        if (editionAsset != null) return editionAsset
-
-        if (apkAssets.any { isKnownEditionApkAsset(it.name) }) {
-            return null
-        }
-
-        val preferred = apkAssets.firstOrNull {
-            it.name.startsWith("GrimCore-v", ignoreCase = true) &&
-                it.name.lowercase(Locale.ROOT).endsWith(".apk")
-        }
-        if (preferred != null) return preferred
-        return apkAssets.firstOrNull()
+        if (normalizeEdition(edition) != EDITION_STANDARD) return null
+        return assets.firstOrNull { grimCoreApkNamePattern.matches(it.name) }
     }
 
     private suspend fun resolveInstallState(context: Context): AppUpdateState {
@@ -1056,14 +1046,6 @@ object AppUpdateManager {
         return EDITION_STANDARD
     }
 
-    private fun isEditionApkAsset(name: String, edition: String): Boolean {
-        return name.lowercase(Locale.ROOT).endsWith("-$edition.apk")
-    }
-
-    private fun isKnownEditionApkAsset(name: String): Boolean {
-        return editionApkNamePattern.matches(name)
-    }
-
     private fun encodePathSegment(raw: String): String {
         return URLEncoder.encode(raw, StandardCharsets.UTF_8.toString())
             .replace("+", "%20")
@@ -1095,6 +1077,9 @@ object AppUpdateManager {
 
     private fun parseNumericVersionParts(raw: String): List<Int>? {
         if (raw.isBlank()) return null
+        grimCoreVersionPattern.matchEntire(raw)?.let { match ->
+            return match.groupValues.drop(1).map { it.toInt() }
+        }
         val parts = raw.split('.')
         if (parts.any { part -> part.isBlank() || part.any { !it.isDigit() } }) {
             return null
