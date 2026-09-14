@@ -57,6 +57,30 @@ patch(
 
 
 def fix_provider_type_popup(value: str) -> str:
+    max_height_constant = "const double _kProviderTypePopupMaxHeight = 420;"
+    if max_height_constant not in value:
+        anchor = "const double _kProviderSwitchPopupMaxHeight = 320;\n"
+        if anchor not in value:
+            raise RuntimeError("provider page: popup height constant anchor changed")
+        value = value.replace(
+            anchor,
+            f"{anchor}{max_height_constant}\n",
+            1,
+        )
+
+    old_height = (
+        "final estimatedHeight = (_kProviderTypeOptions.length * 48 + 24)\n"
+        "        .clamp(120.0, _kProviderSwitchPopupMaxHeight)\n"
+    )
+    new_height = (
+        "final estimatedHeight = (_kProviderTypeOptions.length * 48 + 24)\n"
+        "        .clamp(120.0, _kProviderTypePopupMaxHeight)\n"
+    )
+    if old_height in value:
+        value = value.replace(old_height, new_height, 1)
+    elif new_height not in value:
+        raise RuntimeError("provider page: protocol popup height anchor changed")
+
     eager = (
         "          child: ListView(\n"
         "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
@@ -97,8 +121,8 @@ def fix_provider_type_popup(value: str) -> str:
 
 
 # The catalog remains height-limited and scrollable, but its short list is built
-# eagerly. This keeps every protocol reachable through semantics and widget
-# tests after inserting Codex at the beginning of the menu.
+# eagerly. Its own 420 px ceiling lets all eight protocols fit on a phone-sized
+# 800 px test viewport without enlarging the separate Provider switch popup.
 patch(
     "ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart",
     fix_provider_type_popup,
