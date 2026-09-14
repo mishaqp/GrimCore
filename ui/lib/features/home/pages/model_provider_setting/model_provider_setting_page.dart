@@ -199,7 +199,6 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   CodexChatGptAccountStatus _codexAccountStatus =
       CodexChatGptAccountStatus.signedOut;
   bool _isCodexAccountBusy = false;
-  bool _isCodexStatusRefreshing = false;
 
   Timer? _autoSaveTimer;
   Timer? _codexStatusTimer;
@@ -1872,12 +1871,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     _codexStatusTimer?.cancel();
     if (!_isCodexChatGpt || !_codexAccountStatus.isWaiting) return;
     _codexStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted ||
-          !_isCodexChatGpt ||
-          _isCodexAccountBusy ||
-          _isCodexStatusRefreshing) {
-        return;
-      }
+      if (!mounted || !_isCodexChatGpt || _isCodexAccountBusy) return;
       unawaited(_refreshCodexAccountStatus());
     });
   }
@@ -1885,12 +1879,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   Future<void> _refreshCodexAccountStatus({
     bool showFailureToast = false,
   }) async {
-    if (!_isCodexChatGpt ||
-        _isCodexAccountBusy ||
-        _isCodexStatusRefreshing) {
-      return;
-    }
-    _isCodexStatusRefreshing = true;
+    if (!_isCodexChatGpt || _isCodexAccountBusy) return;
     try {
       final status = await CodexChatGptAccountService.refresh();
       if (!mounted || !_isCodexChatGpt) return;
@@ -1909,8 +1898,6 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
           type: ToastType.error,
         );
       }
-    } finally {
-      _isCodexStatusRefreshing = false;
     }
   }
 

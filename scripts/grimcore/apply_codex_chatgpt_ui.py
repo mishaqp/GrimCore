@@ -401,8 +401,7 @@ if "CodexChatGptAccountStatus" not in page:
         "  String _selectedWireApi = 'chat_completions';\n"
         "  CodexChatGptAccountStatus _codexAccountStatus =\n"
         "      CodexChatGptAccountStatus.signedOut;\n"
-        "  bool _isCodexAccountBusy = false;\n"
-        "  bool _isCodexStatusRefreshing = false;\n\n"
+        "  bool _isCodexAccountBusy = false;\n\n"
         "  Timer? _autoSaveTimer;\n"
         "  Timer? _codexStatusTimer;\n",
         1,
@@ -650,12 +649,7 @@ if "CodexChatGptAccountStatus" not in page:
     _codexStatusTimer?.cancel();
     if (!_isCodexChatGpt || !_codexAccountStatus.isWaiting) return;
     _codexStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted ||
-          !_isCodexChatGpt ||
-          _isCodexAccountBusy ||
-          _isCodexStatusRefreshing) {
-        return;
-      }
+      if (!mounted || !_isCodexChatGpt || _isCodexAccountBusy) return;
       unawaited(_refreshCodexAccountStatus());
     });
   }
@@ -663,12 +657,7 @@ if "CodexChatGptAccountStatus" not in page:
   Future<void> _refreshCodexAccountStatus({
     bool showFailureToast = false,
   }) async {
-    if (!_isCodexChatGpt ||
-        _isCodexAccountBusy ||
-        _isCodexStatusRefreshing) {
-      return;
-    }
-    _isCodexStatusRefreshing = true;
+    if (!_isCodexChatGpt || _isCodexAccountBusy) return;
     try {
       final status = await CodexChatGptAccountService.refresh();
       if (!mounted || !_isCodexChatGpt) return;
@@ -687,8 +676,6 @@ if "CodexChatGptAccountStatus" not in page:
           type: ToastType.error,
         );
       }
-    } finally {
-      _isCodexStatusRefreshing = false;
     }
   }
 
