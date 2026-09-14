@@ -4358,13 +4358,12 @@ class _ProviderTypePopupEntryState extends State<_ProviderTypePopupEntry> {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: dynamicMaxHeight),
         child: Scrollbar(
-          child: ListView.builder(
-            cacheExtent: widget.estimatedHeight,
+          child: ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: widget.options.length,
-            itemBuilder: (context, index) {
-              return _buildProtocolTile(widget.options[index]);
-            },
+            children: List<Widget>.generate(
+              widget.options.length,
+              (index) => _buildProtocolTile(widget.options[index]),
+            ),
           ),
         ),
       ),
