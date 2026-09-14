@@ -4359,6 +4359,7 @@ class _ProviderTypePopupEntryState extends State<_ProviderTypePopupEntry> {
         constraints: BoxConstraints(maxHeight: dynamicMaxHeight),
         child: Scrollbar(
           child: ListView.builder(
+            cacheExtent: widget.estimatedHeight,
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: widget.options.length,
             itemBuilder: (context, index) {
