@@ -3399,6 +3399,168 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'好好和今天说晚安～'**
   String get homeDrawerLateNightSub2;
+
+  /// No description provided for @modelProviderCodexChatGptName.
+  ///
+  /// In zh, this message translates to:
+  /// **'Codex (ChatGPT)'**
+  String get modelProviderCodexChatGptName;
+
+  /// No description provided for @modelProviderCodexDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用官方 Codex CLI 设备登录和现有 Codex ACP 运行时，不保存 API Key。'**
+  String get modelProviderCodexDescription;
+
+  /// No description provided for @modelProviderCodexNotInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'Codex 尚未安装'**
+  String get modelProviderCodexNotInstalled;
+
+  /// No description provided for @modelProviderCodexInstalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装 Codex…'**
+  String get modelProviderCodexInstalling;
+
+  /// No description provided for @modelProviderCodexSignedOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未登录'**
+  String get modelProviderCodexSignedOut;
+
+  /// No description provided for @modelProviderCodexWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待 ChatGPT 登录'**
+  String get modelProviderCodexWaiting;
+
+  /// No description provided for @modelProviderCodexSignedIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'已通过 ChatGPT 登录'**
+  String get modelProviderCodexSignedIn;
+
+  /// No description provided for @modelProviderCodexExpired.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录代码已过期'**
+  String get modelProviderCodexExpired;
+
+  /// No description provided for @modelProviderCodexCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录已取消'**
+  String get modelProviderCodexCancelled;
+
+  /// No description provided for @modelProviderCodexError.
+  ///
+  /// In zh, this message translates to:
+  /// **'Codex 登录错误'**
+  String get modelProviderCodexError;
+
+  /// No description provided for @modelProviderCodexInstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装 Codex'**
+  String get modelProviderCodexInstall;
+
+  /// No description provided for @modelProviderCodexLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过 ChatGPT 登录'**
+  String get modelProviderCodexLogin;
+
+  /// No description provided for @modelProviderCodexCheckStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查状态'**
+  String get modelProviderCodexCheckStatus;
+
+  /// No description provided for @modelProviderCodexLogout.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出登录'**
+  String get modelProviderCodexLogout;
+
+  /// No description provided for @modelProviderCodexCancelLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消登录'**
+  String get modelProviderCodexCancelLogin;
+
+  /// No description provided for @modelProviderCodexCopyCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制代码'**
+  String get modelProviderCodexCopyCode;
+
+  /// No description provided for @modelProviderCodexOpenBrowser.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开浏览器'**
+  String get modelProviderCodexOpenBrowser;
+
+  /// No description provided for @modelProviderCodexDeviceInstructions.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开官方页面，登录 ChatGPT 并输入一次性代码。应用不会显示令牌。'**
+  String get modelProviderCodexDeviceInstructions;
+
+  /// No description provided for @modelProviderCodexVerificationUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'官方登录页面'**
+  String get modelProviderCodexVerificationUrl;
+
+  /// No description provided for @modelProviderCodexDeviceCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'一次性代码'**
+  String get modelProviderCodexDeviceCode;
+
+  /// No description provided for @modelProviderCodexModelNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'模型：gpt-5.3-codex-spark。若账户无权限，Codex 会显示真实套餐或灰度错误，不会切换模型。'**
+  String get modelProviderCodexModelNote;
+
+  /// No description provided for @modelProviderCodexCodeCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'代码已复制'**
+  String get modelProviderCodexCodeCopied;
+
+  /// No description provided for @modelProviderCodexBrowserFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开浏览器'**
+  String get modelProviderCodexBrowserFailed;
+
+  /// No description provided for @modelProviderCodexInstallFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法安装 Codex'**
+  String get modelProviderCodexInstallFailed;
+
+  /// No description provided for @modelProviderCodexLoginFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法启动 ChatGPT 登录'**
+  String get modelProviderCodexLoginFailed;
+
+  /// No description provided for @modelProviderCodexLogoutFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法退出 Codex'**
+  String get modelProviderCodexLogoutFailed;
+
+  /// No description provided for @modelProviderCodexStatusFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法检查 Codex 登录状态'**
+  String get modelProviderCodexStatusFailed;
 }
 
 class _AppLocalizationsDelegate

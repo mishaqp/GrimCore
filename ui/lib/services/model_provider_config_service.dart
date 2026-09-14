@@ -5,6 +5,13 @@ import 'package:ui/services/assists_core_service.dart';
 import 'package:ui/services/models_dev_catalog_service.dart';
 import 'package:ui/services/storage_service.dart';
 
+abstract final class ModelProviderAuthMode {
+  static const String apiKey = 'api_key';
+  static const String codexChatGpt = 'codex_chatgpt';
+}
+
+const String codexChatGptModelId = 'gpt-5.3-codex-spark';
+
 class ModelProviderConfig {
   final String id;
   final String name;
@@ -20,6 +27,12 @@ class ModelProviderConfig {
   final String statusText;
   final bool configured;
   final String wireApi;
+  final String authMode;
+  final bool acpOnly;
+
+  bool get isCodexChatGpt =>
+      authMode == ModelProviderAuthMode.codexChatGpt ||
+      providerType == ModelProviderAuthMode.codexChatGpt;
 
   const ModelProviderConfig({
     required this.id,
@@ -36,6 +49,8 @@ class ModelProviderConfig {
     required this.statusText,
     required this.configured,
     required this.wireApi,
+    this.authMode = ModelProviderAuthMode.apiKey,
+    this.acpOnly = false,
   });
 
   factory ModelProviderConfig.empty() {
@@ -54,6 +69,8 @@ class ModelProviderConfig {
       statusText: '',
       configured: false,
       wireApi: 'chat_completions',
+      authMode: ModelProviderAuthMode.apiKey,
+      acpOnly: false,
     );
   }
 
@@ -77,6 +94,8 @@ class ModelProviderConfig {
       statusText: (map['statusText'] ?? '').toString(),
       configured: map['configured'] == true,
       wireApi: (map['wireApi'] ?? 'chat_completions').toString(),
+      authMode: (map['authMode'] ?? ModelProviderAuthMode.apiKey).toString(),
+      acpOnly: map['acpOnly'] == true,
     );
   }
 }
@@ -111,6 +130,12 @@ class ModelProviderProfileSummary {
   final int revision;
   final String protocolType;
   final String wireApi;
+  final String authMode;
+  final bool acpOnly;
+
+  bool get isCodexChatGpt =>
+      authMode == ModelProviderAuthMode.codexChatGpt ||
+      sourceType == ModelProviderAuthMode.codexChatGpt;
 
   const ModelProviderProfileSummary({
     required this.id,
@@ -128,6 +153,8 @@ class ModelProviderProfileSummary {
     this.revision = 0,
     this.protocolType = 'openai_compatible',
     this.wireApi = 'chat_completions',
+    this.authMode = ModelProviderAuthMode.apiKey,
+    this.acpOnly = false,
   });
 
   factory ModelProviderProfileSummary.fromMap(Map<dynamic, dynamic>? map) {
@@ -148,6 +175,8 @@ class ModelProviderProfileSummary {
       revision: (map?['revision'] as num?)?.toInt() ?? 0,
       protocolType: (map?['protocolType'] ?? 'openai_compatible').toString(),
       wireApi: (map?['wireApi'] ?? 'chat_completions').toString(),
+      authMode: (map?['authMode'] ?? ModelProviderAuthMode.apiKey).toString(),
+      acpOnly: map?['acpOnly'] == true,
     );
   }
 
@@ -167,6 +196,8 @@ class ModelProviderProfileSummary {
       statusText: statusText,
       configured: configured,
       wireApi: wireApi,
+      authMode: authMode,
+      acpOnly: acpOnly,
     );
   }
 }
@@ -459,30 +490,45 @@ class ModelProviderConfigService {
     String sourceType = 'custom',
     String protocolType = 'openai_compatible',
     String? wireApi,
+    String? authMode,
   }) async {
-    final resolvedWireApi = inferWireApi(
-      baseUrl,
-      explicitWireApi: wireApi,
-      protocolType: protocolType,
-    );
-    final normalizedCustomHeaders = customHeaders == null
+    final resolvedAuthMode =
+        authMode ??
+        (sourceType == ModelProviderAuthMode.codexChatGpt
+            ? ModelProviderAuthMode.codexChatGpt
+            : ModelProviderAuthMode.apiKey);
+    final isCodexAccount =
+        resolvedAuthMode == ModelProviderAuthMode.codexChatGpt;
+    final effectiveBaseUrl = isCodexAccount ? '' : baseUrl;
+    final effectiveProtocolType = isCodexAccount ? 'codex_acp' : protocolType;
+    final resolvedWireApi = isCodexAccount
+        ? 'responses'
+        : inferWireApi(
+            effectiveBaseUrl,
+            explicitWireApi: wireApi,
+            protocolType: effectiveProtocolType,
+          );
+    final normalizedCustomHeaders = isCodexAccount || customHeaders == null
         ? null
         : normalizeCustomHeaders(customHeaders);
     final result = await AssistsMessageService.assistCore
         .invokeMethod<Map<dynamic, dynamic>>('saveModelProviderProfile', {
           if (id != null && id.trim().isNotEmpty) 'id': id.trim(),
           'name': name,
-          'baseUrl': baseUrl,
-          if (apiKey != null) 'apiKey': apiKey,
-          if (apiKey != null) 'replaceApiKey': true,
-          if (clearApiKey) 'clearApiKey': true,
+          'baseUrl': effectiveBaseUrl,
+          if (!isCodexAccount && apiKey != null) 'apiKey': apiKey,
+          if (!isCodexAccount && apiKey != null) 'replaceApiKey': true,
+          if (clearApiKey || isCodexAccount) 'clearApiKey': true,
           if (normalizedCustomHeaders != null)
             'customHeaders': normalizedCustomHeaders,
           if (normalizedCustomHeaders != null) 'replaceCustomHeaders': true,
-          if (clearCustomHeaders) 'clearCustomHeaders': true,
-          'sourceType': sourceType,
-          'protocolType': protocolType,
+          if (clearCustomHeaders || isCodexAccount) 'clearCustomHeaders': true,
+          'sourceType': isCodexAccount
+              ? ModelProviderAuthMode.codexChatGpt
+              : sourceType,
+          'protocolType': effectiveProtocolType,
           'wireApi': resolvedWireApi,
+          'authMode': resolvedAuthMode,
         });
     final saved = ModelProviderProfileSummary.fromMap(result);
     // Provider credentials/endpoint changes invalidate the previously
@@ -649,6 +695,18 @@ class ModelProviderConfigService {
     final profileSnapshot = targetProfileId == null
         ? null
         : await _findProfileById(targetProfileId);
+    if (profileSnapshot?.isCodexChatGpt == true) {
+      return const <ProviderModelOption>[
+        ProviderModelOption(
+          id: codexChatGptModelId,
+          displayName: codexChatGptModelId,
+          ownedBy: 'openai',
+          inputModalities: <String>['text', 'image'],
+          reasoning: true,
+          toolCall: true,
+        ),
+      ];
+    }
     final result = await AssistsMessageService.assistCore
         .invokeMethod<List<dynamic>>('fetchProviderModels', {
           'apiBase': apiBase,

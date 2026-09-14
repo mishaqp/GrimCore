@@ -1765,6 +1765,10 @@ class AgentRuntimeService {
     });
   }
 
+  static Future<Map<String, dynamic>> logoutAccount() {
+    return _invokeMap('account/logout');
+  }
+
   static Future<Map<String, dynamic>> respondToApproval({
     required Object requestId,
     required bool accepted,

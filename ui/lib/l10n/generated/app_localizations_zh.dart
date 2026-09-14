@@ -1767,4 +1767,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeDrawerLateNightSub2 => '好好和今天说晚安～';
+
+  @override
+  String get modelProviderCodexChatGptName => 'Codex (ChatGPT)';
+
+  @override
+  String get modelProviderCodexDescription =>
+      '使用官方 Codex CLI 设备登录和现有 Codex ACP 运行时，不保存 API Key。';
+
+  @override
+  String get modelProviderCodexNotInstalled => 'Codex 尚未安装';
+
+  @override
+  String get modelProviderCodexInstalling => '正在安装 Codex…';
+
+  @override
+  String get modelProviderCodexSignedOut => '尚未登录';
+
+  @override
+  String get modelProviderCodexWaiting => '等待 ChatGPT 登录';
+
+  @override
+  String get modelProviderCodexSignedIn => '已通过 ChatGPT 登录';
+
+  @override
+  String get modelProviderCodexExpired => '登录代码已过期';
+
+  @override
+  String get modelProviderCodexCancelled => '登录已取消';
+
+  @override
+  String get modelProviderCodexError => 'Codex 登录错误';
+
+  @override
+  String get modelProviderCodexInstall => '安装 Codex';
+
+  @override
+  String get modelProviderCodexLogin => '通过 ChatGPT 登录';
+
+  @override
+  String get modelProviderCodexCheckStatus => '检查状态';
+
+  @override
+  String get modelProviderCodexLogout => '退出登录';
+
+  @override
+  String get modelProviderCodexCancelLogin => '取消登录';
+
+  @override
+  String get modelProviderCodexCopyCode => '复制代码';
+
+  @override
+  String get modelProviderCodexOpenBrowser => '打开浏览器';
+
+  @override
+  String get modelProviderCodexDeviceInstructions =>
+      '打开官方页面，登录 ChatGPT 并输入一次性代码。应用不会显示令牌。';
+
+  @override
+  String get modelProviderCodexVerificationUrl => '官方登录页面';
+
+  @override
+  String get modelProviderCodexDeviceCode => '一次性代码';
+
+  @override
+  String get modelProviderCodexModelNote =>
+      '模型：gpt-5.3-codex-spark。若账户无权限，Codex 会显示真实套餐或灰度错误，不会切换模型。';
+
+  @override
+  String get modelProviderCodexCodeCopied => '代码已复制';
+
+  @override
+  String get modelProviderCodexBrowserFailed => '无法打开浏览器';
+
+  @override
+  String get modelProviderCodexInstallFailed => '无法安装 Codex';
+
+  @override
+  String get modelProviderCodexLoginFailed => '无法启动 ChatGPT 登录';
+
+  @override
+  String get modelProviderCodexLogoutFailed => '无法退出 Codex';
+
+  @override
+  String get modelProviderCodexStatusFailed => '无法检查 Codex 登录状态';
 }

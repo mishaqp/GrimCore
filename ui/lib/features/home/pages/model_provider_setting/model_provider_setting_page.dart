@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ui/l10n/l10n.dart';
 import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/services/builtin_official_provider_catalog.dart';
 import 'package:ui/services/agent_runtime_service.dart';
+import 'package:ui/services/codex_chatgpt_account_service.dart';
 import 'package:ui/services/model_provider_config_service.dart';
 import 'package:ui/services/model_vendor_catalog.dart';
 import 'package:ui/theme/app_colors.dart';
@@ -53,6 +56,13 @@ class _SelectionOption {
 }
 
 const List<_ProviderTypeOption> _kProviderTypeOptions = <_ProviderTypeOption>[
+  _ProviderTypeOption(
+    value: ModelProviderAuthMode.codexChatGpt,
+    label: 'Codex (ChatGPT)',
+    sourceType: ModelProviderAuthMode.codexChatGpt,
+    protocolType: 'codex_acp',
+    wireApi: 'responses',
+  ),
   _ProviderTypeOption(
     value: 'deepseek',
     label: 'DeepSeek',
@@ -185,8 +195,12 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   String _selectedSourceType = BuiltinOfficialProviderCatalog.customKey;
   String _selectedProtocolType = 'openai_compatible';
   String _selectedWireApi = 'chat_completions';
+  CodexChatGptAccountStatus _codexAccountStatus =
+      CodexChatGptAccountStatus.signedOut;
+  bool _isCodexAccountBusy = false;
 
   Timer? _autoSaveTimer;
+  Timer? _codexStatusTimer;
 
   List<ModelProviderProfileSummary> _profiles = const [];
   String _editingProfileId = '';
@@ -211,6 +225,10 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     return _profiles.isEmpty ? null : _profiles.first;
   }
 
+  bool get _isCodexChatGpt =>
+      _selectedSourceType == ModelProviderAuthMode.codexChatGpt ||
+      _currentProfile?.isCodexChatGpt == true;
+
   bool get _hasAnyProfileFieldFocus =>
       _nameFocusNode.hasFocus ||
       _baseUrlFocusNode.hasFocus ||
@@ -232,6 +250,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
       _isDarkTheme ? context.omniPalette.textTertiary : AppColors.text50;
 
   String get _selectedProviderValue {
+    if (_isCodexChatGpt) return ModelProviderAuthMode.codexChatGpt;
     final officialProvider = BuiltinOfficialProviderCatalog.findByKey(
       _selectedSourceType,
     );
@@ -249,6 +268,9 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
 
   String get _selectedProviderLabel {
     final selectedValue = _selectedProviderValue;
+    if (selectedValue == ModelProviderAuthMode.codexChatGpt) {
+      return context.l10n.modelProviderCodexChatGptName;
+    }
     for (final option in _kProviderTypeOptions) {
       if (option.value == selectedValue) {
         return option.label;
@@ -419,6 +441,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
+    _codexStatusTimer?.cancel();
     unawaited(_persistProfileDraft());
     unawaited(_persistManualModelIds());
     _nameFocusNode.removeListener(_onProfileFieldFocusChanged);
@@ -553,10 +576,10 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     do {
       _saveQueued = false;
       final nextName = _nameController.text.trim();
-      final rawBaseUrl = _baseUrlController.text.trim();
+      final rawBaseUrl = _isCodexChatGpt ? '' : _baseUrlController.text.trim();
       final nextBaseUrl =
           ModelProviderConfigService.normalizeApiBase(rawBaseUrl) ?? '';
-      if (rawBaseUrl.isNotEmpty && nextBaseUrl.isEmpty) {
+      if (!_isCodexChatGpt && rawBaseUrl.isNotEmpty && nextBaseUrl.isEmpty) {
         if (mounted) {
           showToast(
             context.l10n.modelProviderInvalidBaseUrl,
@@ -595,6 +618,11 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
           sourceType: _selectedSourceType,
           protocolType: _selectedProtocolType,
           wireApi: _selectedWireApi,
+          authMode: _isCodexChatGpt
+              ? ModelProviderAuthMode.codexChatGpt
+              : ModelProviderAuthMode.apiKey,
+          clearApiKey: _isCodexChatGpt,
+          clearCustomHeaders: _isCodexChatGpt,
         );
         if (!mounted) return false;
         setState(() {
@@ -737,7 +765,24 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
         current.wireApi,
       );
       _customHeadersErrorText = _computeCustomHeadersValidationError();
+      if (current.isCodexChatGpt) {
+        _remoteModels = const <ProviderModelOption>[
+          ProviderModelOption(
+            id: codexChatGptModelId,
+            displayName: codexChatGptModelId,
+            ownedBy: 'openai',
+            inputModalities: <String>['text', 'image'],
+            reasoning: true,
+            toolCall: true,
+          ),
+        ];
+      }
     });
+    if (current.isCodexChatGpt) {
+      unawaited(_refreshCodexAccountStatus());
+    } else {
+      _codexStatusTimer?.cancel();
+    }
   }
 
   void _syncController(TextEditingController controller, String value) {
@@ -756,6 +801,18 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     ModelProviderProfileSummary profile, {
     bool enrichMetadata = true,
   }) async {
+    if (profile.isCodexChatGpt) {
+      return const <ProviderModelOption>[
+        ProviderModelOption(
+          id: codexChatGptModelId,
+          displayName: codexChatGptModelId,
+          ownedBy: 'openai',
+          inputModalities: <String>['text', 'image'],
+          reasoning: true,
+          toolCall: true,
+        ),
+      ];
+    }
     if (!profile.configured) return const [];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _currentProfile?.id == profile.id) {
@@ -1109,6 +1166,23 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   Future<void> _fetchModelsLocalized({bool silentError = false}) async {
     final current = _currentProfile;
     if (current == null || _isFetchingModels) return;
+    if (_isCodexChatGpt) {
+      await _refreshCodexAccountStatus(showFailureToast: !silentError);
+      if (!mounted) return;
+      setState(() {
+        _remoteModels = const <ProviderModelOption>[
+          ProviderModelOption(
+            id: codexChatGptModelId,
+            displayName: codexChatGptModelId,
+            ownedBy: 'openai',
+            inputModalities: <String>['text', 'image'],
+            reasoning: true,
+            toolCall: true,
+          ),
+        ];
+      });
+      return;
+    }
     final baseUrl = _baseUrlController.text.trim();
 
     if (baseUrl.isEmpty) {
@@ -1285,7 +1359,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
 
   Future<void> _promptAddModel() async {
     final current = _currentProfile;
-    if (current == null || current.readOnly) {
+    if (current == null || current.readOnly || _isCodexChatGpt) {
       return;
     }
     final modelId = await showDialog<String>(
@@ -1332,7 +1406,9 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
 
   Future<void> _deleteModel(_ProviderModelItem item) async {
     final current = _currentProfile;
-    if (current == null || _deletingModelIds.contains(item.id)) {
+    if (current == null ||
+        _isCodexChatGpt ||
+        _deletingModelIds.contains(item.id)) {
       return;
     }
 
@@ -1480,6 +1556,8 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
       (option) => option.value == value,
       orElse: () => _kProviderTypeOptions[0],
     );
+    final isCodexSelection =
+        selected.value == ModelProviderAuthMode.codexChatGpt;
     final isOfficialSelection = selected.baseUrl.isNotEmpty;
     final isGenericOpenAiSelection = selected.value == 'openai_compatible';
     final nextProtocolType = selected.protocolType;
@@ -1505,7 +1583,17 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
       _selectedProtocolType = nextProtocolType;
       _selectedWireApi = nextWireApi;
     });
-    if (isOfficialSelection) {
+    if (isCodexSelection) {
+      _syncController(
+        _nameController,
+        context.l10n.modelProviderCodexChatGptName,
+      );
+      _syncController(_baseUrlController, '');
+      _syncController(_apiKeyController, '');
+      _replaceCustomHeaderEntries(const <String, String>{});
+      _apiKeyDirty = true;
+      _customHeadersDirty = true;
+    } else if (isOfficialSelection) {
       _syncController(_nameController, selected.providerName);
       _syncController(_baseUrlController, selected.baseUrl);
     }
@@ -1523,6 +1611,11 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
         sourceType: selected.sourceType,
         protocolType: nextProtocolType,
         wireApi: nextWireApi,
+        authMode: isCodexSelection
+            ? ModelProviderAuthMode.codexChatGpt
+            : ModelProviderAuthMode.apiKey,
+        clearApiKey: isCodexSelection,
+        clearCustomHeaders: isCodexSelection,
       );
       if (!mounted) return;
       setState(() {
@@ -1536,6 +1629,21 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
       });
       _apiKeyDirty = false;
       _customHeadersDirty = false;
+      if (isCodexSelection) {
+        setState(() {
+          _remoteModels = const <ProviderModelOption>[
+            ProviderModelOption(
+              id: codexChatGptModelId,
+              displayName: codexChatGptModelId,
+              ownedBy: 'openai',
+              inputModalities: <String>['text', 'image'],
+              reasoning: true,
+              toolCall: true,
+            ),
+          ];
+        });
+        await _refreshCodexAccountStatus();
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -1624,7 +1732,11 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     );
     final measuredPopupWidth = _measurePopupWidth(
       context,
-      _kProviderTypeOptions.map((option) => option.label),
+      _kProviderTypeOptions.map(
+        (option) => option.value == ModelProviderAuthMode.codexChatGpt
+            ? context.l10n.modelProviderCodexChatGptName
+            : option.label,
+      ),
       availablePopupWidth,
     );
     final popupWidth = math
@@ -1751,6 +1863,303 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
           menuKey: menuKey,
         ),
       ],
+    );
+  }
+
+  void _scheduleCodexStatusPolling() {
+    _codexStatusTimer?.cancel();
+    if (!_isCodexChatGpt || !_codexAccountStatus.isWaiting) return;
+    _codexStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted || !_isCodexChatGpt || _isCodexAccountBusy) return;
+      unawaited(_refreshCodexAccountStatus());
+    });
+  }
+
+  Future<void> _refreshCodexAccountStatus({
+    bool showFailureToast = false,
+  }) async {
+    if (!_isCodexChatGpt || _isCodexAccountBusy) return;
+    try {
+      final status = await CodexChatGptAccountService.refresh();
+      if (!mounted || !_isCodexChatGpt) return;
+      setState(() => _codexAccountStatus = status);
+      _scheduleCodexStatusPolling();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _codexAccountStatus = const CodexChatGptAccountStatus(
+          state: CodexChatGptAccountState.error,
+        );
+      });
+      if (showFailureToast) {
+        showToast(
+          context.l10n.modelProviderCodexStatusFailed,
+          type: ToastType.error,
+        );
+      }
+    }
+  }
+
+  Future<void> _runCodexAccountAction(
+    Future<CodexChatGptAccountStatus> Function() action, {
+    required String failureMessage,
+  }) async {
+    if (_isCodexAccountBusy) return;
+    setState(() => _isCodexAccountBusy = true);
+    try {
+      final status = await action();
+      if (!mounted || !_isCodexChatGpt) return;
+      setState(() => _codexAccountStatus = status);
+      _scheduleCodexStatusPolling();
+    } catch (_) {
+      if (!mounted) return;
+      showToast(failureMessage, type: ToastType.error);
+      setState(() {
+        _codexAccountStatus = const CodexChatGptAccountStatus(
+          state: CodexChatGptAccountState.error,
+        );
+      });
+    } finally {
+      if (mounted) setState(() => _isCodexAccountBusy = false);
+    }
+  }
+
+  Future<void> _installCodex() async {
+    if (_isCodexAccountBusy) return;
+    setState(() {
+      _isCodexAccountBusy = true;
+      _codexAccountStatus = CodexChatGptAccountStatus.installing;
+    });
+    try {
+      final status = await CodexChatGptAccountService.install();
+      if (!mounted || !_isCodexChatGpt) return;
+      setState(() => _codexAccountStatus = status);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _codexAccountStatus = const CodexChatGptAccountStatus(
+          state: CodexChatGptAccountState.error,
+        );
+      });
+      showToast(
+        context.l10n.modelProviderCodexInstallFailed,
+        type: ToastType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _isCodexAccountBusy = false);
+    }
+  }
+
+  Future<void> _copyCodexDeviceCode() async {
+    final code = _codexAccountStatus.userCode;
+    if (code == null || code.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: code));
+    if (mounted) {
+      showToast(
+        context.l10n.modelProviderCodexCodeCopied,
+        type: ToastType.success,
+      );
+    }
+  }
+
+  Future<void> _openCodexVerificationUrl() async {
+    final raw = _codexAccountStatus.verificationUrl;
+    final uri = raw == null ? null : Uri.tryParse(raw);
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        showToast(
+          context.l10n.modelProviderCodexBrowserFailed,
+          type: ToastType.error,
+        );
+      }
+    }
+  }
+
+  String _codexStatusLabel() {
+    return switch (_codexAccountStatus.state) {
+      CodexChatGptAccountState.notInstalled =>
+        context.l10n.modelProviderCodexNotInstalled,
+      CodexChatGptAccountState.installing =>
+        context.l10n.modelProviderCodexInstalling,
+      CodexChatGptAccountState.signedOut =>
+        context.l10n.modelProviderCodexSignedOut,
+      CodexChatGptAccountState.waiting =>
+        context.l10n.modelProviderCodexWaiting,
+      CodexChatGptAccountState.signedIn =>
+        context.l10n.modelProviderCodexSignedIn,
+      CodexChatGptAccountState.expired =>
+        context.l10n.modelProviderCodexExpired,
+      CodexChatGptAccountState.cancelled =>
+        context.l10n.modelProviderCodexCancelled,
+      CodexChatGptAccountState.error => context.l10n.modelProviderCodexError,
+    };
+  }
+
+  Widget _buildCodexAccountCard() {
+    final status = _codexAccountStatus;
+    final waiting = status.state == CodexChatGptAccountState.waiting;
+    final signedIn = status.state == CodexChatGptAccountState.signedIn;
+    final notInstalled = status.state == CodexChatGptAccountState.notInstalled;
+    final installing = status.state == CodexChatGptAccountState.installing;
+    return Container(
+      key: const Key('codex-chatgpt-account-card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.omniPalette.surfaceSecondary,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.omniPalette.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                signedIn ? LucideIcons.circleCheck : LucideIcons.logIn,
+                size: 20,
+                color: signedIn
+                    ? context.omniPalette.accentPrimary
+                    : _secondaryTextColor,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _codexStatusLabel(),
+                  style: TextStyle(
+                    color: _primaryTextColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (_isCodexAccountBusy)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.modelProviderCodexDescription,
+            style: TextStyle(color: _secondaryTextColor, fontSize: 12),
+          ),
+          if (waiting) ...[
+            const SizedBox(height: 14),
+            Text(
+              context.l10n.modelProviderCodexDeviceInstructions,
+              style: TextStyle(color: _secondaryTextColor, fontSize: 12),
+            ),
+            if (status.verificationUrl != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                context.l10n.modelProviderCodexVerificationUrl,
+                style: TextStyle(color: _tertiaryTextColor, fontSize: 11),
+              ),
+              SelectableText(
+                status.verificationUrl!,
+                key: const Key('codex-chatgpt-verification-url'),
+                style: TextStyle(color: _primaryTextColor, fontSize: 13),
+              ),
+            ],
+            if (status.userCode != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                context.l10n.modelProviderCodexDeviceCode,
+                style: TextStyle(color: _tertiaryTextColor, fontSize: 11),
+              ),
+              SelectableText(
+                status.userCode!,
+                key: const Key('codex-chatgpt-device-code'),
+                style: TextStyle(
+                  color: _primaryTextColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ],
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (notInstalled)
+                FilledButton.icon(
+                  key: const Key('codex-chatgpt-install-button'),
+                  onPressed: _isCodexAccountBusy ? null : _installCodex,
+                  icon: const Icon(LucideIcons.download, size: 17),
+                  label: Text(context.l10n.modelProviderCodexInstall),
+                )
+              else if (!signedIn && !waiting && !installing)
+                FilledButton.icon(
+                  key: const Key('codex-chatgpt-login-button'),
+                  onPressed: _isCodexAccountBusy
+                      ? null
+                      : () => _runCodexAccountAction(
+                          CodexChatGptAccountService.login,
+                          failureMessage:
+                              context.l10n.modelProviderCodexLoginFailed,
+                        ),
+                  icon: const Icon(LucideIcons.logIn, size: 17),
+                  label: Text(context.l10n.modelProviderCodexLogin),
+                ),
+              if (waiting && status.userCode != null)
+                OutlinedButton.icon(
+                  onPressed: _copyCodexDeviceCode,
+                  icon: const Icon(LucideIcons.copy, size: 17),
+                  label: Text(context.l10n.modelProviderCodexCopyCode),
+                ),
+              if (waiting && status.verificationUrl != null)
+                OutlinedButton.icon(
+                  onPressed: _openCodexVerificationUrl,
+                  icon: const Icon(LucideIcons.externalLink, size: 17),
+                  label: Text(context.l10n.modelProviderCodexOpenBrowser),
+                ),
+              if (waiting)
+                TextButton(
+                  onPressed: _isCodexAccountBusy
+                      ? null
+                      : () => _runCodexAccountAction(
+                          () =>
+                              CodexChatGptAccountService.cancel(status.loginId),
+                          failureMessage:
+                              context.l10n.modelProviderCodexStatusFailed,
+                        ),
+                  child: Text(context.l10n.modelProviderCodexCancelLogin),
+                ),
+              if (!notInstalled && !installing)
+                TextButton(
+                  onPressed: _isCodexAccountBusy
+                      ? null
+                      : () =>
+                            _refreshCodexAccountStatus(showFailureToast: true),
+                  child: Text(context.l10n.modelProviderCodexCheckStatus),
+                ),
+              if (signedIn)
+                TextButton(
+                  key: const Key('codex-chatgpt-logout-button'),
+                  onPressed: _isCodexAccountBusy
+                      ? null
+                      : () => _runCodexAccountAction(
+                          CodexChatGptAccountService.logout,
+                          failureMessage:
+                              context.l10n.modelProviderCodexLogoutFailed,
+                        ),
+                  child: Text(context.l10n.modelProviderCodexLogout),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.modelProviderCodexModelNote,
+            style: TextStyle(color: _tertiaryTextColor, fontSize: 11),
+          ),
+        ],
+      ),
     );
   }
 
@@ -3073,79 +3482,84 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        TextField(
-                          controller: _baseUrlController,
-                          focusNode: _baseUrlFocusNode,
-                          enabled: !(_currentProfile?.readOnly ?? false),
-                          style: context.omniInputTextStyle,
-                          decoration: _buildInputDecoration(
-                            label: 'Base URL',
-                            hint: context.l10n.modelProviderBaseUrlHint,
+                        if (_isCodexChatGpt)
+                          _buildCodexAccountCard()
+                        else ...[
+                          TextField(
+                            controller: _baseUrlController,
+                            focusNode: _baseUrlFocusNode,
+                            enabled: !(_currentProfile?.readOnly ?? false),
+                            style: context.omniInputTextStyle,
+                            decoration: _buildInputDecoration(
+                              label: 'Base URL',
+                              hint: context.l10n.modelProviderBaseUrlHint,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _baseUrlController,
-                          builder: (context, value, child) {
-                            final url = _buildBaseUrlHelperText(value.text);
-                            if (url == null) {
-                              return const SizedBox.shrink();
-                            }
-                            return Text(
-                              url,
-                              style: TextStyle(
-                                color: _tertiaryTextColor,
-                                fontSize: 12,
-                                fontFamily: 'PingFang SC',
-                              ),
-                            );
-                          },
-                        ),
-                        if (_selectedProviderValue == 'openai_compatible') ...[
-                          const SizedBox(height: 12),
-                          _buildWireApiField(),
-                        ],
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _apiKeyController,
-                          focusNode: _apiKeyFocusNode,
-                          enabled: !(_currentProfile?.readOnly ?? false),
-                          style: context.omniInputTextStyle,
-                          obscureText: _obscureApiKey,
-                          decoration: _buildInputDecoration(
-                            label: 'API Key',
-                            hint: 'e.g., sk-xxxx',
-                            suffixIcon: IconButton(
-                              key: const Key(
-                                'provider-api-key-visibility-button',
-                              ),
-                              splashRadius: 18,
-                              onPressed: () {
-                                setState(() {
-                                  _obscureApiKey = !_obscureApiKey;
-                                });
-                              },
-                              icon: Icon(
-                                _obscureApiKey
-                                    ? LucideIcons.eyeOff
-                                    : LucideIcons.eye,
-                                color: _tertiaryTextColor,
-                                size: 18,
+                          const SizedBox(height: 8),
+                          ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: _baseUrlController,
+                            builder: (context, value, child) {
+                              final url = _buildBaseUrlHelperText(value.text);
+                              if (url == null) {
+                                return const SizedBox.shrink();
+                              }
+                              return Text(
+                                url,
+                                style: TextStyle(
+                                  color: _tertiaryTextColor,
+                                  fontSize: 12,
+                                  fontFamily: 'PingFang SC',
+                                ),
+                              );
+                            },
+                          ),
+                          if (_selectedProviderValue ==
+                              'openai_compatible') ...[
+                            const SizedBox(height: 12),
+                            _buildWireApiField(),
+                          ],
+                          const SizedBox(height: 14),
+                          TextField(
+                            controller: _apiKeyController,
+                            focusNode: _apiKeyFocusNode,
+                            enabled: !(_currentProfile?.readOnly ?? false),
+                            style: context.omniInputTextStyle,
+                            obscureText: _obscureApiKey,
+                            decoration: _buildInputDecoration(
+                              label: 'API Key',
+                              hint: 'e.g., sk-xxxx',
+                              suffixIcon: IconButton(
+                                key: const Key(
+                                  'provider-api-key-visibility-button',
+                                ),
+                                splashRadius: 18,
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureApiKey = !_obscureApiKey;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscureApiKey
+                                      ? LucideIcons.eyeOff
+                                      : LucideIcons.eye,
+                                  color: _tertiaryTextColor,
+                                  size: 18,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          context.l10n.modelProviderApiKeyHint,
-                          style: TextStyle(
-                            color: _tertiaryTextColor,
-                            fontSize: 12,
-                            fontFamily: 'PingFang SC',
+                          const SizedBox(height: 8),
+                          Text(
+                            context.l10n.modelProviderApiKeyHint,
+                            style: TextStyle(
+                              color: _tertiaryTextColor,
+                              fontSize: 12,
+                              fontFamily: 'PingFang SC',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildCustomHeadersEditor(),
+                          const SizedBox(height: 16),
+                          _buildCustomHeadersEditor(),
+                        ],
                       ],
                     ),
                   ),
@@ -3173,7 +3587,9 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
                             ),
                             _buildModelActionButton(
                               icon: LucideIcons.plus,
-                              onPressed: _currentProfile?.readOnly == true
+                              onPressed:
+                                  _currentProfile?.readOnly == true ||
+                                      _isCodexChatGpt
                                   ? null
                                   : _promptAddModel,
                             ),
@@ -3202,7 +3618,8 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
                                     'Manage chat list models',
                                   ),
                                   highlighted: hasHiddenRemoteModel,
-                                  onPressed: _currentProfile == null
+                                  onPressed:
+                                      _currentProfile == null || _isCodexChatGpt
                                       ? null
                                       : () {
                                           unawaited(
@@ -3900,7 +4317,9 @@ class _ProviderTypePopupEntryState extends State<_ProviderTypePopupEntry> {
             children: [
               Expanded(
                 child: Text(
-                  option.label,
+                  option.value == ModelProviderAuthMode.codexChatGpt
+                      ? context.l10n.modelProviderCodexChatGptName
+                      : option.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

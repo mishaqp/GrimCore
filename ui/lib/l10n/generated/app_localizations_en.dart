@@ -1870,4 +1870,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeDrawerLateNightSub2 => 'Say good night to today';
+
+  @override
+  String get modelProviderCodexChatGptName => 'Codex (ChatGPT)';
+
+  @override
+  String get modelProviderCodexDescription =>
+      'Uses the official Codex CLI device sign-in and the existing Codex ACP runtime. No API key is stored.';
+
+  @override
+  String get modelProviderCodexNotInstalled => 'Codex is not installed';
+
+  @override
+  String get modelProviderCodexInstalling => 'Installing Codex…';
+
+  @override
+  String get modelProviderCodexSignedOut => 'Not signed in';
+
+  @override
+  String get modelProviderCodexWaiting => 'Waiting for ChatGPT sign-in';
+
+  @override
+  String get modelProviderCodexSignedIn => 'Signed in with ChatGPT';
+
+  @override
+  String get modelProviderCodexExpired => 'The sign-in code expired';
+
+  @override
+  String get modelProviderCodexCancelled => 'Sign-in was cancelled';
+
+  @override
+  String get modelProviderCodexError => 'Codex sign-in error';
+
+  @override
+  String get modelProviderCodexInstall => 'Install Codex';
+
+  @override
+  String get modelProviderCodexLogin => 'Sign in with ChatGPT';
+
+  @override
+  String get modelProviderCodexCheckStatus => 'Check status';
+
+  @override
+  String get modelProviderCodexLogout => 'Sign out';
+
+  @override
+  String get modelProviderCodexCancelLogin => 'Cancel sign-in';
+
+  @override
+  String get modelProviderCodexCopyCode => 'Copy code';
+
+  @override
+  String get modelProviderCodexOpenBrowser => 'Open browser';
+
+  @override
+  String get modelProviderCodexDeviceInstructions =>
+      'Open the official page, sign in to ChatGPT, and enter the one-time code. Tokens are never shown in the app.';
+
+  @override
+  String get modelProviderCodexVerificationUrl => 'Official sign-in page';
+
+  @override
+  String get modelProviderCodexDeviceCode => 'One-time code';
+
+  @override
+  String get modelProviderCodexModelNote =>
+      'Model: gpt-5.3-codex-spark. If your account does not have access, Codex will return the real plan or rollout error without switching models.';
+
+  @override
+  String get modelProviderCodexCodeCopied => 'Code copied';
+
+  @override
+  String get modelProviderCodexBrowserFailed => 'Could not open the browser';
+
+  @override
+  String get modelProviderCodexInstallFailed => 'Could not install Codex';
+
+  @override
+  String get modelProviderCodexLoginFailed => 'Could not start ChatGPT sign-in';
+
+  @override
+  String get modelProviderCodexLogoutFailed => 'Could not sign out of Codex';
+
+  @override
+  String get modelProviderCodexStatusFailed =>
+      'Could not check Codex sign-in status';
 }
