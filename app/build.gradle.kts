@@ -153,7 +153,7 @@ android {
         // GrimCore independent version scheme. versionCode is monotonic and
         // never decreases inside the com.mishaqp.grimcore package:
         // major *1000000 + minor *10000 + patch *100 + grim
-        // 0.1.0-grim.3 -> 10003
+        // 0.1.0-grim.4 -> 10004
         versionCode = 10004
         versionName = "0.1.0-grim.4"
         buildConfigField("String", "OMNIBOT_PROFILE", buildConfigString(omnibotProfile))

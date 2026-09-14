@@ -9,7 +9,6 @@ import com.ai.assistance.operit.terminal.setup.buildAlpinePackageInstallCommand
 import cn.com.omnimind.baselib.database.DatabaseHelper
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.CODEX_CHATGPT_MODEL_ID
-import cn.com.omnimind.baselib.llm.isCodexChatGptAccount
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils

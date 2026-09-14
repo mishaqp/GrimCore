@@ -5,7 +5,6 @@ import cn.com.omnimind.baselib.llm.ModelProviderAuthMode
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
-import cn.com.omnimind.baselib.llm.isCodexChatGptAccount
 
 /**
  * Read-only view of the Provider and model selected for Dispatch execution.

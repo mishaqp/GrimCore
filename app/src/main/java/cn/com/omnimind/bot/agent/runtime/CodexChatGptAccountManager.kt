@@ -273,7 +273,7 @@ internal class CodexChatGptAccountManager(
     )
 
     private companion object {
-        private const val PATH_PREFIX = "PATH=\"/root/.npm-global/bin:\\$PATH\"; export PATH;"
+        private const val PATH_PREFIX = "PATH=\"/root/.npm-global/bin:\$PATH\"; export PATH;"
         private const val LOGIN_TIMEOUT_SECONDS = 15L * 60L
         private const val STATUS_TIMEOUT_MS = 15_000L
         private const val START_TIMEOUT_MS = 10_000L
