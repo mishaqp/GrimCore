@@ -34,19 +34,46 @@ jobs:
           fetch-depth: 0
           ref: codex/codex-chatgpt-provider
 
-      - name: Apply backend patch
+      - name: Apply source patches
         run: |
           python3 scripts/grimcore/apply_codex_chatgpt_backend.py
           python3 scripts/grimcore/fix_codex_chatgpt_backend.py
+          python3 scripts/grimcore/apply_codex_chatgpt_ui.py
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install Flutter dependencies
+        working-directory: ui
+        run: flutter pub get --enforce-lockfile
+
+      - name: Format and generate localization
+        working-directory: ui
+        run: |
+          dart format \
+            lib/services/model_provider_config_service.dart \
+            lib/services/agent_runtime_service.dart \
+            lib/services/codex_chatgpt_account_service.dart \
+            lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart \
+            test/services/codex_chatgpt_account_service_test.dart \
+            test/services/model_provider_codex_profile_test.dart
+          flutter gen-l10n
 
       - name: Validate generated diff
         run: |
           git diff --check
           python3 -m json.tool app/src/main/assets/acp/agents.json >/dev/null
+          python3 -m json.tool ui/lib/l10n/app_en.arb >/dev/null
+          python3 -m json.tool ui/lib/l10n/app_ru.arb >/dev/null
+          python3 -m json.tool ui/lib/l10n/app_zh.arb >/dev/null
           grep -R --line-number 'gpt-5.3-codex-spark' \
-            baselib app/src/main ui/lib/services || true
+            baselib app/src/main ui/lib ui/test
 
-      - name: Commit generated backend sources
+      - name: Commit generated provider sources
         id: source
         shell: bash
         run: |
@@ -61,8 +88,18 @@ jobs:
               app/src/main/java/cn/com/omnimind/bot/manager/AssistsCoreManager.kt \
               app/src/test/java/cn/com/omnimind/bot/agent/runtime \
               baselib/src/main/java/cn/com/omnimind/baselib/llm \
-              baselib/src/test/java/cn/com/omnimind/baselib/llm
-            git commit -m "fix: harden Codex ChatGPT account backend"
+              baselib/src/test/java/cn/com/omnimind/baselib/llm \
+              ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart \
+              ui/lib/services/agent_runtime_service.dart \
+              ui/lib/services/codex_chatgpt_account_service.dart \
+              ui/lib/services/model_provider_config_service.dart \
+              ui/lib/l10n/app_en.arb \
+              ui/lib/l10n/app_ru.arb \
+              ui/lib/l10n/app_zh.arb \
+              ui/lib/l10n/generated \
+              ui/test/services/codex_chatgpt_account_service_test.dart \
+              ui/test/services/model_provider_codex_profile_test.dart
+            git commit -m "feat: add Codex ChatGPT provider UI"
             git push origin HEAD:codex/codex-chatgpt-provider
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -96,13 +133,6 @@ jobs:
         with:
           validate-wrappers: false
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: true
-
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
@@ -121,10 +151,6 @@ jobs:
           python3 scripts/grimcore/check_localization.py
           python3 scripts/grimcore/check_no_secrets.py
           for file in scripts/grimcore/*.sh; do bash -n "$file"; done
-
-      - name: Install Flutter dependencies
-        working-directory: ui
-        run: flutter pub get --enforce-lockfile
 
       - name: Flutter test
         working-directory: ui
