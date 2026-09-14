@@ -57,29 +57,48 @@ patch(
 
 
 def fix_provider_type_popup(value: str) -> str:
-    marker = "cacheExtent: widget.estimatedHeight,"
-    if marker in value:
+    eager = (
+        "          child: ListView(\n"
+        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+        "            children: List<Widget>.generate(\n"
+        "              widget.options.length,\n"
+        "              (index) => _buildProtocolTile(widget.options[index]),\n"
+        "            ),\n"
+        "          ),\n"
+    )
+    if eager in value:
         return value
-    anchor = (
-        "          child: ListView.builder(\n"
-        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
-        "            itemCount: widget.options.length,\n"
+
+    lazy_variants = (
+        (
+            "          child: ListView.builder(\n"
+            "            cacheExtent: widget.estimatedHeight,\n"
+            "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+            "            itemCount: widget.options.length,\n"
+            "            itemBuilder: (context, index) {\n"
+            "              return _buildProtocolTile(widget.options[index]);\n"
+            "            },\n"
+            "          ),\n"
+        ),
+        (
+            "          child: ListView.builder(\n"
+            "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+            "            itemCount: widget.options.length,\n"
+            "            itemBuilder: (context, index) {\n"
+            "              return _buildProtocolTile(widget.options[index]);\n"
+            "            },\n"
+            "          ),\n"
+        ),
     )
-    replacement = (
-        "          child: ListView.builder(\n"
-        "            cacheExtent: widget.estimatedHeight,\n"
-        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
-        "            itemCount: widget.options.length,\n"
-    )
-    index = value.rfind(anchor)
-    if index < 0:
-        raise RuntimeError("provider page: provider popup ListView anchor changed")
-    return value[:index] + replacement + value[index + len(anchor) :]
+    for lazy in lazy_variants:
+        if lazy in value:
+            return value.replace(lazy, eager, 1)
+    raise RuntimeError("provider page: provider popup ListView anchor changed")
 
 
-# The provider catalog is intentionally scrollable, but it is also short. Keep
-# its complete element tree cached so the last protocols remain discoverable by
-# semantics/tests after adding Codex as the first entry.
+# The catalog remains height-limited and scrollable, but its short list is built
+# eagerly. This keeps every protocol reachable through semantics and widget
+# tests after inserting Codex at the beginning of the menu.
 patch(
     "ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart",
     fix_provider_type_popup,
