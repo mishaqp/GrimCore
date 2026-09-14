@@ -1,0 +1,53 @@
+name: Codex provider source snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/codex-chatgpt-provider
+    paths:
+      - .github/workflows/codex-source-snapshot.yml
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Collect source context
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p source-snapshot
+          for path in \
+            AGENTS.md \
+            app/src/main \
+            app/src/test \
+            app/build.gradle.kts \
+            baselib/src \
+            baselib/build.gradle.kts \
+            ui/lib \
+            ui/test \
+            ui/pubspec.yaml \
+            pubspec.yaml \
+            build.gradle.kts \
+            settings.gradle.kts \
+            gradle.properties; do
+            if [[ -e "$path" ]]; then
+              mkdir -p "source-snapshot/$(dirname "$path")"
+              cp -a "$path" "source-snapshot/$path"
+            fi
+          done
+          find source-snapshot -type f -print0 | sort -z | xargs -0 sha256sum > source-snapshot/SHA256SUMS
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-provider-source-${{ github.sha }}
+          path: source-snapshot
+          if-no-files-found: error
+          retention-days: 1
