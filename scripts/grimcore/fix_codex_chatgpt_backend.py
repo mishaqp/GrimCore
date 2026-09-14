@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small idempotent corrections for the generated account backend."""
+"""Small idempotent corrections for the generated account backend and UI."""
 from pathlib import Path
 import re
 
@@ -53,6 +53,36 @@ def fix_account_manager(value: str) -> str:
 patch(
     "app/src/main/java/cn/com/omnimind/bot/agent/runtime/CodexChatGptAccountManager.kt",
     fix_account_manager,
+)
+
+
+def fix_provider_type_popup(value: str) -> str:
+    marker = "cacheExtent: widget.estimatedHeight,"
+    if marker in value:
+        return value
+    anchor = (
+        "          child: ListView.builder(\n"
+        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+        "            itemCount: widget.options.length,\n"
+    )
+    replacement = (
+        "          child: ListView.builder(\n"
+        "            cacheExtent: widget.estimatedHeight,\n"
+        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+        "            itemCount: widget.options.length,\n"
+    )
+    index = value.rfind(anchor)
+    if index < 0:
+        raise RuntimeError("provider page: provider popup ListView anchor changed")
+    return value[:index] + replacement + value[index + len(anchor) :]
+
+
+# The provider catalog is intentionally scrollable, but it is also short. Keep
+# its complete element tree cached so the last protocols remain discoverable by
+# semantics/tests after adding Codex as the first entry.
+patch(
+    "ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart",
+    fix_provider_type_popup,
 )
 
 # Keep the build scheme comment truthful after incrementing the installable APK.
