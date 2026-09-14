@@ -8,6 +8,7 @@ import com.ai.assistance.operit.terminal.TerminalManager
 import com.ai.assistance.operit.terminal.setup.buildAlpinePackageInstallCommand
 import cn.com.omnimind.baselib.database.DatabaseHelper
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
+import cn.com.omnimind.baselib.llm.CODEX_CHATGPT_MODEL_ID
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
@@ -106,6 +107,18 @@ internal suspend fun fetchAgentProviderModels(
     profile: ModelProviderProfile,
     forceRefresh: Boolean = false,
 ): List<ProviderModelOption> {
+    if (profile.isCodexChatGptAccount()) {
+        return listOf(
+            ProviderModelOption(
+                id = CODEX_CHATGPT_MODEL_ID,
+                displayName = CODEX_CHATGPT_MODEL_ID,
+                ownedBy = "openai",
+                reasoning = true,
+                toolCall = true,
+                inputModalities = listOf("text", "image"),
+            )
+        )
+    }
     return HttpController.fetchProviderModels(
         apiBase = profile.baseUrl,
         apiKey = profile.apiKey,
@@ -201,6 +214,7 @@ class AgentRuntimeManager private constructor(
     private val historyRepository = AgentConversationHistoryRepository(appContext)
     private val remoteConfigStore = CodexRemoteBridgeConfigStore(appContext)
     private val acpAgentProfileStore = AcpAgentProfileStore(appContext)
+    private val codexChatGptAccountManager = CodexChatGptAccountManager(appContext)
     private val scheduledTaskScheduler by lazy {
         WorkspaceScheduledTaskScheduler(appContext)
     }
@@ -677,6 +691,12 @@ class AgentRuntimeManager private constructor(
     }
 
     suspend fun handleMethod(method: String, args: Map<String, Any?>): Any? {
+        if (method in CODEX_CHATGPT_ACCOUNT_METHODS &&
+            runCatching { ModelProviderConfigStore.getEditingProfile().isCodexChatGptAccount() }
+                .getOrDefault(false)
+        ) {
+            return codexChatGptAccountManager.handle(method, args)
+        }
         val compatibilityRequest = AcpLegacyCompatibilityAdapter.adapt(method, args)
         return try { AcpLegacyCompatibilityAdapter.adaptResponse(
             compatibilityRequest,
@@ -3607,6 +3627,13 @@ internal val MANAGED_NATIVE_BUILD_PREREQUISITES_COMMAND = """
     ensure_native_build_tools
 """.trimIndent()
 internal const val OPENCODE_CONFIG_PATH = "/root/.config/opencode/opencode.json"
+private val CODEX_CHATGPT_ACCOUNT_METHODS = setOf(
+    "account/read",
+    "account/login/start",
+    "account/login/cancel",
+    "account/logout",
+)
+
 private val LOCAL_ACP_METHODS = setOf(
     "initialize",
     "session/new",

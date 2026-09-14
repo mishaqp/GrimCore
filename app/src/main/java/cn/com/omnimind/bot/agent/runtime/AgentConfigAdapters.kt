@@ -3,6 +3,7 @@ package cn.com.omnimind.bot.agent.runtime
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.DeepSeekProvider
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
+import cn.com.omnimind.baselib.llm.ModelProviderAuthMode
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
@@ -22,6 +23,7 @@ internal data class AgentProviderCredentials(
     val wireApi: String = "chat_completions",
     val customHeaders: Map<String, String> = emptyMap(),
     val protocolType: String = "openai_compatible",
+    val authMode: String = ModelProviderAuthMode.API_KEY,
     /** First-party Responses endpoints understand Codex's namespace tools. */
     val supportsNamespaceTools: Boolean = false,
 )
@@ -32,6 +34,23 @@ internal data class AgentProviderCredentials(
  * payloads cannot disagree about whitespace or wire API spelling.
  */
 internal fun AgentProviderCredentials.normalized(): AgentProviderCredentials {
+    val normalizedAuthMode = if (
+        authMode.trim().lowercase() == ModelProviderAuthMode.CODEX_CHATGPT
+    ) {
+        ModelProviderAuthMode.CODEX_CHATGPT
+    } else {
+        ModelProviderAuthMode.API_KEY
+    }
+    if (normalizedAuthMode == ModelProviderAuthMode.CODEX_CHATGPT) {
+        return copy(
+            baseUrl = "",
+            apiKey = "",
+            wireApi = OpenAiWireApi.RESPONSES,
+            customHeaders = emptyMap(),
+            protocolType = "codex_acp",
+            authMode = normalizedAuthMode,
+        )
+    }
     val normalizedBaseUrl = baseUrl.trim()
     require(normalizedBaseUrl.isNotEmpty()) { "Provider base URL is empty." }
     require(!normalizedBaseUrl.any(Char::isWhitespace)) {
@@ -46,6 +65,7 @@ internal fun AgentProviderCredentials.normalized(): AgentProviderCredentials {
         wireApi = OpenAiWireApi.normalize(wireApi),
         customHeaders = normalizedHeaders,
         protocolType = protocolType.trim().lowercase().ifEmpty { "openai_compatible" },
+        authMode = normalizedAuthMode,
     )
 }
 

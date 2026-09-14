@@ -1884,4 +1884,90 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get homeDrawerLateNightSub2 =>
       'Скажите сегодняшнему дню «спокойной ночи»';
+
+  @override
+  String get modelProviderCodexChatGptName => 'Codex (ChatGPT)';
+
+  @override
+  String get modelProviderCodexDescription =>
+      'Использует официальный вход Codex CLI по коду устройства и существующий Codex ACP runtime. API-ключ не сохраняется.';
+
+  @override
+  String get modelProviderCodexNotInstalled => 'Codex не установлен';
+
+  @override
+  String get modelProviderCodexInstalling => 'Установка Codex…';
+
+  @override
+  String get modelProviderCodexSignedOut => 'Вход не выполнен';
+
+  @override
+  String get modelProviderCodexWaiting => 'Ожидание входа через ChatGPT';
+
+  @override
+  String get modelProviderCodexSignedIn => 'Вход через ChatGPT выполнен';
+
+  @override
+  String get modelProviderCodexExpired => 'Код входа истёк';
+
+  @override
+  String get modelProviderCodexCancelled => 'Вход отменён';
+
+  @override
+  String get modelProviderCodexError => 'Ошибка входа Codex';
+
+  @override
+  String get modelProviderCodexInstall => 'Установить Codex';
+
+  @override
+  String get modelProviderCodexLogin => 'Войти через ChatGPT';
+
+  @override
+  String get modelProviderCodexCheckStatus => 'Проверить статус';
+
+  @override
+  String get modelProviderCodexLogout => 'Выйти';
+
+  @override
+  String get modelProviderCodexCancelLogin => 'Отменить вход';
+
+  @override
+  String get modelProviderCodexCopyCode => 'Копировать код';
+
+  @override
+  String get modelProviderCodexOpenBrowser => 'Открыть браузер';
+
+  @override
+  String get modelProviderCodexDeviceInstructions =>
+      'Откройте официальную страницу, войдите в ChatGPT и введите одноразовый код. Токены никогда не показываются в приложении.';
+
+  @override
+  String get modelProviderCodexVerificationUrl => 'Официальная страница входа';
+
+  @override
+  String get modelProviderCodexDeviceCode => 'Одноразовый код';
+
+  @override
+  String get modelProviderCodexModelNote =>
+      'Модель: gpt-5.3-codex-spark. Если она недоступна вашему тарифу, Codex покажет реальную ошибку тарифа или rollout без подмены модели.';
+
+  @override
+  String get modelProviderCodexCodeCopied => 'Код скопирован';
+
+  @override
+  String get modelProviderCodexBrowserFailed => 'Не удалось открыть браузер';
+
+  @override
+  String get modelProviderCodexInstallFailed => 'Не удалось установить Codex';
+
+  @override
+  String get modelProviderCodexLoginFailed =>
+      'Не удалось запустить вход через ChatGPT';
+
+  @override
+  String get modelProviderCodexLogoutFailed => 'Не удалось выйти из Codex';
+
+  @override
+  String get modelProviderCodexStatusFailed =>
+      'Не удалось проверить статус входа Codex';
 }
