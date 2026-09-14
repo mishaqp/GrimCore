@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui/features/home/widgets/home_drawer_search_field.dart';
 import 'package:ui/l10n/l10n.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/models/omni_plugin_item.dart';
 import 'package:ui/services/omni_plugin_service.dart';
 import 'package:ui/theme/app_colors.dart';
@@ -367,5 +368,5 @@ class _PluginMarketPageState extends State<PluginMarketPage> {
   }
 
   String _text(String zh, String en) =>
-      Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 }

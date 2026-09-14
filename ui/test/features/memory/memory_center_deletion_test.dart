@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ui/features/memory/pages/memory_center/memory_center_page.dart';
 import 'package:ui/features/memory/pages/memory_center/widgets/memory_card_list.dart';
+import 'package:ui/l10n/generated/app_localizations.dart';
 import 'package:ui/services/storage_service.dart';
 import 'package:ui/theme/app_theme.dart';
 import 'package:ui/widgets/selection_bottom_bar.dart';
@@ -56,7 +57,13 @@ void main() {
 
   Future<void> mount(WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(theme: AppTheme.lightTheme, home: const MemoryCenterPage()),
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.lightTheme,
+        home: const MemoryCenterPage(),
+      ),
     );
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 100));

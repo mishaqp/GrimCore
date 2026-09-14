@@ -5,9 +5,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     final conversation = _currentConversation;
     if (conversation == null || conversation.id <= 0) {
       _showSnackBar(
-        LegacyTextLocalizer.isEnglish
-            ? 'No adjustable context threshold for this conversation'
-            : '当前对话还没有可调整的上下文阈值',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No adjustable context threshold for this conversation',
+          '当前对话还没有可调整的上下文阈值',
+          ru: 'В этом диалоге нет настраиваемого порога контекста',
+        ),
       );
       return;
     }
@@ -26,9 +29,8 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
             ? conversation.latestPromptTokens
             : null,
         onThresholdSaved: (nextThreshold) async {
-          final trackedConversation = _modeState(
-            conversationMode,
-          ).currentConversation;
+          final trackedConversation = _modeState(conversationMode)
+              .currentConversation;
           final activeConversation = _currentConversation;
           final ConversationModel latestConversation;
           if (trackedConversation?.id == conversation.id) {
@@ -86,9 +88,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     final hasAttachments = _extractRetryAttachments(message).isNotEmpty;
     if (text.isEmpty && !hasAttachments) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'No actionable text in this user message'
-            : '这条用户消息没有可操作的文本',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No actionable text in this user message',
+          '这条用户消息没有可操作的文本',
+          ru: 'В этом сообщении пользователя нет текста для обработки',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -109,9 +114,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
       case _UserMessageQuickAction.copy:
         if (text.isEmpty) {
           showToast(
-            LegacyTextLocalizer.isEnglish
-                ? 'No text to copy in this user message'
-                : '这条用户消息没有可复制的文本',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'No text to copy in this user message',
+              '这条用户消息没有可复制的文本',
+              ru: 'В этом сообщении пользователя нет текста для копирования',
+            ),
             type: ToastType.warning,
           );
           return;
@@ -249,9 +257,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     } catch (_) {
       if (mounted) {
         showToast(
-          LegacyTextLocalizer.isEnglish
-              ? 'Unable to submit the Agent response'
-              : '无法提交 Agent 的输入回复',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Unable to submit the Agent response',
+            '无法提交 Agent 的输入回复',
+            ru: 'Не удалось отправить ответ агенту',
+          ),
           type: ToastType.warning,
         );
       }
@@ -470,9 +481,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
   }) async {
     if (_isAiResponding) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Wait for the current response to finish first'
-            : '请先等待当前回复结束',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Wait for the current response to finish first',
+          '请先等待当前回复结束',
+          ru: 'Дождитесь завершения текущего ответа',
+        ),
         type: ToastType.warning,
       );
       return false;
@@ -517,8 +531,18 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     if (!mounted) return;
     showToast(
       success
-          ? (LegacyTextLocalizer.isEnglish ? 'Message copied' : '已复制消息内容')
-          : (LegacyTextLocalizer.isEnglish ? 'Copy failed' : '复制失败'),
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Message copied',
+              '已复制消息内容',
+              ru: 'Сообщение скопировано',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Copy failed',
+              '复制失败',
+              ru: 'Не удалось скопировать',
+            )),
       type: success ? ToastType.success : ToastType.error,
     );
   }
@@ -528,20 +552,26 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     final attachments = _extractRetryAttachments(message);
     if (text.isEmpty && attachments.isEmpty) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'No content to retry in this user message'
-            : '这条用户消息没有可重试的内容',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'No content to retry in this user message',
+          '这条用户消息没有可重试的内容',
+          ru: 'В этом сообщении пользователя нечего отправить повторно',
+        ),
         type: ToastType.warning,
       );
       return;
     }
     if (!_canRetryUserMessage(message)) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? (_isAiResponding
-                  ? 'Wait for the current response to finish first'
-                  : 'Only the latest user message can be retried')
-            : (_isAiResponding ? '请先等待当前回复结束' : '只有最新一条用户消息支持重试'),
+        LegacyTextLocalizer.pick(
+          _isAiResponding
+              ? 'Wait for the current response to finish first'
+              : 'Only the latest user message can be retried',
+          _isAiResponding ? '请先等待当前回复结束' : '只有最新一条用户消息支持重试',
+          ru: _isAiResponding ? 'Сначала дождитесь завершения текущего ответа' : 'Повторно отправить можно только последнее сообщение пользователя',
+          locale: Localizations.localeOf(context),
+        ),
         type: ToastType.warning,
       );
       return;
@@ -577,9 +607,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     final taskId = _resolveRetryableAgentTaskId(message);
     if (taskId == null) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'This reply can no longer be retried'
-            : '这条回复当前无法继续重试',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'This reply can no longer be retried',
+          '这条回复当前无法继续重试',
+          ru: 'Этот ответ больше нельзя повторить',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -590,9 +623,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     }
     if (_isAiResponding) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'Wait for the current response to finish first'
-            : '请先等待当前回复结束',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Wait for the current response to finish first',
+          '请先等待当前回复结束',
+          ru: 'Дождитесь завершения текущего ответа',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -601,9 +637,12 @@ extension _ChatPageUserMessageActions on _ChatPageStateBase {
     final userMessage = _agentPromptForFailedTurn(message);
     if (userMessage == null) {
       showToast(
-        LegacyTextLocalizer.isEnglish
-            ? 'The original user message is unavailable for retry'
-            : '找不到原始用户消息，无法重试',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'The original user message is unavailable for retry',
+          '找不到原始用户消息，无法重试',
+          ru: 'Не удалось повторить: исходное сообщение пользователя недоступно',
+        ),
         type: ToastType.warning,
       );
       return;

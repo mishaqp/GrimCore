@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/theme/app_colors.dart';
-  
 
-  class SelectionBottomBar extends StatelessWidget {
-    final bool isActive;
-    final VoidCallback? onDeletePressed;
+class SelectionBottomBar extends StatelessWidget {
+  final bool isActive;
+  final VoidCallback? onDeletePressed;
 
-    const SelectionBottomBar({
-      Key? key,
-      required this.isActive,
-      this.onDeletePressed,
-    }) : super(key: key);
+  const SelectionBottomBar({
+    Key? key,
+    required this.isActive,
+    this.onDeletePressed,
+  }) : super(key: key);
 
-    @override
-    Widget build(BuildContext context) {
-      if (!isActive) {
-        return SizedBox.shrink();
-      }
-      return _buildSelectionBottomBar();
+  @override
+  Widget build(BuildContext context) {
+    if (!isActive) {
+      return SizedBox.shrink();
     }
+    return _buildSelectionBottomBar();
+  }
+
   // 选择模式下的底部删除按钮栏
   Widget _buildSelectionBottomBar() {
     return GestureDetector(
@@ -47,7 +47,12 @@ import 'package:ui/theme/app_colors.dart';
               ),
             ),
             Text(
-              LegacyTextLocalizer.isEnglish ? 'Delete' : '删除',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Delete',
+                '删除',
+                ru: 'Удалить',
+              ),
               style: TextStyle(
                 color: AppColors.alertRed,
                 fontSize: 12,

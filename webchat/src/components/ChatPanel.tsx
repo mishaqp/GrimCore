@@ -8,6 +8,8 @@ import {
 } from "react";
 import { agentAvatarUrl, isRecord } from "../api";
 import { formatBytes, markdownToHtml, messageContent, messageTime } from "../format";
+import { useI18n } from "../i18n/I18nProvider";
+import type { MessageCatalog } from "../i18n/catalog";
 import { buildRunTimeline } from "../runTimeline";
 import type { Attachment, ChatMessage, Conversation } from "../types";
 import {
@@ -33,26 +35,16 @@ interface ChatPanelProps {
   onAttachmentError: (error: unknown) => void;
 }
 
-const GREETING_WORDS = ["聊天", "执行", "构建", "探索", "规划", "总结", "检索", "记忆"];
 const WORD_ROTATE_INTERVAL = 1800;
 const WORD_SPIN_DURATION = 460;
 
-function formatThinkTime(seconds: number): string {
-  if (seconds < 60) return `${seconds}秒`;
+function formatDuration(seconds: number, messages: MessageCatalog): string {
+  if (seconds < 60) return messages.durationSeconds(seconds);
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m}分${s}秒`;
-}
-
-function formatRunTime(seconds: number): string {
-  if (seconds < 1) return "";
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  if (m < 60) return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  if (m < 60) return messages.durationMinutesSeconds(m, s);
   const h = Math.floor(m / 60);
-  const rm = m % 60;
-  return rm > 0 ? `${h}h ${rm}m` : `${h}h`;
+  return messages.durationHoursMinutes(h, m % 60);
 }
 
 function useElapsedTime(start: number, end: number, active: boolean): number {
@@ -70,8 +62,8 @@ function useElapsedTime(start: number, end: number, active: boolean): number {
   return elapsed;
 }
 
-/** 复刻 Flutter _SlotWordRotator: 随机初始词, 每 1800ms 随机换词, 460ms 上滑+淡入淡出 */
-function SlotWordRotator({ words }: { words: string[] }) {
+/** Mirrors Flutter _SlotWordRotator: random initial word and timed slide/fade transitions. */
+function SlotWordRotator({ words }: { words: readonly string[] }) {
   const [current, setCurrent] = useState(() => Math.floor(Math.random() * words.length));
   const [previous, setPrevious] = useState<number | null>(null);
   const currentRef = useRef(current);
@@ -96,7 +88,7 @@ function SlotWordRotator({ words }: { words: string[] }) {
 
   return (
     <span className="greeting-word">
-      {/* 隐藏测量层: 容器宽度始终取最长词, 避免换词时抖动 */}
+      {/* Keep the container as wide as its longest word to avoid layout shifts. */}
       {words.map((word) => (
         <span className="word-sizer" aria-hidden="true" key={word}>{word}</span>
       ))}
@@ -109,11 +101,14 @@ function SlotWordRotator({ words }: { words: string[] }) {
 }
 
 function EmptyGreeting() {
+  const { messages } = useI18n();
   return (
     <div className="empty-state">
       <div className="empty-greeting">
-        <p>你好👋，我是小万</p>
-        <p>我可以帮助你 <SlotWordRotator words={GREETING_WORDS} /></p>
+        <p>{messages.greetingHello}</p>
+        <p>
+          {messages.greetingHelp} <SlotWordRotator words={messages.greetingWords} />
+        </p>
       </div>
     </div>
   );
@@ -137,7 +132,7 @@ function AgentAvatar({ className }: { className: string }) {
   );
 }
 
-function fileToAttachment(file: File): Promise<Attachment> {
+function fileToAttachment(file: File, messages: MessageCatalog): Promise<Attachment> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve({
@@ -147,13 +142,13 @@ function fileToAttachment(file: File): Promise<Attachment> {
       dataUrl: String(reader.result),
       isImage: file.type.startsWith("image/"),
     });
-    reader.onerror = () => reject(reader.error ?? new Error(`无法读取 ${file.name}`));
+    reader.onerror = () => reject(reader.error ?? new Error(messages.readFileFailed(file.name)));
     reader.readAsDataURL(file);
   });
 }
 
-function attachmentName(attachment: Record<string, unknown>): string {
-  return String(attachment.fileName ?? attachment.name ?? "附件");
+function attachmentName(attachment: Record<string, unknown>, messages: MessageCatalog): string {
+  return String(attachment.fileName ?? attachment.name ?? messages.attachment);
 }
 
 function attachmentImage(attachment: Record<string, unknown>): string {
@@ -169,12 +164,13 @@ function attachmentImage(attachment: Record<string, unknown>): string {
 }
 
 function MessageAttachments({ attachments }: { attachments: Record<string, unknown>[] }) {
+  const { messages } = useI18n();
   if (!attachments.length) return null;
   return (
     <div className="message-attachments">
       {attachments.map((attachment, index) => {
         const image = attachmentImage(attachment);
-        const name = attachmentName(attachment);
+        const name = attachmentName(attachment, messages);
         return image ? (
           <img className="message-image" src={image} alt={name} key={`${name}-${index}`} />
         ) : (
@@ -188,7 +184,7 @@ function MessageAttachments({ attachments }: { attachments: Record<string, unkno
   );
 }
 
-/** 深度思考卡 —— 带计时文案 (正在思考/思考完成 + 用时Xs) + shimmer + 可选头像 */
+/** Collapsible reasoning card with elapsed time, shimmer, and an optional avatar. */
 function DeepThinkingMessage({
   card,
   classes,
@@ -200,6 +196,7 @@ function DeepThinkingMessage({
   active?: boolean;
   showAvatar?: boolean;
 }) {
+  const { messages } = useI18n();
   const startTime = Number(card.startTime ?? 0);
   const endTime = Number(card.endTime ?? 0);
   const stage = Number(card.stage ?? 0);
@@ -213,9 +210,9 @@ function DeepThinkingMessage({
   const thinkingBodyRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(loading);
   const elapsed = useElapsedTime(startTime, loading ? 0 : endTime, loading);
-  const timeLabel = elapsed > 0 ? formatThinkTime(elapsed) : "";
-  const title = loading ? "正在思考" : "思考完成";
-  const label = timeLabel ? `${title} (用时${timeLabel})` : title;
+  const timeLabel = elapsed > 0 ? formatDuration(elapsed, messages) : "";
+  const title = loading ? messages.thinking : messages.thinkingComplete;
+  const label = timeLabel ? `${title} (${messages.elapsed(timeLabel)})` : title;
 
   useEffect(() => {
     if (loading) {
@@ -253,7 +250,7 @@ function DeepThinkingMessage({
             </span>
           </summary>
           {loading && !thinkingText && (
-            <span className="thinking-dots" role="status" aria-label="正在思考">
+            <span className="thinking-dots" role="status" aria-label={messages.thinking}>
               <span /><span /><span />
             </span>
           )}
@@ -268,16 +265,16 @@ function DeepThinkingMessage({
   );
 }
 
-function statusLabel(status: unknown): string {
+function statusLabel(status: unknown, messages: MessageCatalog): string {
   return ({
-    running: "运行中",
-    completed: "已完成",
-    success: "已完成",
-    error: "失败",
-    timeout: "超时",
-    interrupted: "已中断",
-    cancelled: "已停止",
-  } as Record<string, string>)[String(status)] ?? String(status || "已完成");
+    running: messages.statusRunning,
+    completed: messages.statusCompleted,
+    success: messages.statusCompleted,
+    error: messages.statusFailed,
+    timeout: messages.statusTimeout,
+    interrupted: messages.statusInterrupted,
+    cancelled: messages.statusStopped,
+  } as Record<string, string>)[String(status)] ?? String(status || messages.statusCompleted);
 }
 
 function statusClass(status: unknown): string {
@@ -290,16 +287,16 @@ function statusClass(status: unknown): string {
   return "running";
 }
 
-function toolTypeLabel(card: Record<string, unknown>): string {
+function toolTypeLabel(card: Record<string, unknown>, messages: MessageCatalog): string {
   const raw = `${String(card.toolType ?? "")} ${String(card.type ?? "")}`.toLowerCase();
-  if (/terminal|shell|command|process/.test(raw)) return "终端";
-  if (/browser|web|navigate/.test(raw)) return "浏览器";
-  if (/search/.test(raw)) return "搜索";
-  if (/file|read|write|edit/.test(raw)) return "文件";
+  if (/terminal|shell|command|process/.test(raw)) return messages.terminal;
+  if (/browser|web|navigate/.test(raw)) return messages.browser;
+  if (/search/.test(raw)) return messages.search;
+  if (/file|read|write|edit/.test(raw)) return messages.file;
   if (/subagent/.test(raw)) return "SubAgent";
   if (/mcp/.test(raw)) return "MCP";
   if (/codex/.test(raw)) return "Codex";
-  return "工具";
+  return messages.tool;
 }
 
 function toolIcon(card: Record<string, unknown>): "terminal" | "browser" | "search" | "file" | "agent" | "workspace" {
@@ -323,6 +320,7 @@ function Message({
   suppressReasoning?: boolean;
   suppressThinkingAvatar?: boolean;
 }) {
+  const { messages } = useI18n();
   const content = messageContent(message);
   const isUser = Number(message.user) === 1;
   const rawCard = isRecord(content.cardData) ? content.cardData : null;
@@ -335,7 +333,7 @@ function Message({
   const isCard = Number(message.type) === 2 || rawCard;
   const cardType = String(card.type ?? "");
 
-  // 深度思考卡 → 可折叠思考块 (不要作为工具卡显示)
+  // Render deep-thinking cards as collapsible reasoning instead of tool cards.
   if (isCard && cardType === "deep_thinking") {
     return (
       <DeepThinkingMessage
@@ -347,9 +345,14 @@ function Message({
     );
   }
 
-  // 工具调用卡 (agent_tool_summary 及其他卡片类型)
+  // Tool invocation cards, including agent_tool_summary.
   if (isCard) {
-    const title = card.toolTitle ?? card.toolName ?? card.displayName ?? card.title ?? card.toolType ?? "工具运行";
+    const title = card.toolTitle
+      ?? card.toolName
+      ?? card.displayName
+      ?? card.title
+      ?? card.toolType
+      ?? messages.toolRunning;
     const status = card.status ?? (message.isLoading ? "running" : "completed");
     const running = String(status) === "running";
     return (
@@ -362,7 +365,9 @@ function Message({
                 <strong className={running ? "shimmer" : ""}>{String(title)}</strong>
               </span>
               <span className="tool-status-toggle">
-                <span className="tool-status">{running ? toolTypeLabel(card) : statusLabel(status)}</span>
+                <span className="tool-status">
+                  {running ? toolTypeLabel(card, messages) : statusLabel(status, messages)}
+                </span>
                 <Icon className="tool-chevron" name="chevron-down" size={14} />
               </span>
             </summary>
@@ -375,7 +380,10 @@ function Message({
     );
   }
 
-  const text = String(content.text ?? "");
+  const rawText = String(content.text ?? "");
+  const text = Number(message.user) === 2 && isCancelledTextMessage(message)
+    ? messages.taskCancelled
+    : rawText;
   const reasoningStreaming = active || Boolean(message.isLoading);
   return (
     <article className={classes}>
@@ -384,7 +392,9 @@ function Message({
           <details className={`message-reasoning${reasoningStreaming ? " streaming" : ""}`} open={reasoningStreaming}>
             <summary>
               <span className="reasoning-toggle-label">
-                <span className="reasoning-label">{reasoningStreaming ? "正在思考" : "思考过程"}</span>
+                <span className="reasoning-label">
+                  {reasoningStreaming ? messages.thinking : messages.reasoningProcess}
+                </span>
                 <Icon className="reasoning-chevron" name="chevron-down" size={16} />
               </span>
             </summary>
@@ -394,7 +404,7 @@ function Message({
           </details>
         )}
         {message.isLoading && !text ? (
-          <span className="thinking-dots" role="status" aria-label="正在思考">
+          <span className="thinking-dots" role="status" aria-label={messages.thinking}>
             <span /><span /><span />
           </span>
         ) : (
@@ -412,8 +422,9 @@ function Message({
 }
 
 /* ---------------------------------------------------------------------------
- * Agent 运行分组折叠 (复刻 agent_run_timeline.dart / agent_run_group_message.dart)
- * 同一 parentTaskId 的思考、工具和中间文本共享一个折叠头，最终回复常驻显示。
+ * Collapsible Agent run groups mirror agent_run_timeline.dart and
+ * agent_run_group_message.dart. Reasoning, tools, and intermediate text sharing
+ * a parentTaskId use one header, while the final response remains visible.
  * ------------------------------------------------------------------------- */
 
 interface RunGroup {
@@ -548,7 +559,10 @@ function isLegacyTextSnapshotFallbackCandidate(message: ChatMessage): boolean {
 
 function isCancelledTextMessage(message: ChatMessage): boolean {
   const text = String(messageContent(message).text ?? "").trim().toLowerCase();
-  return text === "任务已取消" || text === "task canceled" || text === "task cancelled";
+  return text === "任务已取消"
+    || text === "task canceled"
+    || text === "task cancelled"
+    || text === "задача отменена";
 }
 
 function isCodexRequestMessage(message: ChatMessage): boolean {
@@ -645,10 +659,11 @@ function buildGroups(messages: ChatMessage[], activeTaskId: string | null): Rend
 }
 
 function AgentRunGroup({ group }: { group: RunGroup }) {
+  const { messages } = useI18n();
   const [expanded, setExpanded] = useState(group.active);
   const elapsed = Math.max(0, Math.round((group.endTime - group.startTime) / 1000));
-  const timeLabel = formatRunTime(elapsed);
-  const label = timeLabel ? `已处理  ${timeLabel}` : "已处理";
+  const timeLabel = elapsed > 0 ? formatDuration(elapsed, messages) : "";
+  const label = timeLabel ? messages.processedWithDuration(timeLabel) : messages.processed;
   const groupMessages = [...group.processMessages, ...group.visibleMessages];
   const activeTailMessage = group.active && groupMessages.length
     ? newestBySequence(groupMessages)
@@ -705,6 +720,7 @@ export function ChatPanel({
   onClearError,
   onAttachmentError,
 }: ChatPanelProps) {
+  const { messages: ui } = useI18n();
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const messageListRef = useRef<HTMLDivElement>(null);
@@ -778,7 +794,7 @@ export function ChatPanel({
     event.target.value = "";
     if (!files.length) return;
     try {
-      const nextAttachments = await Promise.all(files.map(fileToAttachment));
+      const nextAttachments = await Promise.all(files.map((file) => fileToAttachment(file, ui)));
       setAttachments((current) => [...current, ...nextAttachments]);
     } catch (error) {
       onAttachmentError(error);
@@ -791,7 +807,7 @@ export function ChatPanel({
         <button
           className="appbar-icon menu-trigger"
           type="button"
-          aria-label="打开对话列表"
+          aria-label={ui.openConversationList}
           onClick={onOpenConversations}
         >
           <Icon name="menu" size={20} />
@@ -800,8 +816,8 @@ export function ChatPanel({
           <button
             className="appbar-icon"
             type="button"
-            aria-label={conversation?.isArchived ? "取消归档" : "归档对话"}
-            title={conversation?.isArchived ? "取消归档" : "归档对话"}
+            aria-label={conversation?.isArchived ? ui.unarchiveConversation : ui.archiveConversation}
+            title={conversation?.isArchived ? ui.unarchiveConversation : ui.archiveConversation}
             disabled={!canManageConversation}
             onClick={onArchive}
           >
@@ -810,8 +826,8 @@ export function ChatPanel({
           <button
             className="appbar-icon danger"
             type="button"
-            aria-label="删除对话"
-            title="删除对话"
+            aria-label={ui.deleteConversation}
+            title={ui.deleteConversation}
             disabled={!canManageConversation}
             onClick={onDelete}
           >
@@ -848,7 +864,7 @@ export function ChatPanel({
 
       <div className="composer-region">
         {clarifyTaskId && (
-          <div className="clarify-banner">Agent 正在等待你的补充说明，发送下一条消息后继续。</div>
+          <div className="clarify-banner">{ui.clarificationPending}</div>
         )}
         <form className="composer" onSubmit={(event) => void submit(event)}>
           {!!attachments.length && (
@@ -868,7 +884,7 @@ export function ChatPanel({
                   )}
                   <button
                     type="button"
-                    aria-label={`移除 ${attachment.fileName}`}
+                    aria-label={ui.removeAttachment(attachment.fileName)}
                     onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                   >
                     <Icon name="x" size={12} />
@@ -880,7 +896,7 @@ export function ChatPanel({
           <textarea
             ref={textareaRef}
             rows={1}
-            placeholder="请输入内容"
+            placeholder={ui.composerPlaceholder}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
@@ -889,20 +905,31 @@ export function ChatPanel({
             <button
               className="composer-icon-button"
               type="button"
-              aria-label="添加附件"
-              title="添加附件"
+              aria-label={ui.addAttachment}
+              title={ui.addAttachment}
               onClick={() => attachmentInputRef.current?.click()}
             >
               <ComposerAttachmentIcon />
             </button>
             <input ref={attachmentInputRef} type="file" multiple hidden onChange={(event) => void addAttachments(event)} />
-            <span className="composer-hint">Enter 发送 · Shift + Enter 换行</span>
+            <span className="composer-hint">{ui.composerHint}</span>
             {activeTaskId && !clarifyTaskId ? (
-              <button className="send-button stop" type="button" aria-label="停止" title="停止" onClick={onCancel}>
+              <button
+                className="send-button stop"
+                type="button"
+                aria-label={ui.stop}
+                title={ui.stop}
+                onClick={onCancel}
+              >
                 <ComposerStopIcon />
               </button>
             ) : (
-              <button className={`send-button${sending ? " loading" : ""}`} type="submit" aria-label="发送" disabled={!canSend}>
+              <button
+                className={`send-button${sending ? " loading" : ""}`}
+                type="submit"
+                aria-label={ui.send}
+                disabled={!canSend}
+              >
                 <ComposerSendIcon />
               </button>
             )}

@@ -616,52 +616,94 @@ class ShizukuStatusSnapshot {
   String get localizedStatusLabel {
     switch (status) {
       case 'GRANTED_ROOT':
-        return LegacyTextLocalizer.isEnglish ? 'Granted (root)' : '已授权（root）';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Granted (root)',
+          '已授权（root）',
+          ru: 'Разрешено (root)',
+        );
       case 'GRANTED_ADB':
-        return LegacyTextLocalizer.isEnglish ? 'Granted (adb)' : '已授权（adb）';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Granted (adb)',
+          '已授权（adb）',
+          ru: 'Доступ предоставлен (adb)',
+        );
       case 'PERMISSION_DENIED':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Running, permission not granted'
-            : '已启动，尚未授权';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Running, permission not granted',
+          '已启动，尚未授权',
+          ru: 'Служба запущена, разрешение не предоставлено',
+        );
       case 'NOT_RUNNING':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Installed, not running'
-            : '已安装，未启动';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Installed, not running',
+          '已安装，未启动',
+          ru: 'Установлено, но служба не запущена',
+        );
       case 'BINDER_DEAD':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Binder lost, restart required'
-            : '连接已断开，需要重新启动';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Binder lost, restart required',
+          '连接已断开，需要重新启动',
+          ru: 'Соединение с Binder потеряно. Требуется перезапуск службы Shizuku',
+        );
       default:
-        return LegacyTextLocalizer.isEnglish ? 'Not installed' : '未安装';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Not installed',
+          '未安装',
+          ru: 'Не установлено',
+        );
     }
   }
 
   String get localizedGuide {
     switch (status) {
       case 'GRANTED_ROOT':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Shizuku is ready through root/Sui. Agent privileged tools are enabled, including arbitrary shell and persistent shell sessions. Every raw shell and privileged session command still requires confirmation.'
-            : 'Shizuku 已通过 root/Sui 就绪。Agent 高权限工具已启用，支持任意 shell 和持久高权限会话；每次 raw shell 与高权限会话命令仍需用户确认。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Shizuku is ready through root/Sui. Agent privileged tools are enabled, including arbitrary shell and persistent shell sessions. Every raw shell and privileged session command still requires confirmation.',
+          'Shizuku 已通过 root/Sui 就绪。Agent 高权限工具已启用，支持任意 shell 和持久高权限会话；每次 raw shell 与高权限会话命令仍需用户确认。',
+          ru: 'Shizuku работает через root/Sui. Доступны привилегированные инструменты агента: произвольные shell-команды и постоянные shell-сеансы. Для каждой команды raw shell или привилегированного сеанса по-прежнему требуется подтверждение.',
+        );
       case 'GRANTED_ADB':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Shizuku is ready through adb shell. Agent privileged tools are enabled, including arbitrary shell and persistent shell sessions. Commands still follow adb-shell capability limits, and every raw shell and privileged session command requires confirmation.'
-            : 'Shizuku 已通过 adb shell 就绪。Agent 高权限工具已启用，支持任意 shell 和持久高权限会话，但能力仍受 adb shell 后端限制；每次 raw shell 与高权限会话命令都需要用户确认。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Shizuku is ready through adb shell. Agent privileged tools are enabled, including arbitrary shell and persistent shell sessions. Commands still follow adb-shell capability limits, and every raw shell and privileged session command requires confirmation.',
+          'Shizuku 已通过 adb shell 就绪。Agent 高权限工具已启用，支持任意 shell 和持久高权限会话，但能力仍受 adb shell 后端限制；每次 raw shell 与高权限会话命令都需要用户确认。',
+          ru: 'Shizuku работает через adb shell. Привилегированные инструменты агента включены: доступны произвольные команды shell и постоянные сеансы shell. Команды по-прежнему ограничены возможностями adb-shell. Каждую команду raw shell и привилегированного сеанса нужно подтверждать.',
+        );
       case 'PERMISSION_DENIED':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Open Shizuku and grant Omnibot permission.'
-            : '请打开 Shizuku 并授予 Omnibot 权限。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Open Shizuku and grant Omnibot permission.',
+          '请打开 Shizuku 并授予 Omnibot 权限。',
+          ru: 'Откройте Shizuku и предоставьте приложению GrimCore разрешение.',
+        );
       case 'NOT_RUNNING':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Open Shizuku and start it. On Android 11+, non-root devices usually start it from Wireless debugging. You need to restart Shizuku after each reboot.'
-            : '请打开 Shizuku 并启动它。Android 11+ 非 root 设备通常需要从无线调试启动，并且每次重启后都需要重新启动 Shizuku。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Open Shizuku and start it. On Android 11+, non-root devices usually start it from Wireless debugging. You need to restart Shizuku after each reboot.',
+          '请打开 Shizuku 并启动它。Android 11+ 非 root 设备通常需要从无线调试启动，并且每次重启后都需要重新启动 Shizuku。',
+          ru: 'Откройте Shizuku и запустите службу. На устройствах без root-доступа с Android 11 и выше службу обычно запускают через беспроводную отладку. После каждой перезагрузки устройства службу Shizuku нужно запускать заново.',
+        );
       case 'BINDER_DEAD':
-        return LegacyTextLocalizer.isEnglish
-            ? 'Shizuku was restarted or disconnected. Open it again to reconnect.'
-            : 'Shizuku 已重启或断开，请重新打开并启动。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Shizuku was restarted or disconnected. Open it again to reconnect.',
+          'Shizuku 已重启或断开，请重新打开并启动。',
+          ru: 'Служба Shizuku перезапустилась или была отключена. Откройте Shizuku и снова запустите службу, чтобы подключиться.',
+        );
       default:
-        return LegacyTextLocalizer.isEnglish
-            ? 'Install Shizuku first, then start it and grant Omnibot permission.'
-            : '请先安装 Shizuku，然后启动它并授予 Omnibot 权限。';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Install Shizuku first, then start it and grant Omnibot permission.',
+          '请先安装 Shizuku，然后启动它并授予 Omnibot 权限。',
+          ru: 'Сначала установите Shizuku, затем запустите службу и предоставьте приложению GrimCore разрешение.',
+        );
     }
   }
 }
@@ -805,12 +847,25 @@ Future<bool> ensureShizukuPermission(BuildContext context) async {
   }
   final confirmed = await AppDialog.confirm(
     context,
-    title: LegacyTextLocalizer.isEnglish ? 'Shizuku Permission' : 'Shizuku 权限',
+    title: LegacyTextLocalizer.pickForEnglishFlag(
+      LegacyTextLocalizer.isEnglish,
+      'Shizuku Permission',
+      'Shizuku 权限',
+      ru: 'Разрешение Shizuku',
+    ),
     content: status.localizedGuide,
-    cancelText: LegacyTextLocalizer.isEnglish ? 'Cancel' : '取消',
-    confirmText: LegacyTextLocalizer.isEnglish
-        ? (status.installed ? 'Open Shizuku' : 'Install Shizuku')
-        : (status.installed ? '打开 Shizuku' : '安装 Shizuku'),
+    cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+      LegacyTextLocalizer.isEnglish,
+      'Cancel',
+      '取消',
+      ru: 'Отмена',
+    ),
+    confirmText: LegacyTextLocalizer.pick(
+      status.installed ? 'Open Shizuku' : 'Install Shizuku',
+      status.installed ? '打开 Shizuku' : '安装 Shizuku',
+      ru: status.installed ? 'Открыть Shizuku' : 'Установить Shizuku',
+      locale: Localizations.localeOf(context),
+    ),
   );
   if (confirmed != true) {
     return false;

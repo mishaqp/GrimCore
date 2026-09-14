@@ -2,6 +2,7 @@ package cn.com.omnimind.bot.mcp
 
 import android.content.Context
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.server.application.call
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
@@ -68,14 +69,41 @@ object WebChatStaticHandler {
                 return
             }
         }
+        val preferredLanguage = call.request.headers[HttpHeaders.AcceptLanguage]
+            ?.split(',')
+            ?.asSequence()
+            ?.map { it.substringBefore(';').trim().lowercase() }
+            ?.firstOrNull { language ->
+                language.startsWith("ru") ||
+                    language.startsWith("en") ||
+                    language.startsWith("zh")
+            }
+            .orEmpty()
+        val (languageTag, heading, description) = when {
+            preferredLanguage.startsWith("zh") -> Triple(
+                "zh-CN",
+                "Web Chat 静态资源缺失",
+                "尚未找到 Web Chat 静态资源，请重新构建并安装最新 APK。",
+            )
+            preferredLanguage.startsWith("en") -> Triple(
+                "en",
+                "Web Chat bundle missing",
+                "The Web Chat static files are missing. Rebuild the project and install the latest APK.",
+            )
+            else -> Triple(
+                "ru",
+                "Web Chat не найден",
+                "Статические файлы Web Chat отсутствуют. Пересоберите проект и установите новую версию APK.",
+            )
+        }
         call.respondText(
             """
             <!doctype html>
-            <html lang="zh-CN">
+            <html lang="$languageTag">
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>Omnibot Web Chat</title>
+              <title>GrimCore Web Chat</title>
               <style>
                 body { font-family: sans-serif; margin: 0; padding: 32px; background: #f7f9fc; color: #24324a; }
                 .card { max-width: 680px; margin: 8vh auto 0; background: white; border-radius: 20px; padding: 28px; box-shadow: 0 16px 48px rgba(19, 38, 72, 0.12); }
@@ -84,8 +112,8 @@ object WebChatStaticHandler {
             </head>
             <body>
               <div class="card">
-                <h2>Web Chat Bundle Missing</h2>
-                <p>尚未找到 Web Chat 静态资源，请重新构建并安装最新 APK。</p>
+                <h2>$heading</h2>
+                <p>$description</p>
               </div>
             </body>
             </html>

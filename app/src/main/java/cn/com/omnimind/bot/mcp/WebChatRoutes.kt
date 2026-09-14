@@ -93,7 +93,7 @@ object WebChatRoutes {
                 val body = call.receive<Map<String, Any?>>()
                 call.respondJson(
                     conversationService.createConversation(
-                        title = body["title"]?.toString() ?: "新对话",
+                        title = body["title"]?.toString().orEmpty(),
                         mode = body["mode"]?.toString() ?: "agent",
                         summary = body["summary"]?.toString(),
                         parentConversationId = (body["parentConversationId"] as? Number)

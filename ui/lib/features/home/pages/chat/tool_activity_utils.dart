@@ -300,9 +300,19 @@ String resolveAgentToolProgressTitle(
       titleLower.contains('修改') ||
       titleLower.contains('edit');
   final action = isWrite
-      ? (isEnglish ? 'Writing file' : '正在写入文件')
+      ? (LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Writing file',
+          '正在写入文件',
+          ru: 'Запись файла',
+        ))
       : isEdit
-      ? (isEnglish ? 'Editing file' : '正在编辑文件')
+      ? (LegacyTextLocalizer.pickForEnglishFlag(
+          isEnglish,
+          'Editing file',
+          '正在编辑文件',
+          ru: 'Редактирование файла',
+        ))
       : title;
   if (action == title) {
     return action;
@@ -311,7 +321,7 @@ String resolveAgentToolProgressTitle(
   final fileName = _agentToolFileName(cardData);
   final actionWithTarget = fileName.isEmpty
       ? action
-      : '$action${isEnglish ? ': ' : '：'}$fileName';
+      : '$action${LegacyTextLocalizer.pickForEnglishFlag(isEnglish, ': ', '：')}$fileName';
   return actionWithTarget;
 }
 

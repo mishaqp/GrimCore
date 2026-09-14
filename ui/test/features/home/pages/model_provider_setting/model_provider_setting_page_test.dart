@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui/l10n/generated/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -177,6 +178,9 @@ void main() {
         Future<void> openPage() async {
           await tester.pumpWidget(
             MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               theme: AppTheme.lightTheme,
               home: const ModelProviderSettingPage(),
             ),
@@ -220,43 +224,64 @@ void main() {
     );
   }
 
-  testWidgets('model discovery TLS failure stays visible and explicit retry recovers', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2200);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    var calls = 0;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(assistCoreChannel, (call) async {
-      if (call.method == 'listModelProviderProfiles') return profilePayload();
-      if (call.method == 'fetchProviderModels') {
-        calls++;
-        if (calls == 1) {
-          throw PlatformException(
-            code: 'FETCH_PROVIDER_MODELS_ERROR',
-            message: 'Trust anchor for private-server not found',
-            details: {'failureKind': 'provider_tls_certificate_failure'},
-          );
-        }
-        return [{'id': 'gpt-4o', 'displayName': 'gpt-4o'}];
-      }
-      return null;
-    });
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.lightTheme,
-      home: const ModelProviderSettingPage(),
-    ));
-    await tester.pumpAndSettle();
-    await tester.pump(const Duration(seconds: 10));
-    expect(calls, 1);
-    expect(find.textContaining('Check whether your network requires sign-in'), findsOneWidget);
-    expect(find.textContaining('private-server'), findsNothing);
-    await tester.tap(find.text('Retry'));
-    await tester.pumpAndSettle();
-    expect(calls, 2);
-    expect(find.byKey(const ValueKey('provider-model-gpt-4o')), findsOneWidget);
-    expect(find.textContaining('Check whether your network requires sign-in'), findsNothing);
-  });
+  testWidgets(
+    'model discovery TLS failure stays visible and explicit retry recovers',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var calls = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(assistCoreChannel, (call) async {
+            if (call.method == 'listModelProviderProfiles') {
+              return profilePayload();
+            }
+            if (call.method == 'fetchProviderModels') {
+              calls++;
+              if (calls == 1) {
+                throw PlatformException(
+                  code: 'FETCH_PROVIDER_MODELS_ERROR',
+                  message: 'Trust anchor for private-server not found',
+                  details: {'failureKind': 'provider_tls_certificate_failure'},
+                );
+              }
+              return [
+                {'id': 'gpt-4o', 'displayName': 'gpt-4o'},
+              ];
+            }
+            return null;
+          });
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: AppTheme.lightTheme,
+          home: const ModelProviderSettingPage(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 10));
+      expect(calls, 1);
+      expect(
+        find.textContaining('Check whether your network requires sign-in'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('private-server'), findsNothing);
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+      expect(
+        find.byKey(const ValueKey('provider-model-gpt-4o')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Check whether your network requires sign-in'),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('late refresh cannot display models for a changed draft', (
     tester,
@@ -284,6 +309,9 @@ void main() {
         });
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         home: const ModelProviderSettingPage(),
       ),
@@ -311,6 +339,9 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           home: const ModelProviderSettingPage(),
@@ -367,6 +398,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -396,7 +430,7 @@ void main() {
     expect(saveCalls, 0);
   });
 
-  testWidgets('provider page filters the runtime OmniBot official channel', (
+  testWidgets('provider page shows every editable BYOK provider', (
     tester,
   ) async {
     final messenger =
@@ -404,18 +438,19 @@ void main() {
     messenger.setMockMethodCallHandler(assistCoreChannel, (call) async {
       if (call.method == 'listModelProviderProfiles') {
         final payload = profilePayload();
-        (payload['profiles'] as List<Map<String, dynamic>>)
-            .add(<String, dynamic>{
-              'id': 'omnibot-official-ai',
-              'name': 'OmniBot 官方 AI',
-              'baseUrl': 'https://official.example/ai',
-              'sourceType': 'omnibot_official',
-              'readOnly': true,
-              'ready': true,
-              'configured': true,
-              'protocolType': 'openai_compatible',
-              'wireApi': 'chat_completions',
-            });
+        (payload['profiles'] as List<Map<String, dynamic>>).add(
+          <String, dynamic>{
+            'id': 'provider-2',
+            'name': 'Provider 2',
+            'baseUrl': 'https://second.example/v1',
+            'sourceType': 'custom',
+            'readOnly': false,
+            'ready': true,
+            'configured': true,
+            'protocolType': 'openai_compatible',
+            'wireApi': 'chat_completions',
+          },
+        );
         return payload;
       }
       return null;
@@ -423,6 +458,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -434,7 +472,7 @@ void main() {
     expect(find.text('Provider 1'), findsWidgets);
     await tester.tap(find.byKey(const Key('provider-config-title')));
     await tester.pumpAndSettle();
-    expect(find.text('OmniBot 官方 AI'), findsNothing);
+    expect(find.text('Provider 2'), findsWidgets);
   });
 
   testWidgets('provider page does not wait for metadata refresh', (
@@ -465,6 +503,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -561,6 +602,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           key: ValueKey('provider-type-${entry['sourceType']}'),
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -605,6 +649,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -636,6 +683,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -672,6 +722,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -710,6 +763,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -761,6 +817,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -813,6 +872,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -862,6 +924,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -909,6 +974,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         home: const ModelProviderSettingPage(),
@@ -1066,6 +1134,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           home: const ModelProviderSettingPage(),

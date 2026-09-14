@@ -26,9 +26,12 @@ class Mem0MemoryService {
         fromCache: false,
         isStale: false,
         infoMessage: items.isEmpty
-            ? (LegacyTextLocalizer.isEnglish
-                  ? 'Workspace long-term memory is empty'
-                  : 'workspace 长期记忆为空')
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Workspace long-term memory is empty',
+                'workspace 长期记忆为空',
+                ru: 'Долговременная память рабочей области пуста',
+              ))
             : null,
       );
     } catch (e) {
@@ -47,9 +50,12 @@ class Mem0MemoryService {
     final trimmed = memory.trim();
     if (trimmed.isEmpty) {
       throw Exception(
-        LegacyTextLocalizer.isEnglish
-            ? 'Memory content cannot be empty'
-            : '记忆内容不能为空',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Memory content cannot be empty',
+          '记忆内容不能为空',
+          ru: 'Содержимое памяти не может быть пустым',
+        ),
       );
     }
     final content = await WorkspaceMemoryService.getLongMemory();
@@ -67,16 +73,24 @@ class Mem0MemoryService {
     final trimmed = memory.trim();
     if (trimmed.isEmpty) {
       throw Exception(
-        LegacyTextLocalizer.isEnglish
-            ? 'Memory content cannot be empty'
-            : '记忆内容不能为空',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Memory content cannot be empty',
+          '记忆内容不能为空',
+          ru: 'Содержимое памяти не может быть пустым',
+        ),
       );
     }
     final content = await WorkspaceMemoryService.getLongMemory();
     final updated = _replaceById(content, memoryId, trimmed);
     if (updated == null) {
       throw Exception(
-        LegacyTextLocalizer.isEnglish ? 'Memory not found' : '未找到对应记忆',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Memory not found',
+          '未找到对应记忆',
+          ru: 'Запись памяти не найдена',
+        ),
       );
     }
     await WorkspaceMemoryService.saveLongMemory(updated);
@@ -87,7 +101,12 @@ class Mem0MemoryService {
     final deleted = _deleteById(content, memoryId);
     if (deleted == null) {
       throw Exception(
-        LegacyTextLocalizer.isEnglish ? 'Memory not found' : '未找到对应记忆',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Memory not found',
+          '未找到对应记忆',
+          ru: 'Запись памяти не найдена',
+        ),
       );
     }
     await WorkspaceMemoryService.saveLongMemory(deleted);

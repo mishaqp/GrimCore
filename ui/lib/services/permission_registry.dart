@@ -98,10 +98,18 @@ class PermissionRegistry {
         iconPath: 'assets/welcome/permission_overlay.svg',
         iconWidth: 32.0,
         iconHeight: 32.0,
-        name: LegacyTextLocalizer.isEnglish ? 'Overlay Permission' : '悬浮窗权限',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Desktop overlay for quick access'
-            : '桌面悬浮显示，快速唤起小万',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Overlay Permission',
+          '悬浮窗权限',
+          ru: 'Показ поверх других окон',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Desktop overlay for quick access',
+          '桌面悬浮显示，快速唤起小万',
+          ru: 'Плавающая панель на рабочем столе для быстрого доступа',
+        ),
         openMethod: 'openOverlaySettings',
         checkMethod: 'isOverlayPermission',
       ),
@@ -110,12 +118,18 @@ class PermissionRegistry {
         iconPath: 'assets/welcome/permission_battery.svg',
         iconWidth: 32.0,
         iconHeight: 32.0,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Allow background running'
-            : '允许后台运行',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Keep running in background'
-            : '后台持续运行，切出APP不中断服务',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Allow background running',
+          '允许后台运行',
+          ru: 'Разрешить работу в фоне',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Keep running in background',
+          '后台持续运行，切出APP不中断服务',
+          ru: 'Продолжать работу в фоновом режиме',
+        ),
         openMethod: 'openBatteryOptimizationSettings',
         checkMethod: 'isBackgroundRunAllowed',
       ),
@@ -124,12 +138,18 @@ class PermissionRegistry {
         iconPath: 'assets/welcome/permission_installed_apps.svg',
         iconWidth: 32.0,
         iconHeight: 32.0,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Installed Apps Access'
-            : '应用列表读取',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Identify installed apps for app context'
-            : '识别已安装应用并提供应用上下文',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Installed Apps Access',
+          '应用列表读取',
+          ru: 'Доступ к списку приложений',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Identify installed apps for app context',
+          '识别已安装应用并提供应用上下文',
+          ru: 'Определять установленные приложения для контекста',
+        ),
         openMethod: 'openInstalledAppsSettings',
         checkMethod: 'isInstalledAppsPermissionGranted',
       ),
@@ -140,12 +160,18 @@ class PermissionRegistry {
         iconPath: 'assets/welcome/permission_installed_apps.svg',
         iconWidth: 32.0,
         iconHeight: 32.0,
-        name: LegacyTextLocalizer.isEnglish
-            ? 'Shizuku Permission'
-            : 'Shizuku 权限',
-        description: LegacyTextLocalizer.isEnglish
-            ? 'Optional advanced system actions for the agent'
-            : '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+        name: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Shizuku Permission',
+          'Shizuku 权限',
+          ru: 'Разрешение Shizuku',
+        ),
+        description: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Optional advanced system actions for the agent',
+          '可选的高级系统能力，用于扩展 agent 的系统级操作边界',
+          ru: 'Необязательные расширенные системные возможности агента',
+        ),
         openMethod: 'openShizukuDownloadOrApp',
         customCheckMethod: () async {
           final status = await getShizukuStatus();
@@ -181,12 +207,18 @@ class PermissionRegistry {
             iconPath: 'assets/welcome/permission_autostart.svg',
             iconWidth: 32.0,
             iconHeight: 32.0,
-            name: LegacyTextLocalizer.isEnglish
-                ? 'App launch management'
-                : '应用启动管理',
-            description: LegacyTextLocalizer.isEnglish
-                ? 'Prevent Omnibot from being killed by system'
-                : '防止小万被系统关闭',
+            name: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'App launch management',
+              '应用启动管理',
+              ru: 'Управление автозапуском',
+            ),
+            description: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Prevent Omnibot from being killed by system',
+              '防止小万被系统关闭',
+              ru: 'Не давать системе останавливать GrimCore',
+            ),
             openMethod: 'openAutoStartSettings',
             applicableLevels: const {PermissionLevel.fullExecution},
             customCheckMethod: () async {

@@ -1,3 +1,4 @@
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -41,18 +42,24 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
       setState(() => _loading = false);
       showToast(
         e.message ??
-            (Localizations.localeOf(context).languageCode == 'en'
-                ? 'Failed to load MCP tools'
-                : '加载 MCP 工具失败'),
+            (LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Failed to load MCP tools',
+              '加载 MCP 工具失败',
+              ru: 'Не удалось загрузить инструменты MCP',
+            )),
         type: ToastType.error,
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Failed to load MCP tools'
-            : '加载 MCP 工具失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Failed to load MCP tools',
+          '加载 MCP 工具失败',
+          ru: 'Не удалось загрузить инструменты MCP',
+        ),
         type: ToastType.error,
       );
     }
@@ -74,9 +81,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
       });
     } catch (e) {
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Toggle failed'
-            : '切换失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Toggle failed',
+          '切换失败',
+          ru: 'Ошибка переключения',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -98,24 +108,33 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
         }).toList();
       });
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Tool list refreshed'
-            : '工具列表已刷新',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Tool list refreshed',
+          '工具列表已刷新',
+          ru: 'Список инструментов обновлён',
+        ),
       );
     } on PlatformException catch (e) {
       await _reloadServersSilently();
       showToast(
         e.message ??
-            (Localizations.localeOf(context).languageCode == 'en'
-                ? 'Refresh failed'
-                : '刷新失败'),
+            (LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Refresh failed',
+              '刷新失败',
+              ru: 'Не удалось обновить',
+            )),
         type: ToastType.error,
       );
     } catch (_) {
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Refresh failed'
-            : '刷新失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Refresh failed',
+          '刷新失败',
+          ru: 'Не удалось обновить',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -138,14 +157,20 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'Delete MCP Service'
-              : '删除 MCP 服务',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Delete MCP Service',
+            '删除 MCP 服务',
+            ru: 'Удалить сервис MCP',
+          ),
         ),
         content: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'Confirm deleting "${server.name}"?'
-              : '确认删除“${server.name}”？',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Confirm deleting "${server.name}"?',
+            '确认删除“${server.name}”？',
+            ru: 'Удалить «${server.name}»?',
+          ),
         ),
         actions: [
           TextButton(
@@ -155,9 +180,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Delete'
-                  : '删除',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Delete',
+                '删除',
+                ru: 'Удалить',
+              ),
             ),
           ),
         ],
@@ -173,15 +201,21 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
         _servers.removeWhere((item) => item.id == server.id);
       });
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Deleted'
-            : '已删除',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Deleted',
+          '已删除',
+          ru: 'Удалено',
+        ),
       );
     } catch (e) {
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Delete failed'
-            : '删除失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Delete failed',
+          '删除失败',
+          ru: 'Не удалось удалить',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -215,13 +249,21 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
         }
       });
       showToast(
-        Localizations.localeOf(context).languageCode == 'en' ? 'Saved' : '已保存',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Saved',
+          '已保存',
+          ru: 'Сохранено',
+        ),
       );
     } catch (e) {
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Save failed'
-            : '保存失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Save failed',
+          '保存失败',
+          ru: 'Не удалось сохранить',
+        ),
         type: ToastType.error,
       );
     }
@@ -244,9 +286,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
     return Scaffold(
       backgroundColor: palette.pageBackground,
       appBar: CommonAppBar(
-        title: Localizations.localeOf(context).languageCode == 'en'
-            ? 'MCP Tools'
-            : 'MCP 工具',
+        title: LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'MCP Tools',
+          'MCP 工具',
+          ru: 'Инструменты MCP',
+        ),
         primary: true,
       ),
       floatingActionButton: FloatingActionButton(
@@ -266,9 +311,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
                 ),
                 children: [
                   SettingsSectionTitle(
-                    label: Localizations.localeOf(context).languageCode == 'en'
-                        ? 'Remote Services'
-                        : '远端服务',
+                    label: LegacyTextLocalizer.pickForEnglishFlag(
+                      Localizations.localeOf(context).languageCode == 'en',
+                      'Remote Services',
+                      '远端服务',
+                      ru: 'Удалённые сервисы',
+                    ),
                   ),
                   for (int index = 0; index < _servers.length; index++) ...[
                     _buildServerCard(_servers[index]),
@@ -294,9 +342,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            Localizations.localeOf(context).languageCode == 'en'
-                ? 'No remote MCP services'
-                : '暂无远端 MCP 服务',
+            LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'No remote MCP services',
+              '暂无远端 MCP 服务',
+              ru: 'Нет удалённых служб MCP',
+            ),
             style: TextStyle(
               fontSize: 16,
               color: context.isDarkTheme
@@ -351,9 +402,12 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
           children: [
             _MetaChip(label: _healthLabel(server.lastHealth)),
             _MetaChip(
-              label: Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Tools ${server.toolCount}'
-                  : '工具 ${server.toolCount}',
+              label: LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Tools ${server.toolCount}',
+                '工具 ${server.toolCount}',
+                ru: 'Инструменты: ${server.toolCount}',
+              ),
             ),
             if ((server.lastError ?? '').isNotEmpty)
               _MetaChip(
@@ -369,26 +423,35 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
             TextButton(
               onPressed: busy ? null : () => _refreshTools(server),
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Refresh tools'
-                    : '刷新工具',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Refresh tools',
+                  '刷新工具',
+                  ru: 'Обновить инструменты',
+                ),
               ),
             ),
             TextButton(
               onPressed: busy ? null : () => _showServerEditor(server: server),
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Edit'
-                    : '编辑',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Edit',
+                  '编辑',
+                  ru: 'Редактировать',
+                ),
               ),
             ),
             const Spacer(),
             TextButton(
               onPressed: busy ? null : () => _deleteServer(server),
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Delete'
-                    : '删除',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Delete',
+                  '删除',
+                  ru: 'Удалить',
+                ),
               ),
             ),
           ],
@@ -400,17 +463,26 @@ class _RemoteMcpServersPageState extends State<RemoteMcpServersPage> {
   String _healthLabel(String health) {
     switch (health) {
       case 'healthy':
-        return Localizations.localeOf(context).languageCode == 'en'
-            ? 'Connected'
-            : '连接正常';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Connected',
+          '连接正常',
+          ru: 'Подключено',
+        );
       case 'error':
-        return Localizations.localeOf(context).languageCode == 'en'
-            ? 'Connection error'
-            : '连接异常';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Connection error',
+          '连接异常',
+          ru: 'Ошибка подключения',
+        );
       default:
-        return Localizations.localeOf(context).languageCode == 'en'
-            ? 'Unknown'
-            : '状态未知';
+        return LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Unknown',
+          '状态未知',
+          ru: 'Неизвестно',
+        );
     }
   }
 }
@@ -497,9 +569,12 @@ class _RemoteMcpServerEditorSheetState
     final endpoint = _endpointController.text.trim();
     if (name.isEmpty || endpoint.isEmpty) {
       showToast(
-        Localizations.localeOf(context).languageCode == 'en'
-            ? 'Please enter both name and address'
-            : '请填写名称和地址',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          Localizations.localeOf(context).languageCode == 'en',
+          'Please enter both name and address',
+          '请填写名称和地址',
+          ru: 'Укажите название и адрес',
+        ),
         type: ToastType.error,
       );
       return;
@@ -539,21 +614,30 @@ class _RemoteMcpServerEditorSheetState
         children: [
           Text(
             widget.server == null
-                ? (Localizations.localeOf(context).languageCode == 'en'
-                      ? 'Add MCP Service'
-                      : '添加 MCP 服务')
-                : (Localizations.localeOf(context).languageCode == 'en'
-                      ? 'Edit MCP Service'
-                      : '编辑 MCP 服务'),
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    Localizations.localeOf(context).languageCode == 'en',
+                    'Add MCP Service',
+                    '添加 MCP 服务',
+                    ru: 'Добавить сервис MCP',
+                  ))
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    Localizations.localeOf(context).languageCode == 'en',
+                    'Edit MCP Service',
+                    '编辑 MCP 服务',
+                    ru: 'Изменить MCP-сервис',
+                  )),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           _InputField(
             controller: _nameController,
             focusNode: _nameFocusNode,
-            label: Localizations.localeOf(context).languageCode == 'en'
-                ? 'Name'
-                : '名称',
+            label: LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Name',
+              '名称',
+              ru: 'Название',
+            ),
           ),
           const SizedBox(height: 12),
           _InputField(
@@ -564,9 +648,12 @@ class _RemoteMcpServerEditorSheetState
           const SizedBox(height: 12),
           _InputField(
             controller: _tokenController,
-            label: Localizations.localeOf(context).languageCode == 'en'
-                ? 'Bearer Token (Optional)'
-                : 'Bearer Token（可选）',
+            label: LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Bearer Token (Optional)',
+              'Bearer Token（可选）',
+              ru: 'Bearer-токен (необязательно)',
+            ),
           ),
           const SizedBox(height: 12),
           SwitchListTile(
@@ -574,9 +661,12 @@ class _RemoteMcpServerEditorSheetState
             value: _enabled,
             onChanged: (value) => setState(() => _enabled = value),
             title: Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Enabled'
-                  : '启用',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Enabled',
+                '启用',
+                ru: 'Включено',
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -585,9 +675,12 @@ class _RemoteMcpServerEditorSheetState
             child: ElevatedButton(
               onPressed: _submit,
               child: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Save'
-                    : '保存',
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  Localizations.localeOf(context).languageCode == 'en',
+                  'Save',
+                  '保存',
+                  ru: 'Сохранить',
+                ),
               ),
             ),
           ),

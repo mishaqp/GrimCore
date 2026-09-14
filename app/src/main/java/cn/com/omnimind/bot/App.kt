@@ -1,12 +1,9 @@
 package cn.com.omnimind.bot
 
 import BaseApplication
-import cn.com.omnimind.baselib.account.AccountCredentialStorageException
-import cn.com.omnimind.baselib.account.OmniAccount
 import cn.com.omnimind.baselib.database.DatabaseHelper
 import cn.com.omnimind.baselib.i18n.AppLocaleManager
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.util.AppSecretStore
 import cn.com.omnimind.baselib.util.CredentialEndpointSecurity
 import cn.com.omnimind.baselib.util.OmniLog
@@ -26,7 +23,6 @@ import cn.com.omnimind.bot.quicklog.QuickLogWidgetUpdater
 import cn.com.omnimind.bot.terminal.EmbeddedTerminalRuntime
 import cn.com.omnimind.bot.update.AppUpdateManager
 import cn.com.omnimind.bot.util.NestedBackgroundStateUtil
-import cn.com.omnimind.bot.vlm.DebugOmniMindProviderBootstrap
 import cn.com.omnimind.baselib.shizuku.ShizukuCapabilityManager
 import com.rk.resources.Res
 import com.tencent.mmkv.MMKV
@@ -88,17 +84,7 @@ class App : BaseApplication() {
         CredentialEndpointSecurity.configureDebugLoopback(BuildConfig.DEBUG)
         AppSecretStore.initialize(this)
         ModelProviderConfigStore.initialize(this)
-        DebugOmniMindProviderBootstrap.install(this)
         OfficialOmniPluginProviders.register()
-        OmniAccount.initialize(
-            context = this,
-            baseUrl = BuildConfig.BASE_URL,
-            platformGatewayUrl = BuildConfig.AI_GATEWAY_URL,
-            allowInsecureLoopback = BuildConfig.DEBUG,
-            cloudServiceAccessProvider = {
-                AppUpdateManager.getCloudServiceAccessState(this)
-            },
-        )
         AgentPromptSettingsStore.initializeAndCleanupLegacyFiles(this)
         LegacyLocalModelDataCleanup.start(this)
         setupUncaughtExceptionHandler()
@@ -213,25 +199,7 @@ class App : BaseApplication() {
             runCatching {
                 AppUpdateManager.checkNow(this@App, force = true)
             }.onFailure {
-                OmniLog.w("AppStartup", "Cloud-service version policy check failed: ${it.message}")
-            }
-            val signedIn = runCatching {
-                OmniAccount.isConfigured() && OmniAccount.repository().isSignedIn()
-            }.onFailure { error ->
-                if (error is AccountCredentialStorageException) {
-                    OmniLog.w(
-                        "AppStartup",
-                        "Secure account storage is temporarily unavailable; deferring AI sync",
-                    )
-                } else {
-                    OmniLog.w("AppStartup", "Account session state check failed: ${error.message}")
-                }
-            }.getOrDefault(false)
-            if (signedIn && OmniAccount.currentCloudServiceAccess().allowed) {
-                runCatching {
-                    val settings = OmniAccount.repository().getAiSettings()
-                    PlatformAiProvisioner.synchronize(settings)
-                }
+                OmniLog.w("AppStartup", "Release update check failed: ${it.message}")
             }
         }
         OmniLog.d("AppStartup", "initSDKsAfterPrivacyConsent completed")

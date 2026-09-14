@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ui/services/agent_runtime_service.dart';
@@ -120,7 +121,12 @@ class _CodexRemoteFilePreviewPageState
         _error = payload.ok
             ? null
             : (payload.error ??
-                  (_isEnglish ? 'Failed to load file' : '加载文件失败'));
+                  (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Failed to load file',
+                    '加载文件失败',
+                    ru: 'Не удалось загрузить файл',
+                  )));
         if (!keepDraft) {
           _isDirty = false;
           if (_isEditing && !payload.isTextLike) {
@@ -157,7 +163,12 @@ class _CodexRemoteFilePreviewPageState
   Future<void> _handleEditPressed() async {
     if (!_canEdit) {
       showToast(
-        _isEnglish ? 'This remote file is not editable' : '此远程文件不可编辑',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'This remote file is not editable',
+          '此远程文件不可编辑',
+          ru: 'Этот удалённый файл нельзя редактировать',
+        ),
         type: ToastType.warning,
       );
       return;
@@ -178,12 +189,30 @@ class _CodexRemoteFilePreviewPageState
     if (_isDirty) {
       final confirmed = await AppDialog.confirm(
         context,
-        title: _isEnglish ? 'Discard changes' : '放弃修改',
-        content: _isEnglish
-            ? 'There are unsaved changes. Discard them?'
-            : '当前有未保存修改，确认放弃吗？',
-        cancelText: _isEnglish ? 'Keep editing' : '继续编辑',
-        confirmText: _isEnglish ? 'Discard' : '放弃',
+        title: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Discard changes',
+          '放弃修改',
+          ru: 'Отменить изменения',
+        ),
+        content: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'There are unsaved changes. Discard them?',
+          '当前有未保存修改，确认放弃吗？',
+          ru: 'Есть несохранённые изменения. Отменить их?',
+        ),
+        cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Keep editing',
+          '继续编辑',
+          ru: 'Продолжить редактирование',
+        ),
+        confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Discard',
+          '放弃',
+          ru: 'Отменить изменения',
+        ),
       );
       if (confirmed != true || !mounted) return;
     }
@@ -222,13 +251,23 @@ class _CodexRemoteFilePreviewPageState
         _isEditing = false;
       });
       showToast(
-        _isEnglish ? 'Remote file saved' : '远程文件已保存',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Remote file saved',
+          '远程文件已保存',
+          ru: 'Удалённый файл сохранён',
+        ),
         type: ToastType.success,
       );
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Save failed: $error' : '保存失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Save failed: $error',
+          '保存失败：$error',
+          ru: 'Не удалось сохранить: $error',
+        ),
         type: ToastType.error,
       );
     } finally {
@@ -250,10 +289,18 @@ class _CodexRemoteFilePreviewPageState
           color: palette.surfaceSecondary,
           child: Text(
             _isDirty
-                ? (_isEnglish ? 'Editing with unsaved changes' : '编辑中，存在未保存修改')
-                : (_isEnglish
-                      ? 'Editing remote file. Save writes back to the PC Bridge.'
-                      : '正在编辑远程文件，保存后会写回 PC Bridge。'),
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Editing with unsaved changes',
+                    '编辑中，存在未保存修改',
+                    ru: 'Редактирование: изменения не сохранены',
+                  ))
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Editing remote file. Save writes back to the PC Bridge.',
+                    '正在编辑远程文件，保存后会写回 PC Bridge。',
+                    ru: 'Вы редактируете удалённый файл. При сохранении изменения будут отправлены в PC Bridge.',
+                  )),
             style: TextStyle(fontSize: 12, color: palette.textSecondary),
           ),
         ),
@@ -275,7 +322,12 @@ class _CodexRemoteFilePreviewPageState
               decoration: InputDecoration(
                 filled: true,
                 fillColor: palette.surfacePrimary,
-                hintText: _isEnglish ? 'Enter file content' : '输入文件内容',
+                hintText: LegacyTextLocalizer.pickForEnglishFlag(
+                  _isEnglish,
+                  'Enter file content',
+                  '输入文件内容',
+                  ru: 'Введите содержимое файла',
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -394,7 +446,12 @@ class _CodexRemoteFilePreviewPageState
                 payload.mimeType,
                 if (sizeText.isNotEmpty) sizeText,
                 if (payload.truncated)
-                  _isEnglish ? 'too large to preview' : '文件过大，无法预览',
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'too large to preview',
+                    '文件过大，无法预览',
+                    ru: 'слишком велик для предпросмотра',
+                  ),
               ].join(' · '),
               textAlign: TextAlign.center,
               style: TextStyle(color: palette.textSecondary, fontSize: 12),
@@ -423,7 +480,14 @@ class _CodexRemoteFilePreviewPageState
               TextButton.icon(
                 onPressed: () => unawaited(_loadFile()),
                 icon: const Icon(Icons.refresh_rounded, size: 17),
-                label: Text(_isEnglish ? 'Retry' : '重试'),
+                label: Text(
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Retry',
+                    '重试',
+                    ru: 'Повторить',
+                  ),
+                ),
               ),
             ],
           ),
@@ -432,7 +496,16 @@ class _CodexRemoteFilePreviewPageState
     }
     final payload = _payload;
     if (payload == null) {
-      return Center(child: Text(_isEnglish ? 'No content' : '暂无内容'));
+      return Center(
+        child: Text(
+          LegacyTextLocalizer.pickForEnglishFlag(
+            _isEnglish,
+            'No content',
+            '暂无内容',
+            ru: 'Нет содержимого',
+          ),
+        ),
+      );
     }
     if (_isEditing) {
       return _buildEditor();
@@ -471,7 +544,14 @@ class _CodexRemoteFilePreviewPageState
               FilledButton.tonalIcon(
                 onPressed: _isSaving ? null : _handleCancelEditing,
                 icon: const Icon(Icons.close_rounded),
-                label: Text(_isEnglish ? 'Cancel' : '取消'),
+                label: Text(
+                  LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Cancel',
+                    '取消',
+                    ru: 'Отмена',
+                  ),
+                ),
               ),
             if (_isEditing) const SizedBox(width: 10),
             FilledButton.icon(
@@ -489,8 +569,18 @@ class _CodexRemoteFilePreviewPageState
                   : const Icon(Icons.edit_outlined),
               label: Text(
                 _isEditing
-                    ? (_isEnglish ? 'Save' : '保存')
-                    : (_isEnglish ? 'Edit' : '编辑'),
+                    ? (LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Save',
+                        '保存',
+                        ru: 'Сохранить',
+                      ))
+                    : (LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Edit',
+                        '编辑',
+                        ru: 'Редактировать',
+                      )),
               ),
             ),
           ],
@@ -515,7 +605,12 @@ class _CodexRemoteFilePreviewPageState
           primary: true,
           actions: [
             IconButton(
-              tooltip: _isEnglish ? 'Reload' : '刷新',
+              tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Reload',
+                '刷新',
+                ru: 'Обновить',
+              ),
               onPressed: _loading ? null : () => unawaited(_loadFile()),
               icon: const Icon(Icons.refresh_rounded),
             ),

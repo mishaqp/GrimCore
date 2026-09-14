@@ -25,12 +25,14 @@ class BotStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentCostTime = costTime;
+    final isEnglish = LegacyTextLocalizer.isEnglish;
+    final isChinese = !isEnglish && !LegacyTextLocalizer.isRussian;
     final normalizedCostTime = currentCostTime == null
         ? ''
-        : LegacyTextLocalizer.isEnglish
-        ? currentCostTime
-        : currentCostTime.replaceAll(' ', '');
-    if (status == BotStatusType.completed && LegacyTextLocalizer.isEnglish) {
+        : isChinese
+        ? currentCostTime.replaceAll(' ', '')
+        : currentCostTime;
+    if (status == BotStatusType.completed && isEnglish) {
       final completedEnglishText = normalizedCostTime.isEmpty
           ? 'Thought complete'
           : 'Thought for $normalizedCostTime';
@@ -86,6 +88,8 @@ class BotStatus extends StatelessWidget {
     bool shimmerText = false,
   }) {
     final palette = context.omniPalette;
+    final isEnglish = LegacyTextLocalizer.isEnglish;
+    final isChinese = !isEnglish && !LegacyTextLocalizer.isRussian;
     final defaultTextColor = context.isDarkTheme
         ? palette.textSecondary
         : const Color(0x80353E53);
@@ -123,13 +127,11 @@ class BotStatus extends StatelessWidget {
 
     final normalizedCostTime = costTime == null
         ? ''
-        : LegacyTextLocalizer.isEnglish
-        ? costTime
-        : costTime.replaceAll(' ', '');
+        : isChinese
+        ? costTime.replaceAll(' ', '')
+        : costTime;
     final timeJoiner =
-        timeDesc != null &&
-            normalizedCostTime.isNotEmpty &&
-            LegacyTextLocalizer.isEnglish
+        timeDesc != null && normalizedCostTime.isNotEmpty && !isChinese
         ? ' '
         : '';
     final timeText = timeDesc != null

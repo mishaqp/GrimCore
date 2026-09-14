@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { browserFrameUrl, workspaceDownloadUrl } from "../api";
 import { formatBytes } from "../format";
+import { useI18n } from "../i18n/I18nProvider";
 import type {
   BrowserSnapshot,
   ContextPanelName,
@@ -47,6 +48,7 @@ export function ContextPane({
   onBrowserAction,
   onBrowserRefresh,
 }: ContextPaneProps) {
+  const { messages } = useI18n();
   const [browserUrl, setBrowserUrl] = useState("");
   const browserAvailable = browserSnapshot?.available === true;
   const frameUrl = useMemo(() => browserFrameUrl(browserFrameSeed), [browserFrameSeed]);
@@ -64,10 +66,10 @@ export function ContextPane({
   return (
     <aside className="context-pane">
       <div className="mobile-context-header">
-        <button className="appbar-icon" type="button" aria-label="打开对话列表" onClick={onOpenConversations}>
+        <button className="appbar-icon" type="button" aria-label={messages.openConversationList} onClick={onOpenConversations}>
           <Icon name="menu" size={20} />
         </button>
-        <strong>{activePanel === "workspace" ? "工作区" : "浏览器"}</strong>
+        <strong>{activePanel === "workspace" ? messages.workspace : messages.browser}</strong>
         <span />
       </div>
       <div className="context-tabs" role="tablist">
@@ -79,38 +81,38 @@ export function ContextPane({
             aria-selected={activePanel === panel}
             onClick={() => onSelectPanel(panel)}
             key={panel}
-          >{panel === "workspace" ? "工作区" : "浏览器"}</button>
+          >{panel === "workspace" ? messages.workspace : messages.browser}</button>
         ))}
       </div>
 
       <section id="workspace-panel" className={`context-panel${activePanel === "workspace" ? " active" : ""}`}>
         <header className="context-header">
           <div>
-            <strong>工作区</strong>
+            <strong>{messages.workspace}</strong>
             <button className="path-button" type="button" title={workspacePath} onClick={onWorkspacePath}>
-              {workspacePath || "工作区"}
+              {workspacePath || messages.workspace}
             </button>
           </div>
           <div className="header-actions">
             {workspaceFilePath && (
-              <a className="quiet-link" href={workspaceDownloadUrl(workspaceFilePath)} title="下载">
-                <Icon name="download" size={15} /><span>下载</span>
+              <a className="quiet-link" href={workspaceDownloadUrl(workspaceFilePath)} title={messages.download}>
+                <Icon name="download" size={15} /><span>{messages.download}</span>
               </a>
             )}
             <button className="quiet-button" type="button" onClick={onWorkspaceRefresh}>
-              <Icon name="refresh" size={14} /><span>刷新</span>
+              <Icon name="refresh" size={14} /><span>{messages.refresh}</span>
             </button>
             <button
               className="primary-small-button"
               type="button"
               disabled={!workspaceDirty || !workspaceFilePath}
               onClick={onWorkspaceSave}
-            ><Icon name="save" size={14} /><span>保存</span></button>
+            ><Icon name="save" size={14} /><span>{messages.save}</span></button>
           </div>
         </header>
         <div className="workspace-layout">
           <div className="workspace-list">
-            {!workspaceItems.length && <div className="list-empty">目录为空</div>}
+            {!workspaceItems.length && <div className="list-empty">{messages.emptyDirectory}</div>}
             {workspaceItems.map((item) => (
               <button
                 className={`workspace-item${item.path === workspaceFilePath ? " active" : ""}`}
@@ -125,7 +127,7 @@ export function ContextPane({
             ))}
           </div>
           <div className="workspace-editor-wrap">
-            <p>{workspaceFilePath || "选择文件以查看或编辑"}</p>
+            <p>{workspaceFilePath || messages.selectFile}</p>
             <textarea
               id="workspace-editor"
               spellCheck={false}
@@ -142,34 +144,34 @@ export function ContextPane({
           <form className="browser-address-form" onSubmit={navigate}>
             <input
               type="url"
-              placeholder="输入网址并远程导航"
+              placeholder={messages.enterBrowserUrl}
               value={browserUrl}
               onChange={(event) => setBrowserUrl(event.target.value)}
             />
-            <button className="primary-small-button" type="submit">打开</button>
+            <button className="primary-small-button" type="submit">{messages.open}</button>
           </form>
           <div className="browser-buttons">
             <button
               className="quiet-button"
               type="button"
               onClick={() => onBrowserAction({ action: "scroll", direction: "up", amount: 420, tool_title: "Web Chat Scroll Up" })}
-            >上滑</button>
+            >{messages.scrollUp}</button>
             <button
               className="quiet-button"
               type="button"
               onClick={() => onBrowserAction({ action: "scroll", direction: "down", amount: 420, tool_title: "Web Chat Scroll Down" })}
-            >下滑</button>
-            <button className="quiet-button" type="button" onClick={onBrowserRefresh}>刷新画面</button>
+            >{messages.scrollDown}</button>
+            <button className="quiet-button" type="button" onClick={onBrowserRefresh}>{messages.refreshFrame}</button>
           </div>
         </header>
         <div className="browser-summary">
-          <strong>{browserSnapshot?.title || "暂无浏览器会话"}</strong>
+          <strong>{browserSnapshot?.title || messages.noBrowserSession}</strong>
           <span>{browserSnapshot?.currentUrl || ""}</span>
         </div>
         <div className="browser-frame-wrap">
           {browserAvailable
-            ? <img src={frameUrl} alt="浏览器实时画面" />
-            : <p>当前没有可镜像的浏览器会话</p>}
+            ? <img src={frameUrl} alt={messages.browserLiveFrame} />
+            : <p>{messages.noBrowserSessionToMirror}</p>}
         </div>
       </section>
     </aside>

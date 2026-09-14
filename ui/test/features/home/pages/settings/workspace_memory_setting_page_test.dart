@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ui/l10n/generated/app_localizations.dart';
 import 'package:ui/features/home/pages/settings/workspace_memory_setting_page.dart';
 import 'package:ui/theme/app_theme.dart';
 
@@ -33,6 +34,9 @@ void main() {
 
   Widget buildTestApp(Widget child) {
     return MaterialApp(
+      locale: const Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: DefaultAssetBundle(bundle: _SvgTestAssetBundle(), child: child),
@@ -42,14 +46,12 @@ void main() {
   late String soulContent;
   late String chatContent;
   late String memoryContent;
-  late bool embeddingUsesPlatform;
   late List<MethodCall> recordedCalls;
 
   setUp(() {
     soulContent = '# SOUL\ninitial soul\n';
     chatContent = '# CHAT\ninitial chat prompt\n';
     memoryContent = '# MEMORY\ninitial memory\n';
-    embeddingUsesPlatform = false;
     recordedCalls = <MethodCall>[];
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -81,7 +83,6 @@ void main() {
                 'modelId': 'embedding-1',
                 'apiBase': 'https://example.com/v1',
                 'hasApiKey': true,
-                'usesPlatform': embeddingUsesPlatform,
               };
             case 'getWorkspaceMemoryRollupStatus':
               return <String, Object?>{
@@ -145,23 +146,12 @@ void main() {
     );
   });
 
-  testWidgets('BYOK embedding keeps the scene model config entry', (
+  testWidgets('embedding configuration keeps the scene model config entry', (
     tester,
   ) async {
     await tester.pumpWidget(buildTestApp(const WorkspaceMemorySettingPage()));
     await tester.pumpAndSettle();
 
     expect(find.text('去场景模型配置记忆嵌入模型'), findsOneWidget);
-  });
-
-  testWidgets('platform embedding hides the ineffective BYOK config entry', (
-    tester,
-  ) async {
-    embeddingUsesPlatform = true;
-
-    await tester.pumpWidget(buildTestApp(const WorkspaceMemorySettingPage()));
-    await tester.pumpAndSettle();
-
-    expect(find.text('去场景模型配置记忆嵌入模型'), findsNothing);
   });
 }

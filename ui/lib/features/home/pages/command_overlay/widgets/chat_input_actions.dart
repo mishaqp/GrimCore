@@ -4,9 +4,12 @@ extension _ChatInputActionSupport on _ChatInputAreaStateBase {
   Widget _buildTerminalButton({required double iconSize}) {
     return IconButton(
       padding: EdgeInsets.zero,
-      tooltip: Localizations.localeOf(context).languageCode == 'en'
-          ? 'Open terminal'
-          : '打开终端',
+      tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+        Localizations.localeOf(context).languageCode == 'en',
+        'Open terminal',
+        '打开终端',
+        ru: 'Открыть терминал',
+      ),
       iconSize: iconSize,
       icon: SizedBox(
         width: 24,
@@ -107,9 +110,12 @@ extension _ChatInputActionSupport on _ChatInputAreaStateBase {
           contextMenuBuilder: (context, editableTextState) =>
               TextInputContextMenu(editableTextState: editableTextState),
           decoration: InputDecoration(
-            hintText: Localizations.localeOf(context).languageCode == 'en'
-                ? 'Type your message'
-                : '请输入内容',
+            hintText: LegacyTextLocalizer.pickForEnglishFlag(
+              Localizations.localeOf(context).languageCode == 'en',
+              'Type your message',
+              '请输入内容',
+              ru: 'Введите сообщение',
+            ),
             hintStyle: TextStyle(
               fontSize: multiline ? 15.0 : 14.0,
               color: hintColor,

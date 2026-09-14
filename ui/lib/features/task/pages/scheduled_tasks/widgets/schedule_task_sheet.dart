@@ -104,9 +104,12 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      LegacyTextLocalizer.isEnglish
-                          ? 'Set scheduled task'
-                          : '设置定时任务',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        LegacyTextLocalizer.isEnglish,
+                        'Set scheduled task',
+                        '设置定时任务',
+                        ru: 'Настроить запланированную задачу',
+                      ),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -180,7 +183,12 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
                 child: Row(
                   children: [
                     Text(
-                      LegacyTextLocalizer.isEnglish ? 'Repeat daily' : '每日重复执行',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        LegacyTextLocalizer.isEnglish,
+                        'Repeat daily',
+                        '每日重复执行',
+                        ru: 'Повторять ежедневно',
+                      ),
                       style: TextStyle(
                         fontSize: 14,
                         color: palette.textPrimary,
@@ -247,7 +255,12 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
         children: [
           Expanded(
             child: _buildTabButton(
-              title: LegacyTextLocalizer.isEnglish ? 'Fixed time' : '固定时间',
+              title: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Fixed time',
+                '固定时间',
+                ru: 'Заданное время',
+              ),
               isSelected: _selectedTabIndex == 0,
               onTap: () {
                 setState(() {
@@ -263,7 +276,12 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
           ),
           Expanded(
             child: _buildTabButton(
-              title: LegacyTextLocalizer.isEnglish ? 'Countdown' : '倒计时',
+              title: LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Countdown',
+                '倒计时',
+                ru: 'Таймер',
+              ),
               isSelected: _selectedTabIndex == 1,
               onTap: () {
                 setState(() {
@@ -398,7 +416,12 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    LegacyTextLocalizer.isEnglish ? 'Execute after' : '后执行',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Execute after',
+                      '后执行',
+                      ru: 'До выполнения',
+                    ),
                     style: TextStyle(
                       fontSize: 14,
                       color: palette.textSecondary,
@@ -448,9 +471,19 @@ class _ScheduleTaskSheetState extends State<ScheduleTaskSheet> {
       if (mins > 0) {
         return '${hours}h ${mins}m';
       }
-      return isEnglish ? '${hours}h' : '$hours小时';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        '${hours}h',
+        '$hours小时',
+        ru: '$hours ч',
+      );
     }
-    return isEnglish ? '${minutes}m' : '$minutes分钟';
+    return LegacyTextLocalizer.pickForEnglishFlag(
+      isEnglish,
+      '${minutes}m',
+      '$minutes分钟',
+      ru: '$minutes мин',
+    );
   }
 
   /// 构建加减按钮
@@ -546,9 +579,12 @@ class _CountdownInputDialogState extends State<_CountdownInputDialog> {
     final minutes = int.tryParse(_controller.text.trim());
     if (minutes == null || minutes <= 0 || minutes > 1440) {
       setState(() {
-        _errorText = LegacyTextLocalizer.isEnglish
-            ? 'Enter minutes between 1 and 1440'
-            : '请输入 1-1440 之间的分钟数';
+        _errorText = LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Enter minutes between 1 and 1440',
+          '请输入 1-1440 之间的分钟数',
+          ru: 'Введите число минут от 1 до 1440',
+        );
       });
       return;
     }
@@ -574,7 +610,12 @@ class _CountdownInputDialogState extends State<_CountdownInputDialog> {
         backgroundColor: palette.surfacePrimary,
         surfaceTintColor: Colors.transparent,
         title: Text(
-          LegacyTextLocalizer.isEnglish ? 'Set countdown' : '设置倒计时',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Set countdown',
+            '设置倒计时',
+            ru: 'Установить таймер',
+          ),
           style: TextStyle(color: palette.textPrimary),
         ),
         content: Row(
@@ -587,7 +628,12 @@ class _CountdownInputDialogState extends State<_CountdownInputDialog> {
                 keyboardType: TextInputType.number,
                 style: TextStyle(color: palette.textPrimary),
                 decoration: InputDecoration(
-                  suffixText: LegacyTextLocalizer.isEnglish ? 'min' : '分钟',
+                  suffixText: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'min',
+                    '分钟',
+                    ru: 'мин',
+                  ),
                   suffixStyle: TextStyle(color: palette.textSecondary),
                   border: inputBorder,
                   enabledBorder: inputBorder,
@@ -615,11 +661,25 @@ class _CountdownInputDialogState extends State<_CountdownInputDialog> {
         actions: [
           TextButton(
             onPressed: () => _close(),
-            child: Text(LegacyTextLocalizer.isEnglish ? 'Cancel' : '取消'),
+            child: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Cancel',
+                '取消',
+                ru: 'Отмена',
+              ),
+            ),
           ),
           TextButton(
             onPressed: _submit,
-            child: Text(LegacyTextLocalizer.isEnglish ? 'OK' : '确定'),
+            child: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'OK',
+                '确定',
+                ru: 'ОК',
+              ),
+            ),
           ),
         ],
       ),

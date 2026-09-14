@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/agent_runtime_service.dart';
 import 'package:ui/services/model_provider_config_service.dart';
 import 'package:ui/services/scene_model_config_service.dart';
@@ -50,10 +51,8 @@ class _AgentConfigPageState extends State<AgentConfigPage> {
   SceneModelBindingEntry? _sharedModelBinding;
   String? _error;
 
-  bool get _english =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'en';
-
-  String _text(String zh, String en) => _english ? en : zh;
+  String _text(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   @override
   void initState() {
@@ -768,7 +767,14 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton(
               onPressed: onRetry,
-              child: Text(english ? 'Retry' : '重试'),
+              child: Text(
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  english,
+                  'Retry',
+                  '重试',
+                  ru: 'Повторить',
+                ),
+              ),
             ),
           ],
         ),

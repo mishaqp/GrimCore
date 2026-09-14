@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/features/home/pages/agent/codex_bridge_qr_scanner_page.dart';
 import 'package:ui/features/home/pages/agent/codex_remote_directory_picker.dart';
 import 'package:ui/services/agent_runtime_service.dart';
@@ -37,10 +38,8 @@ class _RemoteCodexSettingPageState extends State<RemoteCodexSettingPage> {
   String? _status;
   String? _lastSavedSignature;
 
-  bool get _english =>
-      Localizations.localeOf(context).languageCode.toLowerCase() == 'en';
-
-  String _text(String zh, String en) => _english ? en : zh;
+  String _text(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   bool get _complete =>
       !_enabled ||

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:simple_gradient_text/simple_gradient_text.dart';
 import 'package:ui/l10n/legacy_text_localizer.dart';
@@ -19,6 +20,7 @@ import 'package:ui/services/assists_core_service.dart';
 import 'package:ui/services/workspace_memory_service.dart' as workspace_memory;
 
 import '../../models/memory_model.dart';
+
 import 'package:ui/utils/ui.dart';
 import 'package:ui/features/memory/pages/memory_center/widgets/memory_card_list.dart';
 import 'package:ui/theme/app_text_styles.dart';
@@ -636,6 +638,11 @@ class MemoryCenterPageState extends State<MemoryCenterPage>
     final quickLogPrefix = RegExp(r'^Quick log[:：]?\s*');
     if (quickLogPrefix.hasMatch(text)) {
       final content = text.replaceFirst(quickLogPrefix, '');
+      if (LegacyTextLocalizer.isRussian) {
+        return content.isEmpty
+            ? 'Быстрая заметка'
+            : 'Быстрая заметка: $content';
+      }
       return content.isEmpty ? '日志速记' : '日志速记：$content';
     }
     return text;

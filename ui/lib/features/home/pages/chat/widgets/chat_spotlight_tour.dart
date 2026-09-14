@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/theme/theme_context.dart';
 import 'package:ui/widgets/glass_popup.dart';
 
@@ -39,9 +40,9 @@ class _ChatSpotlightTourState extends State<ChatSpotlightTour> {
   void _scheduleAnchorMeasurement() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final anchorBox =
-          findActiveRenderObject(widget.anchorKey?.currentContext)
-              as RenderBox?;
+      final anchorBox = findActiveRenderObject(
+        widget.anchorKey?.currentContext,
+      ) as RenderBox?;
       final overlayBox =
           findActiveRenderObject(_overlayKey.currentContext) as RenderBox?;
       if (anchorBox == null ||
@@ -125,7 +126,11 @@ class _ChatSpotlightTourState extends State<ChatSpotlightTour> {
               child: Semantics(
                 scopesRoute: true,
                 explicitChildNodes: true,
-                label: isEnglish ? item.titleEn : item.titleZh,
+                label: LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  item.titleEn,
+                  item.titleZh,
+                ),
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -205,9 +210,11 @@ class _ChatSpotlightTourState extends State<ChatSpotlightTour> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            isEnglish
-                                                ? item.titleEn
-                                                : item.titleZh,
+                                            LegacyTextLocalizer.pickForEnglishFlag(
+                                              isEnglish,
+                                              item.titleEn,
+                                              item.titleZh,
+                                            ),
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .titleMedium
@@ -218,9 +225,11 @@ class _ChatSpotlightTourState extends State<ChatSpotlightTour> {
                                           ),
                                           const SizedBox(height: 7),
                                           Text(
-                                            isEnglish
-                                                ? item.descriptionEn
-                                                : item.descriptionZh,
+                                            LegacyTextLocalizer.pickForEnglishFlag(
+                                              isEnglish,
+                                              item.descriptionEn,
+                                              item.descriptionZh,
+                                            ),
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodySmall
@@ -300,48 +309,42 @@ const List<_SpotlightItem> _items = <_SpotlightItem>[
     titleZh: '菜单与会话',
     titleEn: 'Menu and conversations',
     descriptionZh: '从左上角打开侧栏，可新建对话、切换历史会话，并进入各项设置。',
-    descriptionEn:
-        'Open the sidebar to start chats, switch conversation history, and reach settings.',
+    descriptionEn: 'Open the sidebar to start chats, switch conversation history, and reach settings.',
   ),
   _SpotlightItem(
     icon: LucideIcons.workflow,
     titleZh: '选择工作模式',
     titleEn: 'Choose a work mode',
     descriptionZh: '顶部模式岛可在小万、编程 Agent 与纯聊天之间切换，当前选择会直接影响执行方式。',
-    descriptionEn:
-        'Use the top mode island to switch between OmniAi, coding agents, and pure chat.',
+    descriptionEn: 'Use the top mode island to switch between OmniAi, coding agents, and pure chat.',
   ),
   _SpotlightItem(
     icon: LucideIcons.pawPrint,
     titleZh: '宠物与工作区',
     titleEn: 'Pet and workspace',
     descriptionZh: '右上角可以显示桌面宠物；在平板或宽屏设备上，还能展开工作区文件面板。',
-    descriptionEn:
-        'Show the desktop pet, or open the workspace pane on tablets and wider screens.',
+    descriptionEn: 'Show the desktop pet, or open the workspace pane on tablets and wider screens.',
   ),
   _SpotlightItem(
     icon: LucideIcons.squareTerminal,
     titleZh: '环境、终端与浏览器',
     titleEn: 'Environment, terminal, and browser',
     descriptionZh: '工具岛用于管理环境变量、打开本地终端，以及查看 Agent 正在使用的浏览器会话。',
-    descriptionEn:
-        'The tool island manages environment variables, the local terminal, and the agent browser session.',
+    descriptionEn: 'The tool island manages environment variables, the local terminal, and the agent browser session.',
   ),
   _SpotlightItem(
     icon: LucideIcons.circleGauge,
     titleZh: '模型与上下文',
     titleEn: 'Model and context',
     descriptionZh: '从输入区切换当前模型；上下文环显示已使用容量，长按可调整对话阈值。',
-    descriptionEn:
-        'Choose the current model and use the context ring to monitor or adjust chat capacity.',
+    descriptionEn: 'Choose the current model and use the context ring to monitor or adjust chat capacity.',
   ),
   _SpotlightItem(
     icon: LucideIcons.paperclip,
     titleZh: '附件、命令与发送',
     titleEn: 'Attachments, commands, and send',
     descriptionZh: '“+”可添加图片或文件，输入“/”打开命令面板；执行期间发送按钮会变为停止按钮。',
-    descriptionEn:
-        'Use plus for files, slash for commands, and the send button to submit or stop a run.',
+    descriptionEn: 'Use plus for files, slash for commands, and the send button to submit or stop a run.',
   ),
 ];
 

@@ -253,15 +253,31 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
         'toolTitle': '/record',
         'displayName': '/record',
         'toolType': 'command',
-        'toolTypeLabel': LegacyTextLocalizer.isEnglish ? 'Recording' : '录制',
+        'toolTypeLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Recording',
+          '录制',
+          ru: 'Запись',
+        ),
         'status': 'running',
-        'statusLabel': LegacyTextLocalizer.isEnglish ? 'Action' : '操作',
-        'summary': LegacyTextLocalizer.isEnglish
-            ? 'Manually record a reusable operation flow'
-            : '手动录制可复用的操作流程',
-        'progress': LegacyTextLocalizer.isEnglish
-            ? 'Start recording from the floating control'
-            : '通过悬浮控件开始录制',
+        'statusLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Action',
+          '操作',
+          ru: 'Действие',
+        ),
+        'summary': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Manually record a reusable operation flow',
+          '手动录制可复用的操作流程',
+          ru: 'Вручную записать сценарий действий для повторного использования',
+        ),
+        'progress': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Start recording from the floating control',
+          '通过悬浮控件开始录制',
+          ru: 'Начните запись с плавающей кнопки',
+        ),
       },
     ];
     if (_supportsManualContextCompaction) {
@@ -271,15 +287,31 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
         'toolTitle': '/compact',
         'displayName': '/compact',
         'toolType': 'command',
-        'toolTypeLabel': LegacyTextLocalizer.isEnglish ? 'Context' : '上下文',
+        'toolTypeLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Context',
+          '上下文',
+          ru: 'Контекст',
+        ),
         'status': 'running',
-        'statusLabel': LegacyTextLocalizer.isEnglish ? 'Command' : '命令',
-        'summary': LegacyTextLocalizer.isEnglish
-            ? 'Manually compress conversation context'
-            : '手动压缩当前对话上下文',
-        'progress': LegacyTextLocalizer.isEnglish
-            ? 'Compress current session history into a replacement summary'
-            : '把当前会话历史压缩成 replacement summary',
+        'statusLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Command',
+          '命令',
+          ru: 'Команда',
+        ),
+        'summary': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Manually compress conversation context',
+          '手动压缩当前对话上下文',
+          ru: 'Сжать контекст текущего диалога вручную',
+        ),
+        'progress': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Compress current session history into a replacement summary',
+          '把当前会话历史压缩成 replacement summary',
+          ru: 'Сжать историю текущего сеанса и заменить её сводкой',
+        ),
       });
     }
     if (_supportsReasoningEffortCommand) {
@@ -292,15 +324,31 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
         'toolTitle': '/openclaw',
         'displayName': '/openclaw',
         'toolType': 'command',
-        'toolTypeLabel': LegacyTextLocalizer.isEnglish ? 'Gateway' : '网关',
+        'toolTypeLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Gateway',
+          '网关',
+          ru: 'Шлюз',
+        ),
         'status': 'running',
-        'statusLabel': LegacyTextLocalizer.isEnglish ? 'Command' : '命令',
-        'summary': LegacyTextLocalizer.isEnglish
-            ? 'Manually configure a remote or custom OpenClaw gateway'
-            : '手动配置远端或自定义 OpenClaw 网关',
-        'progress': LegacyTextLocalizer.isEnglish
-            ? 'Enter Base URL, Token, and User ID'
-            : '填写 Base URL、Token 与 User ID',
+        'statusLabel': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Command',
+          '命令',
+          ru: 'Команда',
+        ),
+        'summary': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Manually configure a remote or custom OpenClaw gateway',
+          '手动配置远端或自定义 OpenClaw 网关',
+          ru: 'Настроить удалённый или пользовательский шлюз OpenClaw вручную',
+        ),
+        'progress': LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Enter Base URL, Token, and User ID',
+          '填写 Base URL、Token 与 User ID',
+          ru: 'Введите Base URL, токен и ID пользователя',
+        ),
       });
     }
     return commands;
@@ -315,10 +363,21 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
       'toolTitle': '/effort',
       'displayName': '/effort',
       'toolType': 'command',
-      'toolTypeLabel': LegacyTextLocalizer.isEnglish ? 'Thinking' : '思考',
+      'toolTypeLabel': LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Thinking',
+        '思考',
+        ru: 'Рассуждения',
+      ),
       'status': hasSelectedEffort ? 'success' : 'running',
       'statusLabel':
-          activeEffort ?? (LegacyTextLocalizer.isEnglish ? 'Default' : '默认'),
+          activeEffort ??
+          (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Default',
+            '默认',
+            ru: 'По умолчанию',
+          )),
       'summary': '',
       'progress': '',
       'controlType': 'effortSlider',
@@ -344,26 +403,50 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
         cardId: 'slash-command-agent-model',
         toolTitle: '/model',
         displayName: '/model',
-        toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Model' : '模型',
+        toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Model',
+          '模型',
+          ru: 'Модель',
+        ),
         status: _activeAgentModelId == null ? 'running' : 'success',
         statusLabel: _activeAgentModelId == null
-            ? (LegacyTextLocalizer.isEnglish ? 'Select' : '选择')
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Select',
+                '选择',
+                ru: 'Выбрать',
+              ))
             : (_activeAgentModelId!),
         summary: _activeAgentModelId == null
-            ? (LegacyTextLocalizer.isEnglish
-                  ? 'Choose a model for $_activeAcpAgentDisplayName'
-                  : '选择 $_activeAcpAgentDisplayName 的模型')
-            : (LegacyTextLocalizer.isEnglish
-                  ? 'Current model: $_activeAgentModelId'
-                  : '当前模型：$_activeAgentModelId'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Choose a model for $_activeAcpAgentDisplayName',
+                '选择 $_activeAcpAgentDisplayName 的模型',
+                ru: 'Выберите модель для $_activeAcpAgentDisplayName',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Current model: $_activeAgentModelId',
+                '当前模型：$_activeAgentModelId',
+                ru: 'Текущая модель: $_activeAgentModelId',
+              )),
         progress: _agentModelListError != null
             ? _agentModelListError!
             : _isAgentModelListLoading
-            ? (LegacyTextLocalizer.isEnglish ? 'Loading models' : '加载模型中')
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Loading models',
+                '加载模型中',
+                ru: 'Загрузка моделей',
+              ))
             : (_agentModelOptions.isEmpty
-                  ? (LegacyTextLocalizer.isEnglish
-                        ? 'Tap to load models'
-                        : '点击加载模型')
+                  ? (LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Tap to load models',
+                      '点击加载模型',
+                      ru: 'Нажмите, чтобы загрузить модели',
+                    ))
                   : (_agentModelOptions.length == 1
                         ? '1 model'
                         : '${_agentModelOptions.length} models')),
@@ -373,55 +456,116 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
           cardId: 'slash-command-agent-review',
           toolTitle: '/review',
           displayName: '/review',
-          toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Review' : '审查',
+          toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Review',
+            '审查',
+            ru: 'Проверка',
+          ),
           status: 'running',
-          statusLabel: LegacyTextLocalizer.isEnglish ? 'Command' : '命令',
-          summary: LegacyTextLocalizer.isEnglish
-              ? 'Review changes in the current workspace'
-              : '审查当前工作区改动',
-          progress: LegacyTextLocalizer.isEnglish
-              ? 'Runs an Agent review on the active thread'
-              : '在当前线程中启动 Agent review',
+          statusLabel: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Command',
+            '命令',
+            ru: 'Команда',
+          ),
+          summary: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Review changes in the current workspace',
+            '审查当前工作区改动',
+            ru: 'Просмотреть изменения в текущей рабочей области',
+          ),
+          progress: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Runs an Agent review on the active thread',
+            '在当前线程中启动 Agent review',
+            ru: 'Запускает проверку изменений в активном сеансе',
+          ),
         ),
       _buildAgentCommandCard(
         cardId: 'slash-command-agent-init',
         toolTitle: '/init',
         displayName: '/init',
-        toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Init' : '初始化',
+        toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Init',
+          '初始化',
+          ru: 'Инициализация',
+        ),
         status: 'running',
-        statusLabel: LegacyTextLocalizer.isEnglish ? 'Command' : '命令',
-        summary: LegacyTextLocalizer.isEnglish
-            ? 'Generate or update AGENTS.md'
-            : '生成或更新 AGENTS.md',
-        progress: LegacyTextLocalizer.isEnglish
-            ? 'Prompt shortcut: asks the Agent to write workspace guidance'
-            : '提示词快捷操作：请求 Agent 编写工作区指引',
+        statusLabel: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Command',
+          '命令',
+          ru: 'Команда',
+        ),
+        summary: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Generate or update AGENTS.md',
+          '生成或更新 AGENTS.md',
+          ru: 'Создать или обновить AGENTS.md',
+        ),
+        progress: LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Prompt shortcut: asks the Agent to write workspace guidance',
+          '提示词快捷操作：请求 Agent 编写工作区指引',
+          ru: 'Быстрая команда: просит агента написать инструкции для рабочей области',
+        ),
       ),
       if (_resolveAgentPlanMode(_agentCollaborationModes) != null)
         _buildAgentCommandCard(
           cardId: 'slash-command-agent-plan',
           toolTitle: '/plan',
           displayName: '/plan',
-          toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Plan' : '计划',
+          toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Plan',
+            '计划',
+            ru: 'План',
+          ),
           status: planModeEnabled ? 'success' : 'running',
           statusLabel: planModeEnabled
-              ? (LegacyTextLocalizer.isEnglish ? 'Selected' : '已选')
-              : (LegacyTextLocalizer.isEnglish ? 'Off' : '关闭'),
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Selected',
+                  '已选',
+                  ru: 'Выбрано',
+                ))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Off',
+                  '关闭',
+                  ru: 'Выкл.',
+                )),
           summary: planModeEnabled
-              ? (LegacyTextLocalizer.isEnglish
-                    ? 'Plan mode is active'
-                    : '当前已启用 Plan 模式')
-              : (LegacyTextLocalizer.isEnglish
-                    ? 'Plan mode is off'
-                    : '当前未启用 Plan 模式'),
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Plan mode is active',
+                  '当前已启用 Plan 模式',
+                  ru: 'Режим планирования активен',
+                ))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Plan mode is off',
+                  '当前未启用 Plan 模式',
+                  ru: 'Режим планирования отключён',
+                )),
           progress: _agentCollaborationModeListError != null
               ? _agentCollaborationModeListError!
               : _isAgentCollaborationModeListLoading
-              ? (LegacyTextLocalizer.isEnglish ? 'Loading modes' : '加载模式中')
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Loading modes',
+                  '加载模式中',
+                  ru: 'Загрузка режимов',
+                ))
               : (_agentCollaborationModes.isEmpty
-                    ? (LegacyTextLocalizer.isEnglish
-                          ? 'Tap to load modes'
-                          : '点击加载模式')
+                    ? (LegacyTextLocalizer.pickForEnglishFlag(
+                        LegacyTextLocalizer.isEnglish,
+                        'Tap to load modes',
+                        '点击加载模式',
+                        ru: 'Нажмите, чтобы загрузить режимы',
+                      ))
                     : (_agentCollaborationModes.length == 1
                           ? '1 mode'
                           : '${_agentCollaborationModes.length} modes')),
@@ -458,19 +602,33 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
                 'slash-command-acp-${name.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_')}',
             toolTitle: slashName,
             displayName: slashName,
-            toolTypeLabel: LegacyTextLocalizer.isEnglish
-                ? 'ACP command'
-                : 'ACP 命令',
+            toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'ACP command',
+              'ACP 命令',
+              ru: 'Команда ACP',
+            ),
             status: 'running',
-            statusLabel: LegacyTextLocalizer.isEnglish ? 'Available' : '可用',
+            statusLabel: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Available',
+              '可用',
+              ru: 'Доступно',
+            ),
             summary: description.isEmpty
-                ? (LegacyTextLocalizer.isEnglish
-                      ? 'Run $slashName through the active ACP session'
-                      : '通过当前 ACP 会话运行 $slashName')
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Run $slashName through the active ACP session',
+                    '通过当前 ACP 会话运行 $slashName',
+                    ru: 'Выполнить $slashName в активном сеансе ACP',
+                  ))
                 : description,
-            progress: LegacyTextLocalizer.isEnglish
-                ? 'Tap to enter the command, then add arguments if needed'
-                : '点击填入命令，可继续输入参数',
+            progress: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Tap to enter the command, then add arguments if needed',
+              '点击填入命令，可继续输入参数',
+              ru: 'Нажмите, чтобы ввести команду, затем при необходимости добавьте аргументы',
+            ),
           );
           card['acpCommand'] = true;
           return card;
@@ -485,9 +643,8 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
         _agentModelListError == null) {
       unawaited(_loadAgentModelOptionsWhenReady());
     }
-    final query = _slashCommandRouteQuery(
-      _SlashCommandPanelRoute.agentModel,
-    ).toLowerCase();
+    final query = _slashCommandRouteQuery(_SlashCommandPanelRoute.agentModel)
+        .toLowerCase();
     final availableModels = _agentModelOptions.isEmpty
         ? <String>[]
         : _agentModelOptions;
@@ -504,27 +661,53 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
     ];
     if (orderedModels.isEmpty) {
       final statusLabel = _agentModelListError != null
-          ? (LegacyTextLocalizer.isEnglish ? 'Error' : '错误')
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Error',
+              '错误',
+              ru: 'Ошибка',
+            ))
           : _isAgentModelListLoading
-          ? (LegacyTextLocalizer.isEnglish ? 'Loading' : '加载中')
-          : (LegacyTextLocalizer.isEnglish ? 'No models' : '暂无模型');
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Loading',
+              '加载中',
+              ru: 'Загрузка',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'No models',
+              '暂无模型',
+              ru: 'Нет моделей',
+            ));
       return <Map<String, dynamic>>[
         _buildAgentCommandCard(
           cardId: 'slash-command-agent-model-placeholder',
           toolTitle: '/model',
           displayName: '/model',
-          toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Model' : '模型',
+          toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Model',
+            '模型',
+            ru: 'Модель',
+          ),
           status: _agentModelListError != null ? 'failed' : 'running',
           statusLabel: statusLabel,
           summary:
               _agentModelListError ??
               (_isAgentModelListLoading
-                  ? (LegacyTextLocalizer.isEnglish
-                        ? 'Loading available models'
-                        : '正在加载可用模型')
-                  : (LegacyTextLocalizer.isEnglish
-                        ? 'Open /model to load $_activeAcpAgentDisplayName models'
-                        : '输入 /model 加载 $_activeAcpAgentDisplayName 模型')),
+                  ? (LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Loading available models',
+                      '正在加载可用模型',
+                      ru: 'Загрузка доступных моделей',
+                    ))
+                  : (LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Open /model to load $_activeAcpAgentDisplayName models',
+                      '输入 /model 加载 $_activeAcpAgentDisplayName 模型',
+                      ru: 'Введите /model, чтобы загрузить модели $_activeAcpAgentDisplayName',
+                    ))),
           progress: query.isEmpty ? '/model' : query,
         ),
       ];
@@ -535,16 +718,39 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
             cardId: 'slash-command-agent-model-$modelId',
             toolTitle: modelId,
             displayName: modelId,
-            toolTypeLabel: LegacyTextLocalizer.isEnglish ? 'Model' : '模型',
+            toolTypeLabel: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              'Model',
+              '模型',
+              ru: 'Модель',
+            ),
             status: modelId == selectedModel ? 'success' : 'running',
             statusLabel: modelId == selectedModel
-                ? (LegacyTextLocalizer.isEnglish ? 'Selected' : '已选')
-                : (LegacyTextLocalizer.isEnglish ? 'Available' : '可选'),
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Selected',
+                    '已选',
+                    ru: 'Выбрано',
+                  ))
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Available',
+                    '可选',
+                    ru: 'Доступно',
+                  )),
             summary: modelId == selectedModel
-                ? (LegacyTextLocalizer.isEnglish ? 'Current model' : '当前模型')
-                : (LegacyTextLocalizer.isEnglish
-                      ? 'Switch to $modelId'
-                      : '切换到 $modelId'),
+                ? (LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Current model',
+                    '当前模型',
+                    ru: 'Текущая модель',
+                  ))
+                : (LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Switch to $modelId',
+                    '切换到 $modelId',
+                    ru: 'Переключиться на $modelId',
+                  )),
             progress: modelId,
           ),
         )
@@ -919,9 +1125,12 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    LegacyTextLocalizer.isEnglish
-                                        ? 'OpenClaw Configuration'
-                                        : 'OpenClaw 配置',
+                                    LegacyTextLocalizer.pickForEnglishFlag(
+                                      LegacyTextLocalizer.isEnglish,
+                                      'OpenClaw Configuration',
+                                      'OpenClaw 配置',
+                                      ru: 'Настройка OpenClaw',
+                                    ),
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -941,12 +1150,20 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
                                   TextField(
                                     controller: _openClawTokenController,
                                     decoration: InputDecoration(
-                                      labelText: LegacyTextLocalizer.isEnglish
-                                          ? 'Token (optional)'
-                                          : 'Token（可选）',
-                                      hintText: LegacyTextLocalizer.isEnglish
-                                          ? 'Leave empty if no token needed'
-                                          : '为空表示无需 token',
+                                      labelText:
+                                          LegacyTextLocalizer.pickForEnglishFlag(
+                                            LegacyTextLocalizer.isEnglish,
+                                            'Token (optional)',
+                                            'Token（可选）',
+                                            ru: 'Токен (необязательно)',
+                                          ),
+                                      hintText:
+                                          LegacyTextLocalizer.pickForEnglishFlag(
+                                            LegacyTextLocalizer.isEnglish,
+                                            'Leave empty if no token needed',
+                                            '为空表示无需 token',
+                                            ru: 'Оставьте пустым, если токен не нужен',
+                                          ),
                                       isDense: true,
                                     ),
                                   ),
@@ -954,9 +1171,13 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
                                   TextField(
                                     controller: _openClawUserIdController,
                                     decoration: InputDecoration(
-                                      labelText: LegacyTextLocalizer.isEnglish
-                                          ? 'User ID (optional)'
-                                          : 'User ID（可选）',
+                                      labelText:
+                                          LegacyTextLocalizer.pickForEnglishFlag(
+                                            LegacyTextLocalizer.isEnglish,
+                                            'User ID (optional)',
+                                            'User ID（可选）',
+                                            ru: 'ID пользователя (необязательно)',
+                                          ),
                                       isDense: true,
                                     ),
                                   ),
@@ -1193,9 +1414,12 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
             ),
             const SizedBox(height: 12),
             Text(
-              LegacyTextLocalizer.isEnglish
-                  ? 'Remote Agent workspace is not configured'
-                  : '远程 Agent 工作目录尚未配置',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Remote Agent workspace is not configured',
+                '远程 Agent 工作目录尚未配置',
+                ru: 'Рабочая область удалённого агента не настроена',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: palette.textPrimary,
@@ -1205,9 +1429,12 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
             ),
             const SizedBox(height: 8),
             Text(
-              LegacyTextLocalizer.isEnglish
-                  ? 'Open Agent settings and set a remote cwd, or scan the PC Bridge QR code.'
-                  : '请在 Agent 配置中设置远程工作目录，或扫描 PC Bridge 二维码。',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Open Agent settings and set a remote cwd, or scan the PC Bridge QR code.',
+                '请在 Agent 配置中设置远程工作目录，或扫描 PC Bridge 二维码。',
+                ru: 'Откройте настройки агента и укажите удалённую рабочую папку или отсканируйте QR-код PC Bridge.',
+              ),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: palette.textSecondary,
@@ -1349,11 +1576,20 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
     final showAppUpdateIndicator =
         !hideWorkspaceOverlays &&
         AppUpdateService.shouldShowBanner(_appUpdateStatus);
-    final appUpdateTooltip = _appUpdateStatus == null
-        ? (LegacyTextLocalizer.isEnglish ? 'New version available' : '发现新版本')
-        : (LegacyTextLocalizer.isEnglish
-              ? 'New version ${_appUpdateStatus!.latestVersionLabel} available'
-              : '发现新版本 ${_appUpdateStatus!.latestVersionLabel}');
+    final latestVersionLabel = _appUpdateStatus?.latestVersionLabel;
+    final appUpdateTooltip = latestVersionLabel == null
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'New version available',
+            '发现新版本',
+            ru: 'Доступна новая версия',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'New version $latestVersionLabel available',
+            '发现新版本 $latestVersionLabel',
+            ru: 'Доступна новая версия $latestVersionLabel',
+          ));
     final appBarMode = showSurfaceSwitcher
         ? _activeSurfaceMode
         : ChatSurfaceMode.normal;
@@ -2202,15 +2438,24 @@ mixin _ChatPageUiMixin on _ChatPageStateBase {
       return null;
     }
     if (conversation.promptTokenThreshold <= 0) {
-      return LegacyTextLocalizer.isEnglish
-          ? 'No context threshold set\nLong press to adjust threshold'
-          : '上下文阈值未设置\n长按可调整阈值';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'No context threshold set\nLong press to adjust threshold',
+        '上下文阈值未设置\n长按可调整阈值',
+        ru: 'Порог контекста не задан\nУдерживайте, чтобы изменить',
+      );
     }
     final usedTokens = conversation.latestPromptTokens;
     final thresholdTokens = conversation.promptTokenThreshold;
+    final tokenUnit = LegacyTextLocalizer.pick(
+      'tokens',
+      'tokens',
+      ru: 'токенов',
+      locale: Localizations.localeOf(context),
+    );
     return '${_formatTokenCount(usedTokens)} / '
-        '${_formatTokenCount(thresholdTokens)} tokens'
-        '\n${LegacyTextLocalizer.isEnglish ? 'Long press to adjust threshold' : '长按可调整阈值'}';
+        '${_formatTokenCount(thresholdTokens)} $tokenUnit'
+        '\n${LegacyTextLocalizer.pickForEnglishFlag(LegacyTextLocalizer.isEnglish, 'Long press to adjust threshold', '长按可调整阈值', ru: 'Удерживайте, чтобы изменить порог')}';
   }
 
   String _formatTokenCount(int value) {

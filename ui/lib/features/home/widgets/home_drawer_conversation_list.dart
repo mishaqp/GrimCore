@@ -719,21 +719,46 @@ extension _HomeDrawerConversationList on HomeDrawerState {
     final days = today.difference(updatedDay).inDays;
     final isEnglish = LegacyTextLocalizer.isEnglish;
     if (days <= 0) {
-      return isEnglish ? 'Today' : '今天';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Today',
+        '今天',
+        ru: 'Сегодня',
+      );
     }
     if (days < 7) {
-      return isEnglish ? '${days}d' : '$days 天';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        '${days}d',
+        '$days 天',
+        ru: '$days дн.',
+      );
     }
     if (days < 30) {
       final weeks = days ~/ 7;
-      return isEnglish ? '${weeks}w' : '$weeks 周';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        '${weeks}w',
+        '$weeks 周',
+        ru: '$weeks нед.',
+      );
     }
     if (days < 365) {
       final months = days ~/ 30;
-      return isEnglish ? '${months}mo' : '$months 个月';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        '${months}mo',
+        '$months 个月',
+        ru: '$months мес.',
+      );
     }
     final years = days ~/ 365;
-    return isEnglish ? '${years}y' : '$years 年';
+    return LegacyTextLocalizer.pickForEnglishFlag(
+      isEnglish,
+      '${years}y',
+      '$years 年',
+      ru: '$years г.',
+    );
   }
 
   Widget _buildScheduledParentConversationRow(

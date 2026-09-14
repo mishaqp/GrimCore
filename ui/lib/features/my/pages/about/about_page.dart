@@ -30,11 +30,8 @@ class _AboutPageState extends State<AboutPage> {
   String _version = '';
   AppUpdateStatus? _updateStatus = AppUpdateService.statusNotifier.value;
   bool _betaOptIn = AppUpdateService.betaOptInNotifier.value;
-  AppUpdateDownloadSource _downloadSource =
-      AppUpdateService.downloadSourceNotifier.value;
   bool _isCheckingUpdate = false;
   bool _isUpdatingBetaOptIn = false;
-  bool _isUpdatingDownloadSource = false;
   bool _hasSyncedUpdatePreferences = false;
 
   @override
@@ -42,9 +39,6 @@ class _AboutPageState extends State<AboutPage> {
     super.initState();
     AppUpdateService.statusNotifier.addListener(_handleUpdateStatusChanged);
     AppUpdateService.betaOptInNotifier.addListener(_handleBetaOptInChanged);
-    AppUpdateService.downloadSourceNotifier.addListener(
-      _handleDownloadSourceChanged,
-    );
     _loadVersion();
     _loadUpdateStatus();
   }
@@ -53,9 +47,6 @@ class _AboutPageState extends State<AboutPage> {
   void dispose() {
     AppUpdateService.statusNotifier.removeListener(_handleUpdateStatusChanged);
     AppUpdateService.betaOptInNotifier.removeListener(_handleBetaOptInChanged);
-    AppUpdateService.downloadSourceNotifier.removeListener(
-      _handleDownloadSourceChanged,
-    );
     super.dispose();
   }
 
@@ -88,7 +79,6 @@ class _AboutPageState extends State<AboutPage> {
     setState(() {
       _betaOptIn = AppUpdateService.betaOptInNotifier.value;
       _updateStatus = AppUpdateService.statusNotifier.value;
-      _downloadSource = AppUpdateService.downloadSourceNotifier.value;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _hasSyncedUpdatePreferences) {
@@ -111,13 +101,6 @@ class _AboutPageState extends State<AboutPage> {
     if (!mounted) return;
     setState(() {
       _updateStatus = AppUpdateService.statusNotifier.value;
-    });
-  }
-
-  void _handleDownloadSourceChanged() {
-    if (!mounted) return;
-    setState(() {
-      _downloadSource = AppUpdateService.downloadSourceNotifier.value;
     });
   }
 
@@ -188,37 +171,6 @@ class _AboutPageState extends State<AboutPage> {
     await _handleCheckUpdate();
   }
 
-  Future<void> _handleSelectDownloadSource(
-    AppUpdateDownloadSource? source,
-  ) async {
-    if (source == null ||
-        _isUpdatingDownloadSource ||
-        source == _downloadSource) {
-      return;
-    }
-    setState(() {
-      _isUpdatingDownloadSource = true;
-    });
-
-    try {
-      final updatedSource = await AppUpdateService.setDownloadSource(source);
-      if (!mounted) return;
-      setState(() {
-        _downloadSource = updatedSource;
-        _updateStatus = AppUpdateService.statusNotifier.value;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      showToast(context.l10n.aboutApkSourceSwitchFailed, type: ToastType.error);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUpdatingDownloadSource = false;
-        });
-      }
-    }
-  }
-
   String? _buildUpdateHint() {
     final status = _updateStatus;
     if (status?.hasUpdate != true) return null;
@@ -226,33 +178,15 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   void _openUserGuide() {
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final languageCode = Localizations.localeOf(context).languageCode;
     GoRouterManager.push(
       '/webview/webview_page',
       extra: <String, dynamic>{
-        'url': isEnglish ? _enUserGuideUrl : _zhUserGuideUrl,
+        'url': languageCode == 'zh' ? _zhUserGuideUrl : _enUserGuideUrl,
         'title': context.trLegacy('使用手册'),
         'appBarBackClosesPage': true,
       },
     );
-  }
-
-  String _downloadSourceLabel(AppUpdateDownloadSource source) {
-    switch (source) {
-      case AppUpdateDownloadSource.worker:
-        return context.l10n.aboutApkSourceOptionCnb;
-      case AppUpdateDownloadSource.github:
-        return context.l10n.aboutApkSourceOptionGithub;
-    }
-  }
-
-  String _downloadSourceDescription(AppUpdateDownloadSource source) {
-    switch (source) {
-      case AppUpdateDownloadSource.worker:
-        return context.l10n.aboutApkSourceOptionCnbDescription;
-      case AppUpdateDownloadSource.github:
-        return context.l10n.aboutApkSourceOptionGithubDescription;
-    }
   }
 
   Widget _buildHero(bool compact) {
@@ -533,93 +467,6 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
-  Widget _buildDownloadSourceTrailing() {
-    final palette = context.omniPalette;
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<AppUpdateDownloadSource>(
-        key: const ValueKey('about-download-source-dropdown'),
-        value: _downloadSource,
-        isDense: true,
-        itemHeight: null,
-        menuMaxHeight: 260,
-        dropdownColor: context.isDarkTheme
-            ? palette.surfacePrimary
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        icon: Icon(
-          LucideIcons.chevronDown,
-          size: 18,
-          color: context.isDarkTheme ? palette.textTertiary : AppColors.text50,
-        ),
-        style: TextStyle(
-          color: context.isDarkTheme ? palette.textPrimary : AppColors.text,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-          fontFamily: AppTextStyles.fontFamily,
-        ),
-        selectedItemBuilder: (context) {
-          return AppUpdateDownloadSource.values.map((source) {
-            return Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                _downloadSourceLabel(source),
-                style: TextStyle(
-                  color: context.isDarkTheme
-                      ? palette.textPrimary
-                      : AppColors.text,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  fontFamily: AppTextStyles.fontFamily,
-                ),
-              ),
-            );
-          }).toList();
-        },
-        items: AppUpdateDownloadSource.values.map((source) {
-          return DropdownMenuItem<AppUpdateDownloadSource>(
-            value: source,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _downloadSourceLabel(source),
-                    style: TextStyle(
-                      color: context.isDarkTheme
-                          ? palette.textPrimary
-                          : AppColors.text,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      fontFamily: AppTextStyles.fontFamily,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _downloadSourceDescription(source),
-                    style: TextStyle(
-                      color: context.isDarkTheme
-                          ? palette.textSecondary
-                          : AppColors.text70,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 11,
-                      height: 1.35,
-                      fontFamily: AppTextStyles.fontFamily,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-        onChanged: _isUpdatingDownloadSource
-            ? null
-            : _handleSelectDownloadSource,
-      ),
-    );
-  }
-
   Widget _buildPreferenceSection(bool compact) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,19 +501,6 @@ class _AboutPageState extends State<AboutPage> {
                 onToggle: (_) {},
               ),
             ),
-          ),
-        ),
-        _buildFlatSectionDivider(),
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 180),
-          opacity: _isUpdatingDownloadSource ? 0.72 : 1,
-          child: _buildFlatSettingRow(
-            title: context.l10n.aboutApkSourceTitle,
-            subtitle: context.l10n.aboutApkSourceDescription,
-            bottomNote: context.l10n.aboutApkSourceDisclaimer,
-            compact: compact,
-            trailing: _buildDownloadSourceTrailing(),
-            isLast: true,
           ),
         ),
       ],

@@ -67,7 +67,12 @@ class _UserMessageQuickMenuContent extends StatelessWidget {
               _buildAction(
                 context,
                 icon: Icons.content_copy_rounded,
-                label: LegacyTextLocalizer.isEnglish ? 'Copy' : '复制',
+                label: LegacyTextLocalizer.pickForEnglishFlag(
+                  LegacyTextLocalizer.isEnglish,
+                  'Copy',
+                  '复制',
+                  ru: 'Копировать',
+                ),
                 onTap: () => _select(context, _UserMessageQuickAction.copy),
               ),
               if (showEditAction) ...[
@@ -84,7 +89,12 @@ class _UserMessageQuickMenuContent extends StatelessWidget {
                 _buildAction(
                   context,
                   icon: Icons.edit_outlined,
-                  label: LegacyTextLocalizer.isEnglish ? 'Edit' : '编辑',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Edit',
+                    '编辑',
+                    ru: 'Редактировать',
+                  ),
                   onTap: () => _select(context, _UserMessageQuickAction.edit),
                 ),
               ],
@@ -102,7 +112,12 @@ class _UserMessageQuickMenuContent extends StatelessWidget {
                 _buildAction(
                   context,
                   icon: Icons.refresh_rounded,
-                  label: LegacyTextLocalizer.isEnglish ? 'Retry' : '重试这条消息',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Retry',
+                    '重试这条消息',
+                    ru: 'Повторить',
+                  ),
                   onTap: () => _select(context, _UserMessageQuickAction.retry),
                 ),
               ],
@@ -259,9 +274,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
     if (raw.isEmpty) {
       if (showEmptyError) {
         setState(() {
-          _errorText = LegacyTextLocalizer.isEnglish
-              ? 'Please enter a threshold'
-              : '请输入阈值';
+          _errorText = LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Please enter a threshold',
+            '请输入阈值',
+            ru: 'Введите порог',
+          );
         });
       }
       return null;
@@ -269,17 +287,23 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
     final parsed = int.tryParse(raw);
     if (parsed == null) {
       setState(() {
-        _errorText = LegacyTextLocalizer.isEnglish
-            ? 'Threshold must be an integer'
-            : '阈值必须是整数';
+        _errorText = LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Threshold must be an integer',
+          '阈值必须是整数',
+          ru: 'Порог должен быть целым числом',
+        );
       });
       return null;
     }
     if (parsed <= 0) {
       setState(() {
-        _errorText = LegacyTextLocalizer.isEnglish
-            ? 'Threshold must be positive'
-            : '阈值必须为正整数';
+        _errorText = LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Threshold must be positive',
+          '阈值必须为正整数',
+          ru: 'Порог должен быть положительным целым числом',
+        );
       });
       return null;
     }
@@ -336,9 +360,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
       }
       setState(() {
         _isSaving = false;
-        _saveErrorText = LegacyTextLocalizer.isEnglish
-            ? 'Auto-save failed, please try again later'
-            : '自动保存失败，请稍后重试';
+        _saveErrorText = LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Auto-save failed, please try again later',
+          '自动保存失败，请稍后重试',
+          ru: 'Не удалось выполнить автосохранение. Повторите попытку позже',
+        );
       });
       break;
     }
@@ -397,7 +424,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
     final usageRatio = currentUsageTokens == null
         ? null
         : currentUsageTokens / draftThreshold;
-    final noUsageData = LegacyTextLocalizer.isEnglish ? 'No data yet' : '暂无数据';
+    final noUsageData = LegacyTextLocalizer.pickForEnglishFlag(
+      LegacyTextLocalizer.isEnglish,
+      'No data yet',
+      '暂无数据',
+      ru: 'Данных пока нет',
+    );
     final dividerColor = isDark
         ? palette.borderSubtle
         : palette.borderSubtle.withValues(alpha: 0.9);
@@ -411,15 +443,32 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
     final pendingAutoSave = _autoSaveTimer?.isActive ?? false;
     final statusText = switch ((_saveErrorText, _isSaving, pendingAutoSave)) {
       (final String message?, _, _) => message,
-      (_, true, _) => LegacyTextLocalizer.isEnglish ? 'Saving…' : '正在自动保存…',
-      (_, false, true) =>
-        LegacyTextLocalizer.isEnglish ? 'Pending auto-save' : '即将自动保存',
+      (_, true, _) => LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Saving…',
+        '正在自动保存…',
+        ru: 'Сохранение…',
+      ),
+      (_, false, true) => LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Pending auto-save',
+        '即将自动保存',
+        ru: 'Ожидание автосохранения',
+      ),
       _ =>
         draftThreshold == _lastSavedThreshold
-            ? (LegacyTextLocalizer.isEnglish ? 'Auto-saved' : '已自动保存')
-            : (LegacyTextLocalizer.isEnglish
-                  ? 'Auto-save on change'
-                  : '修改后自动保存'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Auto-saved',
+                '已自动保存',
+                ru: 'Сохранено автоматически',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'Auto-save on change',
+                '修改后自动保存',
+                ru: 'Автосохранение при изменении',
+              )),
     };
     final statusColor = _saveErrorText != null
         ? warningColor
@@ -479,9 +528,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    LegacyTextLocalizer.isEnglish
-                        ? 'Adjust Context Threshold'
-                        : '调整上下文阈值',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Adjust Context Threshold',
+                      '调整上下文阈值',
+                      ru: 'Настройка порога контекста',
+                    ),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -490,9 +542,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    LegacyTextLocalizer.isEnglish
-                        ? 'Changes are auto-saved. The new threshold takes effect immediately.'
-                        : '修改后自动保存，新的阈值会立刻用于当前对话。',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Changes are auto-saved. The new threshold takes effect immediately.',
+                      '修改后自动保存，新的阈值会立刻用于当前对话。',
+                      ru: 'Изменения сохраняются автоматически. Новый порог применяется сразу.',
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.4,
@@ -512,9 +567,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
                       children: [
                         Expanded(
                           child: _ThresholdMetric(
-                            label: LegacyTextLocalizer.isEnglish
-                                ? 'Current context'
-                                : '当前上下文',
+                            label: LegacyTextLocalizer.pickForEnglishFlag(
+                              LegacyTextLocalizer.isEnglish,
+                              'Current context',
+                              '当前上下文',
+                              ru: 'Текущий контекст',
+                            ),
                             value: currentUsageTokens == null
                                 ? noUsageData
                                 : _formatTokenCount(currentUsageTokens),
@@ -524,9 +582,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
                         Container(width: 1, height: 38, color: dividerColor),
                         Expanded(
                           child: _ThresholdMetric(
-                            label: LegacyTextLocalizer.isEnglish
-                                ? 'Target threshold'
-                                : '目标阈值',
+                            label: LegacyTextLocalizer.pickForEnglishFlag(
+                              LegacyTextLocalizer.isEnglish,
+                              'Target threshold',
+                              '目标阈值',
+                              ru: 'Целевой порог',
+                            ),
                             value: _formatTokenCount(draftThreshold),
                             accent: accentColor,
                           ),
@@ -534,9 +595,12 @@ class _ContextThresholdSheetState extends State<_ContextThresholdSheet> {
                         Container(width: 1, height: 38, color: dividerColor),
                         Expanded(
                           child: _ThresholdMetric(
-                            label: LegacyTextLocalizer.isEnglish
-                                ? 'Usage'
-                                : '占用比例',
+                            label: LegacyTextLocalizer.pickForEnglishFlag(
+                              LegacyTextLocalizer.isEnglish,
+                              'Usage',
+                              '占用比例',
+                              ru: 'Использование',
+                            ),
                             value: usageRatio == null
                                 ? noUsageData
                                 : _formatUsagePercent(usageRatio),

@@ -65,7 +65,14 @@ extension _ChatRuntimeInternalSupport on ChatConversationRuntimeCoordinator {
       if (message.user != 1) continue;
       final text = message.content?['text'] as String? ?? '';
       if (text.isEmpty) continue;
-      buffer.write(_isEnglish ? 'User: $text\n' : '用户: $text\n');
+      buffer.write(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'User: $text\n',
+          '用户: $text\n',
+          ru: 'Пользователь: $text\n',
+        ),
+      );
     }
     return buffer.toString().trim();
   }

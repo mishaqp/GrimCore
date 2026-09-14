@@ -16,11 +16,6 @@
     <init>(...);
 }
 
-# OkHttpManager resolves this value by its binary class and field names.
--keep class cn.com.omnimind.bot.BuildConfig {
-    public static final java.lang.String BASE_URL;
-}
-
 # Gson persists these Kotlin models. Keep only their instance field names as a
 # compatibility safety net; classes, constructors, methods, and service/store
 # fields remain eligible for shrinking and optimization. Persisted baselib

@@ -224,14 +224,12 @@ class _WorkspaceMemorySettingPageState
                       : context.l10n.workspaceEmbeddingNotReady,
                   value: _embeddingEnabled,
                   onChanged: _toggleEmbedding,
-                  footer: _embeddingConfig?.usesPlatform == true
-                      ? null
-                      : TextButton(
-                          onPressed: () {
-                            GoRouterManager.push('/home/scene_model_setting');
-                          },
-                          child: Text(context.l10n.workspaceGoToConfig),
-                        ),
+                  footer: TextButton(
+                    onPressed: () {
+                      GoRouterManager.push('/home/scene_model_setting');
+                    },
+                    child: Text(context.l10n.workspaceGoToConfig),
+                  ),
                 ),
                 const Divider(height: 24),
                 _buildSwitchCard(

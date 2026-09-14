@@ -371,11 +371,9 @@ class _ConversationHeatmapState extends State<ConversationHeatmap>
         // Heatmap grid: day labels + cells
         LayoutBuilder(
           builder: (context, constraints) {
-            final gridAvailableWidth =
-                constraints.maxWidth - dayLabelWidth;
+            final gridAvailableWidth = constraints.maxWidth - dayLabelWidth;
             final actualCellSize = totalWeeks > 0
-                ? (gridAvailableWidth - (totalWeeks - 1) * cellGap) /
-                    totalWeeks
+                ? (gridAvailableWidth - (totalWeeks - 1) * cellGap) / totalWeeks
                 : cellSize;
             final clampedCellSize = actualCellSize.clamp(4.0, 14.0);
             final gridHeight = 7 * clampedCellSize + 6 * cellGap;
@@ -484,11 +482,13 @@ class _ConversationHeatmapState extends State<ConversationHeatmap>
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
-          LegacyTextLocalizer.isEnglish ? 'Less' : '少',
-          style: TextStyle(
-            fontSize: 9,
-            color: palette.textTertiary,
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Less',
+            '少',
+            ru: 'Меньше',
           ),
+          style: TextStyle(fontSize: 9, color: palette.textTertiary),
         ),
         const SizedBox(width: 4),
         for (int level = 0; level <= 4; level++) ...[
@@ -504,17 +504,37 @@ class _ConversationHeatmapState extends State<ConversationHeatmap>
         ],
         const SizedBox(width: 4),
         Text(
-          LegacyTextLocalizer.isEnglish ? 'More' : '多',
-          style: TextStyle(
-            fontSize: 9,
-            color: palette.textTertiary,
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'More',
+            '多',
+            ru: 'Больше',
           ),
+          style: TextStyle(fontSize: 9, color: palette.textTertiary),
         ),
       ],
     );
   }
 
   String _monthName(int month) {
+    if (LegacyTextLocalizer.isRussian) {
+      const names = [
+        '',
+        'янв',
+        'фев',
+        'мар',
+        'апр',
+        'май',
+        'июн',
+        'июл',
+        'авг',
+        'сен',
+        'окт',
+        'ноя',
+        'дек',
+      ];
+      return names[month];
+    }
     if (LegacyTextLocalizer.isEnglish) {
       const names = [
         '',
@@ -534,14 +554,29 @@ class _ConversationHeatmapState extends State<ConversationHeatmap>
       return names[month];
     }
     const names = [
-      '', '1月', '2月', '3月', '4月', '5月', '6月',
-      '7月', '8月', '9月', '10月', '11月', '12月',
+      '',
+      '1月',
+      '2月',
+      '3月',
+      '4月',
+      '5月',
+      '6月',
+      '7月',
+      '8月',
+      '9月',
+      '10月',
+      '11月',
+      '12月',
     ];
     return names[month];
   }
 
   String _dayLabel(int dayIndex) {
     // dayIndex 0=Mon, 2=Wed, 4=Fri, 6=Sun
+    if (LegacyTextLocalizer.isRussian) {
+      const labels = ['Пн', '', 'Ср', '', 'Пт', '', 'Вс'];
+      return labels[dayIndex];
+    }
     if (LegacyTextLocalizer.isEnglish) {
       const labels = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun'];
       return labels[dayIndex];

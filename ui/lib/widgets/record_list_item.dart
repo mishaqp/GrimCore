@@ -38,82 +38,90 @@ class RecordListItem extends StatelessWidget {
               ),
             ),
             // GestureDetector(
-                        // child: SizedBox(
-                      //   width: 17,
-                      //   height: 3,
-                      //   child: SvgPicture.asset(
-                      //     'assets/common/more.svg',
-                      //     width: 17,
-                      //     height: 3,
-                      //     colorFilter: const ColorFilter.mode(
-                      //       Color(0xFF1A1A1A), // icon_nav_secondary
-                      //       BlendMode.srcIn,
-                      //     ),
-                      //   ),
-                      // ),
+            // child: SizedBox(
+            //   width: 17,
+            //   height: 3,
+            //   child: SvgPicture.asset(
+            //     'assets/common/more.svg',
+            //     width: 17,
+            //     height: 3,
+            //     colorFilter: const ColorFilter.mode(
+            //       Color(0xFF1A1A1A), // icon_nav_secondary
+            //       BlendMode.srcIn,
+            //     ),
+            //   ),
+            // ),
             //   onTapDown: (details) => onMorePressed?.call(context, details.globalPosition),
             // ),
           ],
         ),
         const SizedBox(height: 8),
         recordModel.timeLabel != null
-          ? Text(
-            recordModel.timeLabel!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0x80000000),
-              height: 1.50,
-            ),
-          )
-          : const SizedBox(height: 18),
+            ? Text(
+                recordModel.timeLabel!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0x80000000),
+                  height: 1.50,
+                ),
+              )
+            : const SizedBox(height: 18),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-          // 渲染tags中的数据
-          if (recordModel.tags.isNotEmpty)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: recordModel.tags.map((tag) {
-                return TagChip(
-                  title: tag.label,
-                  iconPath: tag.icon ?? Icons.label,
-                  appIconProvider: tag.appIconProvider,
-                );
-              }).toList(),
-            ),
-          if (recordModel.showRecommended)
-            GestureDetector(
-              onTap: () {
-                onRecommendPressed?.call(recordModel.id, !recordModel.isRecommended);
-              },
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    'assets/memory/favorite_icon.svg',
-                    width: 15,
-                    height: 13,
-                    colorFilter: ColorFilter.mode(
-                      recordModel.isRecommended
-                          ? AppColors.primaryBlue
-                          : const Color(0x33000000),
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    LegacyTextLocalizer.isEnglish ? 'Recommend' : '优先推荐',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: recordModel.isRecommended
-                          ? AppColors.primaryBlue
-                          : const Color(0x33000000),
-                    ),
-                  ),
-                ],
+            // 渲染tags中的数据
+            if (recordModel.tags.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: recordModel.tags.map((tag) {
+                  return TagChip(
+                    title: tag.label,
+                    iconPath: tag.icon ?? Icons.label,
+                    appIconProvider: tag.appIconProvider,
+                  );
+                }).toList(),
               ),
-            ),
+            if (recordModel.showRecommended)
+              GestureDetector(
+                onTap: () {
+                  onRecommendPressed?.call(
+                    recordModel.id,
+                    !recordModel.isRecommended,
+                  );
+                },
+                child: Row(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/memory/favorite_icon.svg',
+                      width: 15,
+                      height: 13,
+                      colorFilter: ColorFilter.mode(
+                        recordModel.isRecommended
+                            ? AppColors.primaryBlue
+                            : const Color(0x33000000),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        LegacyTextLocalizer.isEnglish,
+                        'Recommend',
+                        '优先推荐',
+                        ru: 'Рекомендовать',
+                      ),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: recordModel.isRecommended
+                            ? AppColors.primaryBlue
+                            : const Color(0x33000000),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ],

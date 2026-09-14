@@ -23,5 +23,38 @@ class AppLocaleManagerTest {
             PromptLocale.ZH_CN,
             AppLocaleManager.resolvePromptLocale(AppLanguageMode.SYSTEM, Locale.SIMPLIFIED_CHINESE)
         )
+        assertEquals(
+            PromptLocale.EN_US,
+            AppLocaleManager.resolvePromptLocale(AppLanguageMode.RU, Locale.SIMPLIFIED_CHINESE)
+        )
+    }
+
+    @Test
+    fun resolveUiLocaleKeepsRussianUiIndependentFromPromptLocale() {
+        assertEquals(
+            "ru",
+            AppLocaleManager.resolveUiLocale(AppLanguageMode.RU, Locale.US).language
+        )
+        assertEquals(
+            "ru",
+            AppLocaleManager.resolveUiLocale(
+                AppLanguageMode.SYSTEM,
+                Locale.forLanguageTag("ru-RU")
+            ).language
+        )
+        assertEquals(
+            "en",
+            AppLocaleManager.resolveUiLocale(
+                AppLanguageMode.EN,
+                Locale.forLanguageTag("ru-RU")
+            ).language
+        )
+        assertEquals(
+            "zh",
+            AppLocaleManager.resolveUiLocale(
+                AppLanguageMode.ZH_HANS,
+                Locale.forLanguageTag("ru-RU")
+            ).language
+        )
     }
 }

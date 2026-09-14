@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/features/home/pages/chat/utils/agent_run_timeline.dart';
@@ -115,9 +116,12 @@ class _AgentRunHeaderState extends State<AgentRunHeader> {
     final label = running
         ? (widget.activeToolLabel?.trim().isNotEmpty == true
               ? '${widget.activeToolLabel} · ${_elapsedSeconds}s'
-              : (isEnglish
-                    ? 'Processing ${_elapsedSeconds}s'
-                    : '正在处理 ${_elapsedSeconds}s'))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Processing ${_elapsedSeconds}s',
+                  '正在处理 ${_elapsedSeconds}s',
+                  ru: 'Обработка: $_elapsedSeconds с',
+                )))
         : _finishedLabel(isEnglish);
     final labelColor = running
         ? palette.textTertiary
@@ -231,10 +235,25 @@ class _AgentRunHeaderState extends State<AgentRunHeader> {
 
   String _finishedLabel(bool isEnglish) {
     final base = widget.status == AgentRunStatus.failed
-        ? (isEnglish ? 'Failed' : '执行失败')
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Failed',
+            '执行失败',
+            ru: 'Ошибка',
+          ))
         : widget.status == AgentRunStatus.cancelled
-        ? (isEnglish ? 'Cancelled' : '已取消')
-        : (isEnglish ? 'Processed' : '已处理');
+        ? (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Cancelled',
+            '已取消',
+            ru: 'Отменено',
+          ))
+        : (LegacyTextLocalizer.pickForEnglishFlag(
+            isEnglish,
+            'Processed',
+            '已处理',
+            ru: 'Обработано',
+          ));
     final elapsed = _formatElapsed(_elapsedSeconds);
     return elapsed.isEmpty ? base : '$base  $elapsed';
   }

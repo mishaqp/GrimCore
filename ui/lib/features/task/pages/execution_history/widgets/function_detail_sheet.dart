@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/theme/theme_context.dart';
 
 class FunctionDetailSheet extends StatefulWidget {
@@ -412,7 +413,7 @@ Set<String> _stringSet(dynamic value) =>
 String _string(dynamic value) => value?.toString().trim() ?? '';
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
 extension on String {
   String? get nullIfEmpty => isEmpty ? null : this;

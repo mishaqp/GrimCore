@@ -42,9 +42,12 @@ class AiGeneratedBadge extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           text ??
-              (LegacyTextLocalizer.isEnglish
-                  ? 'AI generated content'
-                  : '内容由Ai生成'),
+              (LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                'AI generated content',
+                '内容由Ai生成',
+                ru: 'Контент, созданный ИИ',
+              )),
           style: TextStyle(
             color: effectiveColor,
             fontSize: fontSize,

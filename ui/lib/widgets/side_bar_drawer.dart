@@ -27,9 +27,12 @@ class SidebarDrawer extends StatefulWidget {
 
 class _SidebarDrawerState extends State<SidebarDrawer> {
   int avatarIndex = 0;
-  String nickname = LegacyTextLocalizer.isEnglish
-      ? "Usernamexxxxx"
-      : "用户名xxxxx";
+  String nickname = LegacyTextLocalizer.pickForEnglishFlag(
+    LegacyTextLocalizer.isEnglish,
+    "Username",
+    "用户名",
+    ru: "Имя пользователя",
+  );
   final List<String> presetAvatars = [
     'assets/avatar/default_avatar1.png',
     'assets/avatar/default_avatar2.png',
@@ -68,7 +71,12 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
       avatarIndex = prefs.getInt('avatarIndex') ?? 0;
       nickname =
           prefs.getString('nickname') ??
-          (LegacyTextLocalizer.isEnglish ? "Usernamexxxxx" : "用户名xxxxx");
+          (LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            "Username",
+            "用户名",
+            ru: "Имя пользователя",
+          ));
     });
   }
 
@@ -184,7 +192,12 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
             Icon(Icons.edit_outlined, color: Colors.grey[600], size: 20),
             SizedBox(width: 8),
             Text(
-              isEnglish ? "New task" : "新建任务",
+              LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                "New task",
+                "新建任务",
+                ru: 'Новая задача',
+              ),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[700],
@@ -217,7 +230,12 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
           children: [
             _buildMenuItem(
               icon: Icons.memory_outlined,
-              title: isEnglish ? "Memory center" : "记忆中心",
+              title: LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                "Memory center",
+                "记忆中心",
+                ru: "Центр памяти",
+              ),
               onTap: () {
                 Navigator.push(
                   context,
@@ -265,7 +283,12 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              isEnglish ? "History" : "历史记录",
+              LegacyTextLocalizer.pickForEnglishFlag(
+                isEnglish,
+                "History",
+                "历史记录",
+                ru: 'История',
+              ),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -286,7 +309,12 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
                 : conversations.isEmpty
                 ? Center(
                     child: Text(
-                      isEnglish ? "No conversations yet" : "暂无历史对话",
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        isEnglish,
+                        "No conversations yet",
+                        "暂无历史对话",
+                        ru: 'Пока нет диалогов',
+                      ),
                       style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                     ),
                   )
@@ -340,7 +368,14 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
                 children: [
                   Icon(Icons.edit, size: 18, color: Colors.grey[600]),
                   SizedBox(width: 8),
-                  Text(isEnglish ? 'Rename' : '重命名'),
+                  Text(
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      isEnglish,
+                      'Rename',
+                      '重命名',
+                      ru: 'Переименовать',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -350,7 +385,14 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
                 children: [
                   Icon(Icons.content_copy, size: 18, color: Colors.grey[600]),
                   SizedBox(width: 8),
-                  Text(isEnglish ? 'Copy conversation' : '复制对话'),
+                  Text(
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      isEnglish,
+                      'Copy conversation',
+                      '复制对话',
+                      ru: 'Скопировать диалог',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -360,7 +402,14 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
                 children: [
                   Icon(Icons.ios_share, size: 18, color: Colors.grey[600]),
                   SizedBox(width: 8),
-                  Text(isEnglish ? 'Export' : '导出'),
+                  Text(
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      isEnglish,
+                      'Export',
+                      '导出',
+                      ru: 'Экспорт',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -370,7 +419,14 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
                 children: [
                   Icon(Icons.delete, size: 18, color: Colors.grey[600]),
                   SizedBox(width: 8),
-                  Text(isEnglish ? 'Delete' : '删除'),
+                  Text(
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      isEnglish,
+                      'Delete',
+                      '删除',
+                      ru: 'Удалить',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -463,8 +519,18 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
       SnackBar(
         content: Text(
           exported
-              ? (isEnglish ? 'Conversation exported' : '对话已导出')
-              : (isEnglish ? 'Export failed' : '导出失败'),
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Conversation exported',
+                  '对话已导出',
+                  ru: 'Диалог экспортирован',
+                ))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Export failed',
+                  '导出失败',
+                  ru: 'Не удалось экспортировать',
+                )),
         ),
       ),
     );
@@ -481,8 +547,18 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
       SnackBar(
         content: Text(
           copied
-              ? (isEnglish ? 'Conversation copied' : '已复制对话')
-              : (isEnglish ? 'Copy failed' : '复制失败'),
+              ? (LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Conversation copied',
+                  '已复制对话',
+                  ru: 'Диалог скопирован',
+                ))
+              : (LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Copy failed',
+                  '复制失败',
+                  ru: 'Не удалось скопировать',
+                )),
         ),
       ),
     );
@@ -494,24 +570,48 @@ class _SidebarDrawerState extends State<SidebarDrawer> {
       builder: (BuildContext context) {
         final isEnglish = Localizations.localeOf(context).languageCode == 'en';
         return AlertDialog(
-          title: Text(isEnglish ? "Delete conversation" : "删除对话"),
+          title: Text(
+            LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              "Delete conversation",
+              "删除对话",
+              ru: "Удалить диалог",
+            ),
+          ),
           content: Text(
-            isEnglish
-                ? "Are you sure you want to delete this conversation?"
-                : "确定要删除这个对话吗？",
+            LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              "Are you sure you want to delete this conversation?",
+              "确定要删除这个对话吗？",
+              ru: 'Вы уверены, что хотите удалить этот диалог?',
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: Text(isEnglish ? "Cancel" : "取消"),
+              child: Text(
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  "Cancel",
+                  "取消",
+                  ru: "Отмена",
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context, true);
               },
-              child: Text(isEnglish ? "Delete" : "确定"),
+              child: Text(
+                LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  "Delete",
+                  "确定",
+                  ru: 'Удалить',
+                ),
+              ),
             ),
           ],
         );
@@ -601,26 +701,48 @@ class _RenameConversationDialogState extends State<_RenameConversationDialog> {
       },
       child: AlertDialog(
         title: Text(
-          LegacyTextLocalizer.isEnglish ? "Rename conversation" : "重命名对话",
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            "Rename conversation",
+            "重命名对话",
+            ru: 'Переименовать диалог',
+          ),
         ),
         content: TextField(
           controller: _controller,
           focusNode: _focusNode,
           decoration: InputDecoration(
-            hintText: LegacyTextLocalizer.isEnglish
-                ? "Enter new name"
-                : "输入新的名称",
+            hintText: LegacyTextLocalizer.pickForEnglishFlag(
+              LegacyTextLocalizer.isEnglish,
+              "Enter new name",
+              "输入新的名称",
+              ru: "Введите новое имя",
+            ),
           ),
           onSubmitted: (_) => _close(_controller.text.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => _close(),
-            child: Text(LegacyTextLocalizer.isEnglish ? "Cancel" : "取消"),
+            child: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                "Cancel",
+                "取消",
+                ru: "Отмена",
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => _close(_controller.text.trim()),
-            child: Text(LegacyTextLocalizer.isEnglish ? "OK" : "确定"),
+            child: Text(
+              LegacyTextLocalizer.pickForEnglishFlag(
+                LegacyTextLocalizer.isEnglish,
+                "OK",
+                "确定",
+                ru: 'ОК',
+              ),
+            ),
           ),
         ],
       ),

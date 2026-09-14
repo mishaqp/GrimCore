@@ -221,9 +221,12 @@ class _CodexBridgeQrScannerPageState extends State<CodexBridgeQrScannerPage> {
     }
     _lastInvalidToastAt = now;
     showToast(
-      _isEnglish
-          ? 'This is not an Omnibot Codex Bridge QR code.'
-          : '这不是 Omnibot Codex Bridge 二维码。',
+      LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'This is not an Omnibot Codex Bridge QR code.',
+        '这不是 Omnibot Codex Bridge 二维码。',
+        ru: 'Это не QR-код Omnibot Codex Bridge.',
+      ),
       type: ToastType.warning,
     );
   }
@@ -243,12 +246,22 @@ class _CodexBridgeQrScannerPageState extends State<CodexBridgeQrScannerPage> {
         ),
         actions: [
           IconButton(
-            tooltip: _isEnglish ? 'Torch' : '手电筒',
+            tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Torch',
+              '手电筒',
+              ru: 'Фонарик',
+            ),
             onPressed: () => unawaited(_controller.toggleTorch()),
             icon: const Icon(LucideIcons.zap),
           ),
           IconButton(
-            tooltip: _isEnglish ? 'Switch camera' : '切换摄像头',
+            tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Switch camera',
+              '切换摄像头',
+              ru: 'Сменить камеру',
+            ),
             onPressed: () => unawaited(_controller.switchCamera()),
             icon: const Icon(LucideIcons.switchCamera),
           ),
@@ -265,9 +278,12 @@ class _CodexBridgeQrScannerPageState extends State<CodexBridgeQrScannerPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(28),
                   child: Text(
-                    _isEnglish
-                        ? 'Camera unavailable: ${error.errorCode.name}'
-                        : '摄像头不可用：${error.errorCode.name}',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Camera unavailable: ${error.errorCode.name}',
+                      '摄像头不可用：${error.errorCode.name}',
+                      ru: 'Камера недоступна: ${error.errorCode.name}',
+                    ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
@@ -307,9 +323,12 @@ class _CodexBridgeQrScannerPageState extends State<CodexBridgeQrScannerPage> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _isEnglish
-                          ? 'Scan the QR code printed by the PC Bridge terminal.'
-                          : '扫描 PC Bridge 终端打印的二维码。',
+                      LegacyTextLocalizer.pickForEnglishFlag(
+                        _isEnglish,
+                        'Scan the QR code printed by the PC Bridge terminal.',
+                        '扫描 PC Bridge 终端打印的二维码。',
+                        ru: 'Отсканируйте QR-код, показанный в терминале PC Bridge.',
+                      ),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,

@@ -20,8 +20,22 @@ Future<RecordMenuAction?> showRecordContextMenu({
   bool showDelete = true,
 }) {
   final isEnglish = Localizations.localeOf(context).languageCode == 'en';
-  final resolvedEditLabel = editLabel ?? (isEnglish ? 'Edit' : '编辑');
-  final resolvedDeleteLabel = deleteLabel ?? (isEnglish ? 'Delete record' : '删除记录');
+  final resolvedEditLabel =
+      editLabel ??
+      (LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Edit',
+        '编辑',
+        ru: 'Редактировать',
+      ));
+  final resolvedDeleteLabel =
+      deleteLabel ??
+      (LegacyTextLocalizer.pickForEnglishFlag(
+        isEnglish,
+        'Delete record',
+        '删除记录',
+        ru: 'Удалить запись',
+      ));
   final List<PopupMenuEntry<RecordMenuAction>> items = [];
 
   if (showEdit) {
@@ -30,16 +44,28 @@ Future<RecordMenuAction?> showRecordContextMenu({
         value: RecordMenuAction.edit,
         padding: EdgeInsets.zero,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(18, items.isEmpty && !showDelete ? 16 : 16, 0, items.isEmpty && !showDelete ? 16 : 10),
+          padding: EdgeInsets.fromLTRB(
+            18,
+            items.isEmpty && !showDelete ? 16 : 16,
+            0,
+            items.isEmpty && !showDelete ? 16 : 10,
+          ),
           child: Row(
             children: [
               SvgPicture.asset(
                 editIconAsset,
                 width: 22.5,
                 height: 18.28,
-                colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.70), BlendMode.srcIn),
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.70),
+                  BlendMode.srcIn,
+                ),
                 errorBuilder: (ctx, err, stack) {
-                  return const Icon(Icons.edit_outlined, size: 18, color: Colors.black);
+                  return const Icon(
+                    Icons.edit_outlined,
+                    size: 18,
+                    color: Colors.black,
+                  );
                 },
               ),
               const SizedBox(width: 20),
@@ -68,16 +94,28 @@ Future<RecordMenuAction?> showRecordContextMenu({
         value: RecordMenuAction.delete,
         padding: EdgeInsets.zero,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(18, showEdit ? 16 : 16, 0, !showEdit ? 16 : 10),
+          padding: EdgeInsets.fromLTRB(
+            18,
+            showEdit ? 16 : 16,
+            0,
+            !showEdit ? 16 : 10,
+          ),
           child: Row(
             children: [
               SvgPicture.asset(
                 deleteIconAsset,
                 width: 18.28,
                 height: 18.28,
-                colorFilter: const ColorFilter.mode(AppColors.alertRed, BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                  AppColors.alertRed,
+                  BlendMode.srcIn,
+                ),
                 errorBuilder: (ctx, err, stack) {
-                  return const Icon(Icons.close, size: 18, color: AppColors.alertRed);
+                  return const Icon(
+                    Icons.close,
+                    size: 18,
+                    color: AppColors.alertRed,
+                  );
                 },
               ),
               const SizedBox(width: 20),

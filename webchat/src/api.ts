@@ -7,6 +7,18 @@ interface RequestOptions {
   query?: Record<string, string | number | boolean | null | undefined>;
 }
 
+export class RequestError extends Error {
+  readonly status: number;
+  readonly serverMessage: string;
+
+  constructor(status: number, serverMessage: string) {
+    super(serverMessage);
+    this.name = "RequestError";
+    this.status = status;
+    this.serverMessage = serverMessage;
+  }
+}
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, query } = options;
   const url = new URL(`${API_ROOT}${path}`, window.location.origin);
@@ -23,6 +35,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     credentials: "same-origin",
     headers: {
       Accept: "application/json",
+      "Accept-Language": document.documentElement.lang,
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -39,7 +52,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (!response.ok) {
     const record = isRecord(payload) ? payload : null;
     const message = record?.error ?? record?.message ?? payload;
-    throw new Error(String(message || `请求失败 (${response.status})`));
+    throw new RequestError(response.status, String(message ?? "").trim());
   }
   return payload as T;
 }

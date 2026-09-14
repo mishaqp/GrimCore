@@ -1,3 +1,4 @@
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ui/theme/theme_context.dart';
@@ -33,24 +34,36 @@ class BotStatus extends StatelessWidget {
         return _buildStatusRow(
           context,
           svgPath: 'assets/chatbot/thinking_icon.svg',
-          text: Localizations.localeOf(context).languageCode == 'en'
-              ? 'Thinking...'
-              : '正在思考...',
-          timeDesc: Localizations.localeOf(context).languageCode == 'en'
-              ? 'Time taken'
-              : '已用时',
+          text: LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Thinking...',
+            '正在思考...',
+            ru: 'Думаю...',
+          ),
+          timeDesc: LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Time taken',
+            '已用时',
+            ru: 'Прошло',
+          ),
           costTime: costTime,
         );
       case BotStatusType.completed:
         return _buildStatusRow(
           context,
           icon: Icons.check_circle,
-          text: Localizations.localeOf(context).languageCode == 'en'
-              ? 'Thinking complete'
-              : '已完成思考',
-          timeDesc: Localizations.localeOf(context).languageCode == 'en'
-              ? 'Total time'
-              : '总用时',
+          text: LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Thinking complete',
+            '已完成思考',
+            ru: 'Рассуждения завершены',
+          ),
+          timeDesc: LegacyTextLocalizer.pickForEnglishFlag(
+            Localizations.localeOf(context).languageCode == 'en',
+            'Total time',
+            '总用时',
+            ru: 'Общее время',
+          ),
           costTime: costTime,
         );
       case BotStatusType.hint:
@@ -59,9 +72,12 @@ class BotStatus extends StatelessWidget {
           svgPath: 'assets/chatbot/thinking_icon.svg',
           text:
               hintText ??
-              (Localizations.localeOf(context).languageCode == 'en'
-                  ? 'Hint'
-                  : '提示'),
+              (LegacyTextLocalizer.pickForEnglishFlag(
+                Localizations.localeOf(context).languageCode == 'en',
+                'Hint',
+                '提示',
+                ru: 'Подсказка',
+              )),
         );
     }
   }

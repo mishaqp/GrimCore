@@ -152,6 +152,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -227,6 +228,11 @@ button:disabled {
   background: var(--surface);
   box-shadow: var(--pane-shadow);
   animation: rise-in 360ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.login-language-select {
+  display: block;
+  margin: 0 0 16px auto;
 }
 
 .login-form {
@@ -1001,6 +1007,32 @@ button.conversation-section-header:hover {
   background: var(--surface);
   color: var(--muted);
   font-size: 11px;
+}
+
+.connection-footer > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.language-select {
+  min-width: 68px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: 0;
+  background: var(--preview);
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.language-select:focus-visible {
+  outline: 2px solid rgb(44 127 235 / 32%);
+  outline-offset: 2px;
 }
 
 .connection-dot {

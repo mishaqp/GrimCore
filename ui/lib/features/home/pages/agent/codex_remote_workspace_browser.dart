@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ui/features/home/pages/agent/codex_remote_file_preview_page.dart';
@@ -158,9 +159,12 @@ class CodexRemoteWorkspaceBrowserState
         _error = listing.ok
             ? null
             : (listing.error ??
-                  (_isEnglish
-                      ? 'Failed to read remote workspace'
-                      : '读取远程工作区失败'));
+                  (LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Failed to read remote workspace',
+                    '读取远程工作区失败',
+                    ru: 'Не удалось прочитать удалённое рабочее пространство',
+                  )));
       });
       _notifyCanGoUpChanged();
     } catch (error) {
@@ -196,7 +200,12 @@ class CodexRemoteWorkspaceBrowserState
     await Clipboard.setData(ClipboardData(text: entry.path));
     if (!mounted) return;
     showToast(
-      _isEnglish ? 'Remote path copied' : '已复制远程路径',
+      LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Remote path copied',
+        '已复制远程路径',
+        ru: 'Удалённый путь скопирован',
+      ),
       type: ToastType.success,
     );
   }
@@ -263,14 +272,24 @@ class CodexRemoteWorkspaceBrowserState
                   _buildActionTile(
                     context: sheetContext,
                     icon: Icons.visibility_outlined,
-                    label: _isEnglish ? 'Open' : '打开',
+                    label: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Open',
+                      '打开',
+                      ru: 'Открыть',
+                    ),
                     action: _RemoteWorkspaceEntryAction.open,
                   ),
                   const SizedBox(height: 8),
                   _buildActionTile(
                     context: sheetContext,
                     icon: Icons.edit_outlined,
-                    label: _isEnglish ? 'Edit' : '编辑',
+                    label: LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Edit',
+                      '编辑',
+                      ru: 'Редактировать',
+                    ),
                     action: _RemoteWorkspaceEntryAction.edit,
                   ),
                   const SizedBox(height: 8),
@@ -278,21 +297,36 @@ class CodexRemoteWorkspaceBrowserState
                 _buildActionTile(
                   context: sheetContext,
                   icon: Icons.drive_file_rename_outline_rounded,
-                  label: _isEnglish ? 'Rename' : '重命名',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Rename',
+                    '重命名',
+                    ru: 'Переименовать',
+                  ),
                   action: _RemoteWorkspaceEntryAction.rename,
                 ),
                 const SizedBox(height: 8),
                 _buildActionTile(
                   context: sheetContext,
                   icon: Icons.copy_rounded,
-                  label: _isEnglish ? 'Copy path' : '复制路径',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Copy path',
+                    '复制路径',
+                    ru: 'Копировать путь',
+                  ),
                   action: _RemoteWorkspaceEntryAction.copyPath,
                 ),
                 const SizedBox(height: 8),
                 _buildActionTile(
                   context: sheetContext,
                   icon: Icons.delete_outline_rounded,
-                  label: _isEnglish ? 'Delete' : '删除',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    _isEnglish,
+                    'Delete',
+                    '删除',
+                    ru: 'Удалить',
+                  ),
                   action: _RemoteWorkspaceEntryAction.delete,
                   destructive: true,
                 ),
@@ -307,7 +341,12 @@ class CodexRemoteWorkspaceBrowserState
                     color: palette.textPrimary,
                   ),
                   title: Text(
-                    _isEnglish ? 'Cancel' : '取消',
+                    LegacyTextLocalizer.pickForEnglishFlag(
+                      _isEnglish,
+                      'Cancel',
+                      '取消',
+                      ru: 'Отмена',
+                    ),
                     style: TextStyle(
                       color: palette.textPrimary,
                       fontWeight: FontWeight.w500,
@@ -374,12 +413,37 @@ class CodexRemoteWorkspaceBrowserState
     final nextName = (await AppDialog.input(
       context,
       title: entry.isDirectory
-          ? (_isEnglish ? 'Rename folder' : '重命名文件夹')
-          : (_isEnglish ? 'Rename file' : '重命名文件'),
-      hintText: _isEnglish ? 'New name' : '请输入新名称',
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Rename folder',
+              '重命名文件夹',
+              ru: 'Переименовать папку',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Rename file',
+              '重命名文件',
+              ru: 'Переименовать файл',
+            )),
+      hintText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'New name',
+        '请输入新名称',
+        ru: 'Новое имя',
+      ),
       initialValue: oldName,
-      confirmText: _isEnglish ? 'Save' : '保存',
-      cancelText: _isEnglish ? 'Cancel' : '取消',
+      confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Save',
+        '保存',
+        ru: 'Сохранить',
+      ),
+      cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Cancel',
+        '取消',
+        ru: 'Отмена',
+      ),
     ))?.trim();
     if (nextName == null) return;
     final validationError = _validateEntryName(nextName);
@@ -388,13 +452,25 @@ class CodexRemoteWorkspaceBrowserState
       return;
     }
     if (nextName == oldName) {
-      showToast(_isEnglish ? 'Name unchanged' : '名称未发生变化');
+      showToast(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Name unchanged',
+          '名称未发生变化',
+          ru: 'Имя не изменено',
+        ),
+      );
       return;
     }
     final parentPath = _parentPath(entry.path);
     if (parentPath == null) {
       showToast(
-        _isEnglish ? 'Rename failed: invalid path' : '重命名失败：路径无效',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Rename failed: invalid path',
+          '重命名失败：路径无效',
+          ru: 'Не удалось переименовать: недопустимый путь',
+        ),
         type: ToastType.error,
       );
       return;
@@ -411,12 +487,25 @@ class CodexRemoteWorkspaceBrowserState
       if (result['ok'] != true) {
         throw StateError(result['error']?.toString() ?? 'rename failed');
       }
-      showToast(_isEnglish ? 'Renamed' : '重命名成功', type: ToastType.success);
+      showToast(
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Renamed',
+          '重命名成功',
+          ru: 'Переименовано',
+        ),
+        type: ToastType.success,
+      );
       await _reload();
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Rename failed: $error' : '重命名失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Rename failed: $error',
+          '重命名失败：$error',
+          ru: 'Не удалось переименовать: $error',
+        ),
         type: ToastType.error,
       );
     }
@@ -426,13 +515,36 @@ class CodexRemoteWorkspaceBrowserState
     final confirmed = await AppDialog.confirm(
       context,
       title: entry.isDirectory
-          ? (_isEnglish ? 'Delete folder' : '删除文件夹')
-          : (_isEnglish ? 'Delete file' : '删除文件'),
-      content: _isEnglish
-          ? 'Delete "${entry.name}" from the remote PC? This cannot be undone.'
-          : '确认从远程 PC 删除“${entry.name}”？删除后不可恢复。',
-      cancelText: _isEnglish ? 'Cancel' : '取消',
-      confirmText: _isEnglish ? 'Delete' : '删除',
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Delete folder',
+              '删除文件夹',
+              ru: 'Удалить папку',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              _isEnglish,
+              'Delete file',
+              '删除文件',
+              ru: 'Удалить файл',
+            )),
+      content: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Delete "${entry.name}" from the remote PC? This cannot be undone.',
+        '确认从远程 PC 删除“${entry.name}”？删除后不可恢复。',
+        ru: 'Удалить "${entry.name}" с удалённого ПК? Это действие нельзя отменить.',
+      ),
+      cancelText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Cancel',
+        '取消',
+        ru: 'Отмена',
+      ),
+      confirmText: LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Delete',
+        '删除',
+        ru: 'Удалить',
+      ),
       confirmButtonColor: const Color(0xFFE53935),
     );
     if (confirmed != true) return;
@@ -449,33 +561,75 @@ class CodexRemoteWorkspaceBrowserState
       }
       showToast(
         entry.isDirectory
-            ? (_isEnglish ? 'Folder deleted' : '文件夹已删除')
-            : (_isEnglish ? 'File deleted' : '文件已删除'),
+            ? (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Folder deleted',
+                '文件夹已删除',
+                ru: 'Папка удалена',
+              ))
+            : (LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'File deleted',
+                '文件已删除',
+                ru: 'Файл удалён',
+              )),
         type: ToastType.success,
       );
       await _reload();
     } catch (error) {
       if (!mounted) return;
       showToast(
-        _isEnglish ? 'Delete failed: $error' : '删除失败：$error',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          _isEnglish,
+          'Delete failed: $error',
+          '删除失败：$error',
+          ru: 'Не удалось удалить: $error',
+        ),
         type: ToastType.error,
       );
     }
   }
 
   String? _validateEntryName(String name) {
-    if (name.trim().isEmpty) return _isEnglish ? 'Name is required' : '名称不能为空';
+    if (name.trim().isEmpty) {
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Name is required',
+        '名称不能为空',
+        ru: 'Введите имя',
+      );
+    }
     if (name == '.' || name == '..') {
-      return _isEnglish ? 'Name cannot be . or ..' : '名称不能为 . 或 ..';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Name cannot be . or ..',
+        '名称不能为 . 或 ..',
+        ru: 'Имя не может быть . или ..',
+      );
     }
     if (name.contains('/')) {
-      return _isEnglish ? 'Name cannot contain /' : '名称不能包含 /';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Name cannot contain /',
+        '名称不能包含 /',
+        ru: 'Имя не может содержать /',
+      );
     }
     if (name.contains('\\')) {
-      return _isEnglish ? 'Name cannot contain \\' : '名称不能包含 "\\"';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Name cannot contain \\',
+        '名称不能包含 "\\"',
+        ru: 'Имя не может содержать «\\»',
+      );
     }
     if (name.contains('\u0000')) {
-      return _isEnglish ? 'Name contains invalid characters' : '名称包含非法字符';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Name contains invalid characters',
+        '名称包含非法字符',
+        ru: 'Имя содержит недопустимые символы',
+      );
     }
     return null;
   }
@@ -483,7 +637,12 @@ class CodexRemoteWorkspaceBrowserState
   String get _rootBreadcrumbLabel {
     final root = _normalizePath(_rootPath);
     if (root.isEmpty) {
-      return _isEnglish ? 'Remote workspace' : '远程工作区';
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Remote workspace',
+        '远程工作区',
+        ru: 'Удалённая рабочая область',
+      );
     }
     return _entryNameFromPath(root).isEmpty ? root : _entryNameFromPath(root);
   }
@@ -542,7 +701,12 @@ class CodexRemoteWorkspaceBrowserState
         children: [
           if (widget.showHeaderTitle) ...[
             Text(
-              _isEnglish ? 'Remote Workspace' : '远程工作区',
+              LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Remote Workspace',
+                '远程工作区',
+                ru: 'Удалённое рабочее пространство',
+              ),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -556,9 +720,12 @@ class CodexRemoteWorkspaceBrowserState
               Expanded(
                 child: breadcrumbs.isEmpty
                     ? Text(
-                        _isEnglish
-                            ? 'Loading remote workspace...'
-                            : '加载远程工作区中...',
+                        LegacyTextLocalizer.pickForEnglishFlag(
+                          _isEnglish,
+                          'Loading remote workspace...',
+                          '加载远程工作区中...',
+                          ru: 'Загрузка удалённой рабочей области…',
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: palette.textSecondary,
@@ -590,7 +757,12 @@ class CodexRemoteWorkspaceBrowserState
               ),
               const SizedBox(width: 8),
               IconButton(
-                tooltip: _isEnglish ? 'Reload' : '刷新',
+                tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                  _isEnglish,
+                  'Reload',
+                  '刷新',
+                  ru: 'Обновить',
+                ),
                 onPressed: _isLoading || _isReloading
                     ? null
                     : () => unawaited(_reload()),
@@ -654,10 +826,30 @@ class CodexRemoteWorkspaceBrowserState
     final palette = context.omniPalette;
     final isDirectory = entry.isDirectory;
     final typeLabel = switch (entry.type) {
-      'directory' => _isEnglish ? 'Folder' : '文件夹',
-      'symlink' => _isEnglish ? 'Symlink' : '符号链接',
-      'file' => _isEnglish ? 'File' : '文件',
-      _ => _isEnglish ? 'Item' : '项目',
+      'directory' => LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Folder',
+        '文件夹',
+        ru: 'Папка',
+      ),
+      'symlink' => LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Symlink',
+        '符号链接',
+        ru: 'Символическая ссылка',
+      ),
+      'file' => LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'File',
+        '文件',
+        ru: 'Файл',
+      ),
+      _ => LegacyTextLocalizer.pickForEnglishFlag(
+        _isEnglish,
+        'Item',
+        '项目',
+        ru: 'Элемент',
+      ),
     };
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -773,7 +965,14 @@ class CodexRemoteWorkspaceBrowserState
                     TextButton.icon(
                       onPressed: onRetry,
                       icon: const Icon(Icons.refresh_rounded, size: 17),
-                      label: Text(_isEnglish ? 'Retry' : '重试'),
+                      label: Text(
+                        LegacyTextLocalizer.pickForEnglishFlag(
+                          _isEnglish,
+                          'Retry',
+                          '重试',
+                          ru: 'Повторить',
+                        ),
+                      ),
                     ),
                   ],
                 ],
@@ -793,9 +992,12 @@ class CodexRemoteWorkspaceBrowserState
       onRefresh: _reload,
       child: _isLoading && _listing == null
           ? _buildStatusList(
-              message: _isEnglish
-                  ? 'Loading remote workspace...'
-                  : '加载远程工作区中...',
+              message: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Loading remote workspace...',
+                '加载远程工作区中...',
+                ru: 'Загрузка удалённой рабочей области…',
+              ),
             )
           : !exists
           ? _buildStatusList(
@@ -805,9 +1007,12 @@ class CodexRemoteWorkspaceBrowserState
             )
           : itemCount == 0
           ? _buildStatusList(
-              message: _isEnglish
-                  ? 'Current remote directory is empty'
-                  : '当前远程目录为空',
+              message: LegacyTextLocalizer.pickForEnglishFlag(
+                _isEnglish,
+                'Current remote directory is empty',
+                '当前远程目录为空',
+                ru: 'Текущий удалённый каталог пуст',
+              ),
               icon: Icons.folder_open_outlined,
             )
           : ListView.builder(

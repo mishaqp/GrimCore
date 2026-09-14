@@ -7,8 +7,6 @@ import cn.com.omnimind.baselib.i18n.PromptLocale
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.ModelSceneRegistry
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
 import cn.com.omnimind.baselib.util.OmniLog
@@ -50,7 +48,6 @@ data class WorkspaceMemoryEmbeddingConfig(
     val modelId: String?,
     val apiBase: String?,
     val hasApiKey: Boolean,
-    val usesPlatform: Boolean = false,
 )
 
 data class WorkspaceMemorySearchHit(
@@ -121,7 +118,6 @@ internal fun WorkspaceMemoryEmbeddingConfig.embeddingConfigId(): String? {
         ?.trimEnd('/')
         .orEmpty()
     val rawIdentity = listOf(
-        if (usesPlatform) "platform" else "byok",
         providerProfileId?.trim().orEmpty(),
         normalizedApiBase,
         normalizedModelId,
@@ -180,9 +176,7 @@ internal fun explicitByokEmbeddingProfile(
     boundProfile: ModelProviderProfile?,
 ): ModelProviderProfile? {
     val normalizedBindingId = bindingProviderProfileId?.trim().orEmpty()
-    if (normalizedBindingId.isEmpty() ||
-        OmniOfficialProvider.isOfficialProfile(normalizedBindingId)
-    ) {
+    if (normalizedBindingId.isEmpty()) {
         return null
     }
     return boundProfile?.takeIf { it.id == normalizedBindingId }
@@ -227,7 +221,6 @@ class WorkspaceMemoryService(
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
-    private val platformEmbeddingGateway = PlatformEmbeddingGateway()
 
     private fun memoryWriteLock(): Any {
         val key = context.applicationContext.filesDir.absolutePath
@@ -1185,37 +1178,8 @@ class WorkspaceMemoryService(
                 modelId = binding?.modelId,
             )
         }
-        if (OmniOfficialProvider.shouldExpose()) {
-            // A process can already be text-ready while still holding the
-            // catalog cached before embedding was published. Refresh that
-            // incomplete catalog before deciding to fall back to lexical
-            // retrieval.
-            val platformStatus = if (enabled) {
-                runBlocking { PlatformAiProvisioner.ensureEmbeddingReadyStatus() }
-            } else {
-                PlatformAiProvisioner.status()
-            }
-            val platformProfile = PlatformAiProvisioner.officialProfileOrNull()
-            val platformModelId = platformStatus.defaultEmbeddingModelId
-            val declared = platformStatus.embeddingModels.any { it.id == platformModelId }
-            return WorkspaceMemoryEmbeddingConfig(
-                enabled = enabled,
-                configured = enabled &&
-                    platformStatus.ready &&
-                    platformProfile?.ready == true &&
-                    !platformModelId.isNullOrBlank() &&
-                    declared,
-                sceneId = SCENE_MEMORY_EMBEDDING,
-                providerProfileId = OmniOfficialProvider.PROFILE_ID,
-                providerProfileName = OmniOfficialProvider.PROFILE_NAME,
-                modelId = platformModelId,
-                apiBase = platformProfile?.baseUrl,
-                hasApiKey = false,
-                usesPlatform = true,
-            )
-        }
         val applicableBinding = binding?.takeIf {
-            boundProfile != null && !OmniOfficialProvider.isOfficialProfile(it.providerProfileId)
+            boundProfile != null
         }
         val profile = boundProfile
             ?.takeIf { applicableBinding != null }
@@ -1443,11 +1407,6 @@ class WorkspaceMemoryService(
         text: String
     ): List<Double> {
         check(config.configured) { "embedding config not ready" }
-        if (config.usesPlatform) {
-            return runBlocking {
-                platformEmbeddingGateway.embed(config.modelId.orEmpty(), text)
-            }
-        }
         val apiBase = ModelProviderConfigStore.stripDirectRequestUrlMarker(config.apiBase!!)
         val modelId = config.modelId!!.trim()
         val profile = config.providerProfileId?.let { ModelProviderConfigStore.getProfile(it) }

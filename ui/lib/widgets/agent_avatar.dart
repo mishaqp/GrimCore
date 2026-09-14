@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/agent_avatar_service.dart';
 import 'package:ui/theme/theme_context.dart';
 import 'package:ui/utils/ui.dart';
@@ -74,8 +75,15 @@ class _AgentAvatarButtonState extends State<AgentAvatarButton> {
 
   @override
   Widget build(BuildContext context) {
+    final tooltip = widget.tooltip == '修改 Agent 头像'
+        ? LegacyTextLocalizer.pick(
+            'Edit Agent avatar',
+            '修改 Agent 头像',
+            ru: 'Изменить аватар агента',
+          )
+        : LegacyTextLocalizer.localize(widget.tooltip);
     return Tooltip(
-      message: widget.tooltip,
+      message: tooltip,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _openPicker,
@@ -308,7 +316,14 @@ class _AgentAvatarPickerDialogState extends State<_AgentAvatarPickerDialog> {
       }
       Navigator.of(context).pop(selectedState);
     } catch (error) {
-      showToast('选择头像失败：$error', type: ToastType.error);
+      showToast(
+        LegacyTextLocalizer.pick(
+          'Failed to select avatar: $error',
+          '选择头像失败：$error',
+          ru: 'Не удалось выбрать аватар: $error',
+        ),
+        type: ToastType.error,
+      );
     } finally {
       _isImagePickerActive = false;
       if (mounted) {
@@ -365,7 +380,11 @@ class _AgentAvatarPickerDialogState extends State<_AgentAvatarPickerDialog> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Agent 头像',
+                        LegacyTextLocalizer.pick(
+                          'Agent avatar',
+                          'Agent 头像',
+                          ru: 'Аватар агента',
+                        ),
                         style: TextStyle(
                           color: palette.textPrimary,
                           fontSize: 17,
@@ -375,7 +394,11 @@ class _AgentAvatarPickerDialogState extends State<_AgentAvatarPickerDialog> {
                       ),
                     ),
                     IconButton(
-                      tooltip: '关闭',
+                      tooltip: LegacyTextLocalizer.pick(
+                        'Close',
+                        '关闭',
+                        ru: 'Закрыть',
+                      ),
                       visualDensity: VisualDensity.compact,
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(
@@ -478,7 +501,11 @@ class _LocalAvatarPickerButton extends StatelessWidget {
               const SizedBox(width: 11),
               Expanded(
                 child: Text(
-                  '从相册选择并裁剪',
+                  LegacyTextLocalizer.pick(
+                    'Choose and crop from gallery',
+                    '从相册选择并裁剪',
+                    ru: 'Выбрать и обрезать из галереи',
+                  ),
                   style: TextStyle(
                     color: palette.textPrimary,
                     fontSize: 14,
@@ -583,7 +610,13 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
   Future<Uint8List> _renderCroppedAvatar(double cropSize) async {
     final image = _image;
     if (image == null) {
-      throw StateError('图片还没有加载完成');
+      throw StateError(
+        LegacyTextLocalizer.pick(
+          'The image has not finished loading',
+          '图片还没有加载完成',
+          ru: 'Изображение ещё не загрузилось',
+        ),
+      );
     }
 
     final effectiveScale = _baseScale(cropSize) * _scale;
@@ -627,7 +660,13 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
     croppedImage.dispose();
     picture.dispose();
     if (byteData == null) {
-      throw StateError('头像裁剪失败');
+      throw StateError(
+        LegacyTextLocalizer.pick(
+          'Failed to crop avatar',
+          '头像裁剪失败',
+          ru: 'Не удалось обрезать аватар',
+        ),
+      );
     }
     return byteData.buffer.asUint8List();
   }
@@ -644,7 +683,14 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
       }
       Navigator.of(context).pop(bytes);
     } catch (error) {
-      showToast('裁剪头像失败：$error', type: ToastType.error);
+      showToast(
+        LegacyTextLocalizer.pick(
+          'Failed to crop avatar: $error',
+          '裁剪头像失败：$error',
+          ru: 'Не удалось обрезать аватар: $error',
+        ),
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -765,7 +811,11 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                   children: [
                     Expanded(
                       child: Text(
-                        '裁剪头像',
+                        LegacyTextLocalizer.pick(
+                          'Crop avatar',
+                          '裁剪头像',
+                          ru: 'Обрезать аватар',
+                        ),
                         style: TextStyle(
                           color: palette.textPrimary,
                           fontSize: 17,
@@ -775,7 +825,11 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                       ),
                     ),
                     IconButton(
-                      tooltip: '关闭',
+                      tooltip: LegacyTextLocalizer.pick(
+                        'Close',
+                        '关闭',
+                        ru: 'Закрыть',
+                      ),
                       visualDensity: VisualDensity.compact,
                       onPressed: _isSaving
                           ? null
@@ -793,7 +847,11 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
                     child: Text(
-                      '图片加载失败，请重新选择',
+                      LegacyTextLocalizer.pick(
+                        'Failed to load the image. Please choose another',
+                        '图片加载失败，请重新选择',
+                        ru: 'Не удалось загрузить изображение. Выберите другое',
+                      ),
                       style: TextStyle(
                         color: palette.textSecondary,
                         fontSize: 13,
@@ -805,7 +863,14 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                   _buildCropViewport(cropSize.toDouble()),
                 const SizedBox(height: 12),
                 Text(
-                  '拖动或双指缩放，圆框内即头像',
+                  LegacyTextLocalizer.pick(
+                    'Drag or pinch to zoom. The area inside the circle will '
+                        'be used as the avatar',
+                    '拖动或双指缩放，圆框内即头像',
+                    ru:
+                        'Перемещайте и масштабируйте двумя пальцами. '
+                        'Область в круге станет аватаром',
+                  ),
                   style: TextStyle(
                     color: palette.textTertiary,
                     fontSize: 12,
@@ -829,7 +894,13 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        child: const Text('取消'),
+                        child: Text(
+                          LegacyTextLocalizer.pick(
+                            'Cancel',
+                            '取消',
+                            ru: 'Отмена',
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -858,7 +929,13 @@ class _AgentAvatarCropDialogState extends State<_AgentAvatarCropDialog> {
                                   ),
                                 ),
                               )
-                            : const Text('设为头像'),
+                            : Text(
+                                LegacyTextLocalizer.pick(
+                                  'Set as avatar',
+                                  '设为头像',
+                                  ru: 'Сделать аватаром',
+                                ),
+                              ),
                       ),
                     ),
                   ],

@@ -7,6 +7,21 @@ import org.junit.Test
 class WebConversationCreationTest {
 
     @Test
+    fun `localized draft titles are replaced by the first user message`() {
+        listOf(
+            "新对话",
+            "New chat",
+            "New conversation",
+            "Новый чат",
+        ).forEach { title ->
+            assertEquals(true, isDefaultWebConversationTitle(title))
+        }
+        assertEquals(false, isDefaultWebConversationTitle("Release planning"))
+        assertEquals(false, isDefaultWebConversationTitle("Новая беседа"))
+        assertEquals(false, isDefaultWebConversationTitle("Новый разговор"))
+    }
+
+    @Test
     fun `conversation harness ownership prefers durable conversation binding`() {
         assertEquals(
             "deepseek-harness-acp",

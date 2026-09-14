@@ -87,7 +87,12 @@ List<ChatMessageAnchor> buildChatMessageAnchors(
       }
     }
     if (preview.isEmpty) {
-      preview = LegacyTextLocalizer.isEnglish ? 'Working…' : '思考中…';
+      preview = LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Working…',
+        '思考中…',
+        ru: 'Работаю…',
+      );
     }
     anchors.add(
       ChatMessageAnchor(

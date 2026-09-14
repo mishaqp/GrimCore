@@ -3,6 +3,7 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/features/home/pages/authorize/accessibility_permission_prompt.dart';
 import 'package:ui/l10n/l10n.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/special_permission.dart';
 import 'package:ui/theme/theme_context.dart';
 import 'package:ui/utils/cache_util.dart';
@@ -91,8 +92,11 @@ class _AuthorizeSettingPageState extends State<AuthorizeSettingPage>
   }
 
   String _localeText({required String zh, required String en}) {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    return languageCode == 'en' ? en : zh;
+    return LegacyTextLocalizer.pick(
+      en,
+      zh,
+      locale: Localizations.localeOf(context),
+    );
   }
 
   List<_AuthorizeSettingSection> _buildSections() {

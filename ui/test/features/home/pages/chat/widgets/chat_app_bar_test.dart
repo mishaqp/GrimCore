@@ -596,7 +596,7 @@ void main() {
 
     expect(
       pureChatIcon.colorFilter,
-      const ColorFilter.mode(Color(0xFF2C7FEB), BlendMode.srcIn),
+      ColorFilter.mode(OmniThemePalette.light.accentPrimary, BlendMode.srcIn),
     );
   });
 
@@ -1365,7 +1365,7 @@ void main() {
 
     expect(
       agentIcon.colorFilter,
-      const ColorFilter.mode(Color(0xFF2C7FEB), BlendMode.srcIn),
+      ColorFilter.mode(OmniThemePalette.light.accentPrimary, BlendMode.srcIn),
     );
     expect(agentIcon.width, 22);
     expect(agentIcon.height, 22);

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/acp_capabilities.dart';
 
 enum CodexLoginType {
@@ -203,14 +204,22 @@ String formatAgentRuntimeErrorForUser(
   final raw = rawMessage?.toLowerCase() ?? '';
   String text(String key) {
     final message = _agentUserErrors[key]!;
-    return english ? message.en : message.zh;
+    return LegacyTextLocalizer.pickForEnglishFlag(
+      english,
+      message.en,
+      message.zh,
+    );
   }
 
   // Errors may already have been formatted before durable projection.
   // Preserve only these exact app-owned messages, never arbitrary payloads.
   for (final message in _agentUserErrors.values) {
     if (rawMessage == message.zh || rawMessage == message.en) {
-      return english ? message.en : message.zh;
+      return LegacyTextLocalizer.pickForEnglishFlag(
+        english,
+        message.en,
+        message.zh,
+      );
     }
   }
   // ACP error messages can arrive without PlatformException.details. Match
@@ -219,17 +228,27 @@ String formatAgentRuntimeErrorForUser(
     r'(?:chat completion stream|responses|anthropic) request failed\((\d{3})\)',
   ).firstMatch(raw);
   final httpStatus = int.tryParse(httpMatch?.group(1) ?? '');
-  if (failureKind == 'provider_service_unavailable') return text('serviceUnavailable');
-  if (failureKind == 'provider_request_rejected') return text('requestRejected');
+  if (failureKind == 'provider_service_unavailable') {
+    return text('serviceUnavailable');
+  }
+  if (failureKind == 'provider_request_rejected') {
+    return text('requestRejected');
+  }
   if (failureKind == 'provider_quota_exceeded') return text('quota');
   if (failureKind == 'provider_rate_limited') return text('rateLimit');
   if (failureKind == 'provider_request_limited') return text('requestLimited');
   if (httpStatus == 401) return text('credentials');
   if (httpStatus == 429) {
-    if (raw.contains('insufficient_quota') || raw.contains('quota_exceeded') ||
-        raw.contains('quota exhausted') || raw.contains('quota_exhausted') ||
-        raw.contains('额度不足') || raw.contains('余额不足')) return text('quota');
-    if (raw.contains('rate_limit_exceeded') || raw.contains('rate_limit_error')) {
+    if (raw.contains('insufficient_quota') ||
+        raw.contains('quota_exceeded') ||
+        raw.contains('quota exhausted') ||
+        raw.contains('quota_exhausted') ||
+        raw.contains('额度不足') ||
+        raw.contains('余额不足')) {
+      return text('quota');
+    }
+    if (raw.contains('rate_limit_exceeded') ||
+        raw.contains('rate_limit_error')) {
       return text('rateLimit');
     }
     return text('requestLimited');
@@ -1457,11 +1476,13 @@ class AgentRuntimeService {
       if (failureKind is String && response['error'] is String) {
         return <String, dynamic>{
           ...response,
-          'error': formatAgentRuntimeErrorForUser(PlatformException(
-            code: 'AGENT_RUNTIME_CALL_FAILED',
-            message: response['error'] as String,
-            details: <String, dynamic>{'failureKind': failureKind},
-          )),
+          'error': formatAgentRuntimeErrorForUser(
+            PlatformException(
+              code: 'AGENT_RUNTIME_CALL_FAILED',
+              message: response['error'] as String,
+              details: <String, dynamic>{'failureKind': failureKind},
+            ),
+          ),
         };
       }
       return response;

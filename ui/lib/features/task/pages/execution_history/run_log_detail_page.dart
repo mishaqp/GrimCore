@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ui/features/task/pages/execution_history/widgets/run_log_timeline_components.dart';
 import 'package:ui/features/task/run_log/omniflow_tool_client.dart';
 import 'package:ui/features/task/run_log/run_log_metrics.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 
 class RunLogDetailPage extends StatefulWidget {
   const RunLogDetailPage({super.key, required this.runId});
@@ -115,9 +116,8 @@ class _RunLogDetailPageState extends State<RunLogDetailPage> {
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
       }
     }
   }
@@ -344,4 +344,4 @@ Map<String, dynamic> _map(dynamic value) => value is Map
     : <String, dynamic>{};
 
 String _text(BuildContext context, String zh, String en) =>
-    Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));

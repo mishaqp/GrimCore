@@ -10,7 +10,7 @@ import org.junit.Test
 
 class WorkspaceMemoryEmbeddingIndexTest {
     @Test
-    fun `explicit BYOK binding is preferred but official binding is not`() {
+    fun `explicit BYOK binding is preferred and missing binding is not`() {
         val byok = ModelProviderProfile(
             id = "provider-a",
             name = "Provider A",
@@ -22,7 +22,7 @@ class WorkspaceMemoryEmbeddingIndexTest {
         assertEquals(null, explicitByokEmbeddingProfile("other-provider", byok))
         assertEquals(
             null,
-            explicitByokEmbeddingProfile("omnibot-official-ai", byok),
+            explicitByokEmbeddingProfile("removed-provider", byok),
         )
     }
 
@@ -41,10 +41,6 @@ class WorkspaceMemoryEmbeddingIndexTest {
         assertNotEquals(
             base.embeddingConfigId(),
             base.copy(apiBase = "https://other.example.com/v1").embeddingConfigId(),
-        )
-        assertNotEquals(
-            base.embeddingConfigId(),
-            base.copy(usesPlatform = true).embeddingConfigId(),
         )
     }
 
@@ -154,6 +150,5 @@ class WorkspaceMemoryEmbeddingIndexTest {
             modelId = "embedding-model-a",
             apiBase = "https://example.com/v1",
             hasApiKey = true,
-            usesPlatform = false,
         )
 }

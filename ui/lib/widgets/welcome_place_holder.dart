@@ -20,31 +20,47 @@ class WelcomePlaceHolder extends StatefulWidget {
 }
 
 class _WelcomePlaceHolderState extends State<WelcomePlaceHolder> {
-  final GlobalKey<AnimatedListState> _suggestionListKey = GlobalKey<AnimatedListState>();
+  final GlobalKey<AnimatedListState> _suggestionListKey =
+      GlobalKey<AnimatedListState>();
   final ScrollController _scrollController = ScrollController(); // 添加滚动控制器
   final List<String> _rendered = [];
   bool _hasInserted = false;
 
   static const _defaultSuggestions = [
-        '📷 Take a photo with camera',
-        '📅 Create a meeting reminder for tomorrow morning',
-        '🛫 Search for flights from Beijing to Shanghai',
-      ];
+    '📷 Take a photo with camera',
+    '📅 Create a meeting reminder for tomorrow morning',
+    '🛫 Search for flights from Beijing to Shanghai',
+  ];
 
   static const _defaultSuggestionsZh = [
-        '📷 打开相机并拍一张照片',
-        '📅 创建明天上午的会议提醒',
-        '🛫 查询北京飞上海的机票',
-      ];
+    '📷 打开相机并拍一张照片',
+    '📅 创建明天上午的会议提醒',
+    '🛫 查询北京飞上海的机票',
+  ];
 
-  List<String> get _allSuggestions => widget.suggestions ?? (LegacyTextLocalizer.isEnglish ? _defaultSuggestions : _defaultSuggestionsZh);
+  static const _defaultSuggestionsRu = [
+    '📷 Открыть камеру и сделать снимок',
+    '📅 Создать напоминание о встрече завтра утром',
+    '🛫 Найти авиабилеты из Москвы в Санкт-Петербург',
+  ];
+
+  List<String> get _allSuggestions =>
+      widget.suggestions ??
+      (LegacyTextLocalizer.isRussian
+          ? _defaultSuggestionsRu
+          : LegacyTextLocalizer.isEnglish
+          ? _defaultSuggestions
+          : _defaultSuggestionsZh);
 
   @override
   void initState() {
     super.initState();
     widget.focusNode.addListener(_onFocusChange); // 使用外部传入的 FocusNode
     if (widget.showSuggestions) {
-      Future.delayed(const Duration(milliseconds: 150), _insertSuggestionsAnimated);
+      Future.delayed(
+        const Duration(milliseconds: 150),
+        _insertSuggestionsAnimated,
+      );
     }
   }
 
@@ -79,16 +95,21 @@ class _WelcomePlaceHolderState extends State<WelcomePlaceHolder> {
   void didUpdateWidget(covariant WelcomePlaceHolder oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.showSuggestions && !_hasInserted) {
-      Future.delayed(const Duration(milliseconds: 50), _insertSuggestionsAnimated);
+      Future.delayed(
+        const Duration(milliseconds: 50),
+        _insertSuggestionsAnimated,
+      );
     }
   }
-
 
   void _insertSuggestionsAnimated() async {
     if (_hasInserted) return;
     for (int i = 0; i < _allSuggestions.length; i++) {
       _rendered.insert(i, _allSuggestions[i]);
-      _suggestionListKey.currentState?.insertItem(i, duration: const Duration(milliseconds: 300));
+      _suggestionListKey.currentState?.insertItem(
+        i,
+        duration: const Duration(milliseconds: 300),
+      );
       await Future.delayed(const Duration(milliseconds: 360));
     }
     setState(() {
@@ -127,10 +148,7 @@ class _WelcomePlaceHolderState extends State<WelcomePlaceHolder> {
             child: Text(
               LegacyTextLocalizer.localize('🎉Hi，我是小万，我会做很多事，让我展示给你下！'),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: darkGrey,
-              ),
+              style: TextStyle(fontSize: 16, color: darkGrey),
             ),
           ),
           const SizedBox(height: 16),
@@ -143,7 +161,10 @@ class _WelcomePlaceHolderState extends State<WelcomePlaceHolder> {
             itemBuilder: (context, index, animation) {
               final text = _rendered[index];
               return SizeTransition(
-                sizeFactor: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                sizeFactor: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ),
                 child: FadeTransition(
                   opacity: animation,
                   child: Padding(
@@ -161,18 +182,14 @@ class _WelcomePlaceHolderState extends State<WelcomePlaceHolder> {
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                padding: const EdgeInsets.only(top: 8.0,left: 24.0),
+                padding: const EdgeInsets.only(top: 8.0, left: 24.0),
                 child: GestureDetector(
                   onTap: () {
                     // not implemented yet
                   },
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.refresh,
-                        size: 16,
-                        color: darkGrey,
-                      ),
+                      Icon(Icons.refresh, size: 16, color: darkGrey),
                       SizedBox(width: 8),
                       Text(
                         LegacyTextLocalizer.localize("换一换"),
@@ -226,11 +243,7 @@ class _SuggestionChip extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(
-              Icons.call_made,
-              size: 16,
-              color: darkGrey,
-            ),
+            Icon(Icons.call_made, size: 16, color: darkGrey),
           ],
         ),
       ),

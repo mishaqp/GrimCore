@@ -6,10 +6,11 @@ export function createConversationDraft(
   mode: ConversationMode,
   updatedAt = Date.now(),
   agentId?: string,
+  title = "Новый чат",
 ): Conversation {
   return {
     id: DRAFT_CONVERSATION_ID,
-    title: "新对话",
+    title,
     mode,
     agentId: agentId?.trim() || undefined,
     messageCount: 0,

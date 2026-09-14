@@ -134,10 +134,25 @@ class AppBackgroundVisualProfile {
       usesLightText ? const Color(0xFFA9F0B6) : const Color(0xFF52C41A);
 
   String get previewToneLabel => usesCustomTextColor
-      ? (LegacyTextLocalizer.isEnglish ? 'Custom Color' : '自定义颜色')
+      ? (LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Custom Color',
+          '自定义颜色',
+          ru: 'Свой цвет',
+        ))
       : usesLightText
-      ? (LegacyTextLocalizer.isEnglish ? 'Light Text' : '浅色文本')
-      : (LegacyTextLocalizer.isEnglish ? 'Dark Text' : '深色文本');
+      ? (LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Light Text',
+          '浅色文本',
+          ru: 'Светлый текст',
+        ))
+      : (LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Dark Text',
+          '深色文本',
+          ru: 'Тёмный текст',
+        ));
 
   static AppBackgroundVisualProfile derive({
     required AppBackgroundConfig config,
@@ -432,9 +447,12 @@ class AppBackgroundService {
     final sourceFile = File(sourcePath);
     if (!await sourceFile.exists()) {
       throw Exception(
-        LegacyTextLocalizer.isEnglish
-            ? 'Selected image does not exist'
-            : '所选图片不存在',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Selected image does not exist',
+          '所选图片不存在',
+          ru: 'Выбранное изображение не найдено',
+        ),
       );
     }
     final directory = await _backgroundDirectory();
@@ -567,9 +585,8 @@ class AppBackgroundService {
           if (response.statusCode < 200 || response.statusCode >= 300) {
             return null;
           }
-          return await consolidateHttpClientResponseBytes(
-            response,
-          ).timeout(const Duration(seconds: 4));
+          return await consolidateHttpClientResponseBytes(response)
+              .timeout(const Duration(seconds: 4));
         } catch (_) {
           return null;
         } finally {

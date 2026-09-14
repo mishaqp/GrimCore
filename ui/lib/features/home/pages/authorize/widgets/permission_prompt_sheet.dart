@@ -105,9 +105,12 @@ class _PermissionPromptSheetState extends State<PermissionPromptSheet>
               const SizedBox(height: 32),
               Text(
                 widget.title ??
-                    (LegacyTextLocalizer.isEnglish
-                        ? 'Please check the permission below'
-                        : '请检查下列权限'),
+                    (LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Please check the permission below',
+                      '请检查下列权限',
+                      ru: 'Проверьте разрешения ниже',
+                    )),
                 style: TextStyle(
                   color: isDark ? palette.textPrimary : AppColors.text,
                   fontSize: 20,

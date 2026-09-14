@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -50,8 +51,10 @@ const String _kAgentPermissionFullAccessIconAsset =
 
 enum AgentPermissionMode { readOnly, defaultMode, autoReview, fullAccess }
 
-typedef AgentRunSettingsChanged =
-    FutureOr<void> Function({String? modelId, String? reasoningEffort});
+typedef AgentRunSettingsChanged = FutureOr<void> Function({
+  String? modelId,
+  String? reasoningEffort,
+});
 
 class AgentRunSettings {
   const AgentRunSettings({

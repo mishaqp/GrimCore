@@ -326,16 +326,24 @@ class _StreamingTextState extends State<StreamingText> {
       final shared = await OmnibotResourceService.shareText(selectedText);
       if (!shared) {
         showToast(
-          LegacyTextLocalizer.isEnglish
-              ? 'Share failed, please try again later'
-              : '发送失败，请稍后重试',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Share failed, please try again later',
+            '发送失败，请稍后重试',
+            ru: 'Не удалось поделиться. Повторите попытку позже',
+          ),
           type: ToastType.error,
         );
       }
     } catch (error) {
       debugPrint('share selected text failed: $error');
       showToast(
-        LegacyTextLocalizer.isEnglish ? 'Share failed' : '发送失败',
+        LegacyTextLocalizer.pickForEnglishFlag(
+          LegacyTextLocalizer.isEnglish,
+          'Share failed',
+          '发送失败',
+          ru: 'Не удалось поделиться',
+        ),
         type: ToastType.error,
       );
     }
@@ -583,17 +591,32 @@ class _GlassSelectionContextMenu extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _GlassSelectionMenuButton(
-                  label: LegacyTextLocalizer.isEnglish ? 'Select all' : '全选',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Select all',
+                    '全选',
+                    ru: 'Выбрать все',
+                  ),
                   onPressed: onSelectAll,
                 ),
                 const _GlassSelectionMenuDivider(),
                 _GlassSelectionMenuButton(
-                  label: LegacyTextLocalizer.isEnglish ? 'Copy' : '复制',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Copy',
+                    '复制',
+                    ru: 'Копировать',
+                  ),
                   onPressed: onCopy,
                 ),
                 const _GlassSelectionMenuDivider(),
                 _GlassSelectionMenuButton(
-                  label: LegacyTextLocalizer.isEnglish ? 'Share' : '发送',
+                  label: LegacyTextLocalizer.pickForEnglishFlag(
+                    LegacyTextLocalizer.isEnglish,
+                    'Share',
+                    '发送',
+                    ru: 'Поделиться',
+                  ),
                   onPressed: onShare,
                 ),
               ],

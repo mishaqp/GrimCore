@@ -77,9 +77,8 @@ class AppBackgroundLayer extends StatelessWidget {
               alpha: (whiteMaskOpacity + 0.04).clamp(0.0, 0.85),
             ),
             const Color(0xFFF6FAFF).withValues(alpha: whiteMaskOpacity),
-            const Color(
-              0xFFEDF4FF,
-            ).withValues(alpha: (whiteMaskOpacity * 0.9).clamp(0.0, 0.8)),
+            const Color(0xFFEDF4FF)
+                .withValues(alpha: (whiteMaskOpacity * 0.9).clamp(0.0, 0.8)),
           ],
         ),
       ),
@@ -217,7 +216,12 @@ class _AppBackgroundPreviewState extends State<AppBackgroundPreview> {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          LegacyTextLocalizer.isEnglish ? 'Drag or pinch to zoom' : '拖动与双指缩放图片',
+                          LegacyTextLocalizer.pickForEnglishFlag(
+                            LegacyTextLocalizer.isEnglish,
+                            'Drag or pinch to zoom',
+                            '拖动与双指缩放图片',
+                            ru: 'Перетаскивайте или масштабируйте двумя пальцами',
+                          ),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
@@ -551,7 +555,12 @@ class _BackgroundLoadFailurePlaceholder extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          LegacyTextLocalizer.isEnglish ? 'Image load failed' : '图片加载失败',
+          LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Image load failed',
+            '图片加载失败',
+            ru: 'Не удалось загрузить изображение',
+          ),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 12,

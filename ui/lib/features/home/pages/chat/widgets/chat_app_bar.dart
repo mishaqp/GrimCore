@@ -330,9 +330,12 @@ class ChatAppBar extends StatelessWidget {
                             child: Tooltip(
                               message:
                                   appUpdateTooltip ??
-                                  (LegacyTextLocalizer.isEnglish
-                                      ? 'Check for updates'
-                                      : '检查更新'),
+                                  (LegacyTextLocalizer.pickForEnglishFlag(
+                                    LegacyTextLocalizer.isEnglish,
+                                    'Check for updates',
+                                    '检查更新',
+                                    ru: 'Проверить обновления',
+                                  )),
                               child: Container(
                                 color: Colors.transparent,
                                 padding: const EdgeInsets.all(15),
@@ -487,7 +490,12 @@ class _ChatAppBarWorkspaceButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: LegacyTextLocalizer.isEnglish ? 'Show workspace' : '显示工作区',
+      message: LegacyTextLocalizer.pickForEnglishFlag(
+        LegacyTextLocalizer.isEnglish,
+        'Show workspace',
+        '显示工作区',
+        ru: 'Показать рабочее пространство',
+      ),
       child: GestureDetector(
         key: const ValueKey('chat-app-bar-workspace-pane-button'),
         onTap: onTap,
@@ -622,7 +630,12 @@ class _ChatAppBarModeShortcutButtonState
               ? _ChatAppBarModeShortcutMenuItemData(
                   action: _ChatAppBarModeShortcutAction.omniAi,
                   iconAsset: _kChatAppBarAgentIconAsset,
-                  tooltip: isEnglish ? 'OmniAi' : '小万',
+                  tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                    isEnglish,
+                    'OmniAi',
+                    '小万',
+                    ru: 'GrimCore',
+                  ),
                   selected:
                       widget.isOmniAiSelected &&
                       (widget.activeAcpAgentId?.trim().isEmpty ?? true),
@@ -649,7 +662,12 @@ class _ChatAppBarModeShortcutButtonState
                 );
           return _ChatAppBarModeShortcutMenuContent(
             width: _kChatAppBarAccessoryButtonSize,
-            closeTooltip: isEnglish ? 'Close mode menu' : '收起模式菜单',
+            closeTooltip: LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Close mode menu',
+              '收起模式菜单',
+              ru: 'Закрыть меню режимов',
+            ),
             headerIcon: _buildOpenIcon(selectedColor),
             items: [
               xiaowanItem,
@@ -671,7 +689,12 @@ class _ChatAppBarModeShortcutButtonState
               _ChatAppBarModeShortcutMenuItemData(
                 action: _ChatAppBarModeShortcutAction.pureChat,
                 iconAsset: _kChatAppBarPureChatIconAsset,
-                tooltip: isEnglish ? 'Pure chat' : '纯聊天模式',
+                tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                  isEnglish,
+                  'Pure chat',
+                  '纯聊天模式',
+                  ru: 'Только чат',
+                ),
                 selected: widget.isPureChatSelected,
                 enabled: canSelectPureChat,
                 iconSize: _kChatAppBarModeMenuPureChatIconSize,
@@ -793,8 +816,18 @@ class _ChatAppBarModeShortcutButtonState
     );
     return Tooltip(
       message: _isOpen
-          ? (isEnglish ? 'Close mode menu' : '收起模式菜单')
-          : (isEnglish ? 'Switch chat mode' : '切换聊天模式'),
+          ? (LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Close mode menu',
+              '收起模式菜单',
+              ru: 'Закрыть меню режимов',
+            ))
+          : (LegacyTextLocalizer.pickForEnglishFlag(
+              isEnglish,
+              'Switch chat mode',
+              '切换聊天模式',
+              ru: 'Сменить режим чата',
+            )),
       child: GestureDetector(
         onTap: _openMenu,
         behavior: HitTestBehavior.opaque,
@@ -1265,9 +1298,12 @@ class _ChatToolSlider extends StatelessWidget {
                     key: const ValueKey('chat-island-terminal-button'),
                     isSelected: _isTerminalActive,
                     isEnabled: true,
-                    tooltip: LegacyTextLocalizer.isEnglish
-                        ? 'Open terminal'
-                        : '打开终端',
+                    tooltip: LegacyTextLocalizer.pickForEnglishFlag(
+                      LegacyTextLocalizer.isEnglish,
+                      'Open terminal',
+                      '打开终端',
+                      ru: 'Открыть терминал',
+                    ),
                     onTap: onTerminalTap,
                     child: SvgPicture.asset(
                       terminalIconAsset,
@@ -1283,12 +1319,18 @@ class _ChatToolSlider extends StatelessWidget {
                     isSelected: _isBrowserActive,
                     isEnabled: isBrowserEnabled,
                     tooltip: isBrowserEnabled
-                        ? (LegacyTextLocalizer.isEnglish
-                              ? 'Open browser for current session'
-                              : '打开当前会话浏览器')
-                        : (LegacyTextLocalizer.isEnglish
-                              ? 'No browser session available'
-                              : '当前会话还没有可用的浏览器会话'),
+                        ? (LegacyTextLocalizer.pickForEnglishFlag(
+                            LegacyTextLocalizer.isEnglish,
+                            'Open browser for current session',
+                            '打开当前会话浏览器',
+                            ru: 'Открыть браузер для текущего сеанса',
+                          ))
+                        : (LegacyTextLocalizer.pickForEnglishFlag(
+                            LegacyTextLocalizer.isEnglish,
+                            'No browser session available',
+                            '当前会话还没有可用的浏览器会话',
+                            ru: 'Нет доступного сеанса браузера',
+                          )),
                     onTap: onBrowserTap,
                     child: SvgPicture.asset(
                       browserIconAsset,
@@ -1312,9 +1354,12 @@ class _ChatToolSlider extends StatelessWidget {
     return Builder(
       builder: (anchorContext) {
         return Tooltip(
-          message: LegacyTextLocalizer.isEnglish
-              ? 'Manage terminal environment variables'
-              : '管理终端环境变量',
+          message: LegacyTextLocalizer.pickForEnglishFlag(
+            LegacyTextLocalizer.isEnglish,
+            'Manage terminal environment variables',
+            '管理终端环境变量',
+            ru: 'Переменные окружения терминала',
+          ),
           child: InkWell(
             key: const ValueKey('chat-island-terminal-env-button'),
             onTap: () => onTerminalEnvironmentTap(anchorContext),

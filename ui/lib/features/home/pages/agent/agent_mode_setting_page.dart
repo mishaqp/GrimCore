@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/core/router/go_router_manager.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:ui/services/agent_runtime_service.dart';
 import 'package:ui/services/agent_web_action_presenter.dart';
 import 'package:ui/services/omni_plugin_service.dart';
@@ -46,7 +47,8 @@ class _AgentModeSettingPageState extends State<AgentModeSettingPage> {
   bool get _english =>
       Localizations.localeOf(context).languageCode.toLowerCase() == 'en';
 
-  String _text(String zh, String en) => _english ? en : zh;
+  String _text(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   @override
   void initState() {
@@ -347,7 +349,10 @@ class _AgentModeSettingPageState extends State<AgentModeSettingPage> {
     if (_busyPluginActionKey != null) return;
     setState(() => _busyPluginActionKey = key);
     try {
-      await AgentWebActionPresenter.invoke(action, english: _english);
+      await AgentWebActionPresenter.invoke(
+        action,
+        locale: Localizations.localeOf(context),
+      );
     } finally {
       if (mounted && _busyPluginActionKey == key) {
         setState(() => _busyPluginActionKey = null);
@@ -696,9 +701,7 @@ class _AgentModeSettingPageState extends State<AgentModeSettingPage> {
       navigationLabel: _text('配置', 'Configure'),
       navigationKey: Key('agent-navigation-${agent.id}'),
       busy: busy,
-      onTap: preparing
-          ? () {}
-          : () => _openAgentConfig(agent),
+      onTap: preparing ? () {} : () => _openAgentConfig(agent),
     );
   }
 
@@ -739,18 +742,21 @@ class _AgentModeSettingPageState extends State<AgentModeSettingPage> {
     final authoring = plugin['authoring'] == true;
     final install = plugin['installViaHarness'] == true;
     if (!authoring && !install) return null;
-    if (_english) {
-      return authoring && install
-          ? 'Plugins: create and install through the assistant'
-          : authoring
-          ? 'Plugins: create through the assistant'
-          : 'Plugins: install through the assistant';
-    }
-    return authoring && install
+    final englishText = authoring && install
+        ? 'Plugins: create and install through the assistant'
+        : authoring
+        ? 'Plugins: create through the assistant'
+        : 'Plugins: install through the assistant';
+    final chineseText = authoring && install
         ? '插件：可通过助手创建和安装'
         : authoring
         ? '插件：可通过助手创建'
         : '插件：可通过助手安装';
+    return LegacyTextLocalizer.pickForEnglishFlag(
+      _english,
+      englishText,
+      chineseText,
+    );
   }
 }
 
@@ -770,7 +776,8 @@ class _AddCustomAgentDialogState extends State<_AddCustomAgentDialog> {
   String _environment = '';
   bool _enabled = true;
 
-  String _text(String zh, String en) => widget.english ? en : zh;
+  String _text(String zh, String en) =>
+      LegacyTextLocalizer.pick(en, zh, locale: Localizations.localeOf(context));
 
   void _save() {
     final name = _name.trim();
@@ -1128,17 +1135,40 @@ Map<String, String> _parseEnvironment(String source) {
 ({String label, Color color}) _statusPresentation(String status, bool english) {
   return switch (status) {
     'online' => (
-      label: english ? 'Available' : '可用',
+      label: LegacyTextLocalizer.pickForEnglishFlag(
+        english,
+        'Available',
+        '可用',
+        ru: 'Доступно',
+      ),
       color: const Color(0xFF2EAF67),
     ),
     'missing' => (
-      label: english ? 'Not installed' : '未安装',
+      label: LegacyTextLocalizer.pickForEnglishFlag(
+        english,
+        'Not installed',
+        '未安装',
+        ru: 'Не установлено',
+      ),
       color: const Color(0xFF98A2B3),
     ),
     'offline' => (
-      label: english ? 'Could not start' : '启动失败',
+      label: LegacyTextLocalizer.pickForEnglishFlag(
+        english,
+        'Could not start',
+        '启动失败',
+        ru: 'Не удалось запустить',
+      ),
       color: const Color(0xFFE05252),
     ),
-    _ => (label: english ? 'Unchecked' : '未检测', color: const Color(0xFFE3A52B)),
+    _ => (
+      label: LegacyTextLocalizer.pickForEnglishFlag(
+        english,
+        'Unchecked',
+        '未检测',
+        ru: 'Не проверено',
+      ),
+      color: const Color(0xFFE3A52B),
+    ),
   };
 }

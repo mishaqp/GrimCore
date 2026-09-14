@@ -8,4 +8,33 @@
     <string name="permission_btn_allow_text">允许</string>
     <!-- 是否允许 [AppName] [权限操作描述] -->
     <string name="permission_prompt_template">是否允许 %1$s「%2$s」</string>
+    <string name="permission_disclosure_template">%1$s：%2$s</string>
+    <string name="permission_label_notifications">通知权限使用说明</string>
+    <string name="permission_label_bluetooth_connect">蓝牙连接权限使用说明</string>
+    <string name="permission_label_bluetooth_scan">蓝牙扫描权限使用说明</string>
+    <string name="permission_label_microphone">麦克风权限使用说明</string>
+    <string name="permission_label_read_images">读取图片权限使用说明</string>
+    <string name="permission_label_read_audio">音频权限使用说明</string>
+    <string name="permission_label_read_storage">读取存储权限使用说明</string>
+    <string name="permission_label_write_storage">写入存储权限使用说明</string>
+    <string name="permission_label_write_settings">写设置权限使用说明</string>
+    <string name="permission_label_coarse_location">大致位置权限使用说明</string>
+    <string name="permission_label_fine_location">精确位置权限使用说明</string>
+    <string name="permission_label_camera">相机权限使用说明</string>
+    <string name="permission_label_read_calendar">日历读取权限使用说明</string>
+    <string name="permission_label_write_calendar">日历写入权限使用说明</string>
+    <string name="permission_purpose_notifications">为及时向您推送消息通知</string>
+    <string name="permission_purpose_bluetooth_connect">为连接蓝牙设备以提供相关服务</string>
+    <string name="permission_purpose_bluetooth_scan">为扫描并发现蓝牙设备</string>
+    <string name="permission_purpose_microphone">用于在您主动使用语音输入、语音唤醒或语音转文字功能时采集声音</string>
+    <string name="permission_purpose_read_images">为读取图片以实现图片识别、截屏检测等功能</string>
+    <string name="permission_purpose_read_audio">用于读取您主动选择的本地 MP3，作为提醒闹钟铃声</string>
+    <string name="permission_purpose_read_storage">用于在 Android 12 及以下读取您主动选择的本地 MP3</string>
+    <string name="permission_purpose_write_storage">为保存文件、下载安装包等</string>
+    <string name="permission_purpose_write_settings">用于问题排查与系统设置相关功能</string>
+    <string name="permission_purpose_coarse_location">为获取大致位置信息以提供位置相关服务</string>
+    <string name="permission_purpose_fine_location">为获取精确位置信息以提供位置相关服务</string>
+    <string name="permission_purpose_camera">为实现扫码、图片转文字等功能</string>
+    <string name="permission_purpose_read_calendar">用于在您主动调用日历功能时读取日历和日程</string>
+    <string name="permission_purpose_write_calendar">用于在您主动调用日历功能时创建或修改日程</string>
 </resources>

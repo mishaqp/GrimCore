@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:ui/l10n/l10n.dart';
+import 'package:ui/l10n/legacy_text_localizer.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui/services/builtin_official_provider_catalog.dart';
@@ -155,12 +156,6 @@ class ModelProviderSettingPage extends StatefulWidget {
 }
 
 class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
-  static List<ModelProviderProfileSummary> _byokProfiles(
-    List<ModelProviderProfileSummary> profiles,
-  ) => profiles
-      .where((profile) => profile.sourceType != 'omnibot_official')
-      .toList(growable: false);
-
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _baseUrlController = TextEditingController();
   final TextEditingController _apiKeyController = TextEditingController();
@@ -356,9 +351,8 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     }
     final entries = groups.entries.toList()
       ..sort((a, b) {
-        final orderCompare = ModelVendorCatalog.orderOf(
-          a.key,
-        ).compareTo(ModelVendorCatalog.orderOf(b.key));
+        final orderCompare = ModelVendorCatalog.orderOf(a.key)
+            .compareTo(ModelVendorCatalog.orderOf(b.key));
         if (orderCompare != 0) return orderCompare;
         return a.key.compareTo(b.key);
       });
@@ -631,11 +625,10 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     try {
       final payload = await ModelProviderConfigService.listProfiles();
       if (!mounted) return;
-      final profiles = _byokProfiles(payload.profiles);
+      final profiles = payload.profiles;
       if (profiles.isEmpty) {
-        // The native store may contain only the read-only official profile on
-        // a clean install.  Keep the editor alive with a real draft so the
-        // first Provider can be registered from this page.
+        // Keep the editor alive with a real draft so the first Provider can
+        // be registered from this page.
         const draft = ModelProviderProfileSummary(
           id: 'profile-1',
           name: 'Provider 1',
@@ -874,7 +867,11 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   }
 
   String _headerText(String zh, String en) {
-    return Localizations.localeOf(context).languageCode == 'en' ? en : zh;
+    return LegacyTextLocalizer.pick(
+      en,
+      zh,
+      locale: Localizations.localeOf(context),
+    );
   }
 
   void _replaceCustomHeaderEntries(Map<String, String> headers) {
@@ -1200,7 +1197,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
       }
       final message = formatAgentRuntimeErrorForUser(
         error,
-        english: Localizations.localeOf(context).languageCode != 'zh',
+        english: Localizations.localeOf(context).languageCode == 'en',
         fallback: _headerText(
           '模型列表刷新失败，请检查配置后重试',
           'Failed to refresh models. Check the configuration and try again.',
@@ -1247,7 +1244,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
         current.id,
       );
       if (!mounted) return;
-      final profiles = _byokProfiles(payload.profiles);
+      final profiles = payload.profiles;
       if (profiles.isEmpty) {
         throw StateError('No editable BYOK provider profile is available');
       }
@@ -2354,7 +2351,12 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     final languageCode = Localizations.localeOf(context).languageCode;
     final displayLabel =
         vendor?.labelForLanguage(languageCode) ??
-        (languageCode == 'en' ? 'Other' : '其他');
+        (LegacyTextLocalizer.pickForEnglishFlag(
+          languageCode == 'en',
+          'Other',
+          '其他',
+          ru: 'Другое',
+        ));
     final labelStyle = TextStyle(
       color: _tertiaryTextColor,
       fontSize: 11,
@@ -3233,7 +3235,8 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
                                         ),
                                         const SizedBox(height: 10),
                                         Text(
-                                          _modelFetchError ?? context.l10n.modelAddPrompt,
+                                          _modelFetchError ??
+                                              context.l10n.modelAddPrompt,
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             color: _secondaryTextColor,
@@ -3245,8 +3248,12 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
                                         if (_modelFetchError != null) ...[
                                           const SizedBox(height: 8),
                                           TextButton(
-                                            onPressed: _isFetchingModels ? null : _fetchModelsLocalized,
-                                            child: Text(_headerText('重试', 'Retry')),
+                                            onPressed: _isFetchingModels
+                                                ? null
+                                                : _fetchModelsLocalized,
+                                            child: Text(
+                                              _headerText('重试', 'Retry'),
+                                            ),
                                           ),
                                         ],
                                       ],

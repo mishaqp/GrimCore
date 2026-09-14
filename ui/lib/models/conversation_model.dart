@@ -246,6 +246,10 @@ class ConversationModel {
       return LegacyTextLocalizer.localize('昨天');
     } else if (difference < 7) {
       // 显示星期几
+      if (LegacyTextLocalizer.isRussian) {
+        const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        return weekdays[updatedDate.weekday - 1];
+      }
       final weekdays = LegacyTextLocalizer.isEnglish
           ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
           : ['一', '二', '三', '四', '五', '六', '日'];

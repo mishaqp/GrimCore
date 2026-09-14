@@ -103,12 +103,6 @@ class AssistsCoreChannel {
                 "clearSceneModelBinding" -> {
                     assistsCoreManager!!.clearSceneModelBinding(call, result)
                 }
-                "getSceneOperationConfig" -> {
-                    assistsCoreManager!!.getSceneOperationConfig(call, result)
-                }
-                "saveSceneOperationConfig" -> {
-                    assistsCoreManager!!.saveSceneOperationConfig(call, result)
-                }
                 "getSceneVoiceConfig" -> {
                     assistsCoreManager!!.getSceneVoiceConfig(call, result)
                 }

@@ -1,22 +1,15 @@
 package cn.com.omnimind.bot.agent
 
 import cn.com.omnimind.assists.controller.http.HttpController
-import cn.com.omnimind.baselib.account.AiRequestTransportPolicy
-import cn.com.omnimind.baselib.account.OmniAccount
-import cn.com.omnimind.baselib.account.PlatformModelsUnavailableException
 import cn.com.omnimind.baselib.llm.ChatCompletionRequest
 import cn.com.omnimind.baselib.llm.ChatCompletionMessage
 import cn.com.omnimind.baselib.llm.ChatCompletionTurn
 import cn.com.omnimind.baselib.llm.ChatCompletionUsage
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
 import cn.com.omnimind.baselib.llm.OpenAiResponsesFunctionNameCodec
-import cn.com.omnimind.baselib.llm.OmniOfficialProvider
-import cn.com.omnimind.baselib.llm.PlatformAiProvisioner
 import cn.com.omnimind.baselib.llm.ReasoningStreamUpdatePolicy
-import cn.com.omnimind.baselib.llm.contentText
 import cn.com.omnimind.baselib.llm.encodeRequestToString
 import cn.com.omnimind.baselib.util.OmniLog
-import cn.com.omnimind.bot.media.PlatformMediaProtocol
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -97,26 +90,6 @@ class HttpAgentLlmClient(
             explicitWireApi = explicitWireApi
         )
     },
-    private val refreshPlatformSessionOp: suspend () -> Boolean = {
-        val access = OmniAccount.currentAiRequestAccess()
-        if (access.usesPlatform) {
-            OmniAccount.repository().refreshSession()
-            true
-        } else {
-            false
-        }
-    },
-    private val resolvePlatformVisionModelOp: suspend () -> String? = {
-        val access = OmniAccount.currentAiRequestAccess()
-        if (!access.usesPlatform) {
-            null
-        } else {
-            PlatformAiProvisioner.ensureReadyStatus().defaultVisionModelId
-                ?: throw PlatformModelsUnavailableException(
-                    "官方服务当前没有可用的图片理解模型"
-                )
-        }
-    },
     // This is the single transport retry owner. A retry is safe only before
     // visible output exists; replaying a started stream duplicates reasoning,
     // text, and potentially tool intent.
@@ -155,11 +128,6 @@ class HttpAgentLlmClient(
             "timeout",
             "timed out",
         )
-        // The platform gateway reserves quota from the whole prompt plus the
-        // requested output ceiling. Reusing full agent history, every tool schema,
-        // and the 16K ceiling can reserve several times a user's weekly allowance
-        // before the vision model is called. A vision turn only needs the current
-        // image question; subsequent text turns still use the normal agent context.
     }
 
 
@@ -169,62 +137,13 @@ class HttpAgentLlmClient(
         onContentUpdate: (suspend (String) -> Unit)?,
         onToolCallInput: (suspend (AssistantToolCall) -> Unit)?,
     ): ChatCompletionTurn {
-        val usesOfficialProvider =
-            OmniOfficialProvider.isOfficialProfile(modelOverride?.providerProfileId) ||
-                (request.hasImageInput() && requestUsesOfficialProvider(request))
-        val platformVisionModel = if (request.hasImageInput() && usesOfficialProvider) {
-            resolvePlatformVisionModelOp()?.trim()?.takeIf { it.isNotEmpty() }
-        } else {
-            null
-        }
-        if (platformVisionModel == null) {
-            return streamRoutedTurn(
-                request = request,
-                effectiveExplicitModel = modelOverride?.modelId,
-                onReasoningUpdate = onReasoningUpdate,
-                onContentUpdate = onContentUpdate,
-                onToolCallInput = onToolCallInput,
-            )
-        }
-
-        // Platform vision is a bounded preprocessing turn. Feed its description
-        // back into the normal Agent turn so system/history, tools and the stable
-        // prompt cache key remain available for the actual user request.
-        val visionTurn = streamRoutedTurn(
-            request = request.forPlatformVision(platformVisionModel),
-            effectiveExplicitModel = platformVisionModel,
-            onReasoningUpdate = null,
-            onContentUpdate = null,
-            onToolCallInput = null,
-        )
-        val description = visionTurn.message.contentText().trim()
-        check(description.isNotEmpty()) { "官方图片理解模型未返回可用内容" }
         return streamRoutedTurn(
-            request = request.withPlatformVisionDescription(description),
+            request = request,
             effectiveExplicitModel = modelOverride?.modelId,
             onReasoningUpdate = onReasoningUpdate,
             onContentUpdate = onContentUpdate,
             onToolCallInput = onToolCallInput,
         )
-    }
-
-    private fun requestUsesOfficialProvider(request: ChatCompletionRequest): Boolean {
-        if (OmniOfficialProvider.isOfficialProfile(modelOverride?.providerProfileId)) {
-            return true
-        }
-        if (modelOverride != null) {
-            return false
-        }
-        val routeInfo = resolveRouteInfoOp(
-            request.model,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-        )
-        return AiRequestTransportPolicy.isPlatformRoute(routeInfo.routeTag)
     }
 
     private suspend fun streamRoutedTurn(
@@ -247,11 +166,10 @@ class HttpAgentLlmClient(
             OpenAiResponsesFunctionNameCodec.planFor(request)
         } else null
         val wireRequest = namePlan?.encodeRequest(request) ?: request
-        val turn = streamTurnWithPlatformAuthRetry(
+        val turn = streamTurnOnce(
             model = request.model,
             requestJson = json.encodeToJsonElement(wireRequest).jsonObject,
             explicitModel = effectiveExplicitModel,
-            platformRoute = AiRequestTransportPolicy.isPlatformRoute(routeInfo.routeTag),
             onReasoningUpdate = onReasoningUpdate,
             onContentUpdate = onContentUpdate,
             onToolCallInput = { call ->
@@ -261,54 +179,6 @@ class HttpAgentLlmClient(
             },
         )
         return namePlan?.restoreTurn(turn) ?: turn
-    }
-
-    private suspend fun streamTurnWithPlatformAuthRetry(
-        model: String,
-        requestJson: JsonObject,
-        explicitModel: String?,
-        platformRoute: Boolean,
-        onReasoningUpdate: (suspend (String) -> Unit)?,
-        onContentUpdate: (suspend (String) -> Unit)?,
-        onToolCallInput: (suspend (AssistantToolCall) -> Unit)?,
-    ): ChatCompletionTurn {
-        var emittedOutput = false
-        suspend fun forward(
-            callback: (suspend (String) -> Unit)?,
-            value: String,
-        ) {
-            if (value.isNotBlank()) emittedOutput = true
-            callback?.invoke(value)
-        }
-        return try {
-            streamTurnOnce(
-                model,
-                requestJson,
-                explicitModel,
-                onReasoningUpdate = { value -> forward(onReasoningUpdate, value) },
-                onContentUpdate = { value -> forward(onContentUpdate, value) },
-                onToolCallInput = { call -> emittedOutput = true; onToolCallInput?.invoke(call) },
-            )
-        } catch (error: AgentStreamRequestException) {
-            if (
-                error.statusCode != 401 ||
-                emittedOutput ||
-                error.responseStarted ||
-                !platformRoute ||
-                !refreshPlatformSessionOp()
-            ) {
-                throw error
-            }
-            OmniLog.i(tag, "platform access token refreshed after 401; retrying once")
-            streamTurnOnce(
-                model,
-                requestJson,
-                explicitModel,
-                onReasoningUpdate = { value -> forward(onReasoningUpdate, value) },
-                onContentUpdate = { value -> forward(onContentUpdate, value) },
-                onToolCallInput = { call -> emittedOutput = true; onToolCallInput?.invoke(call) },
-            )
-        }
     }
 
     private suspend fun streamTurnOnce(
@@ -848,10 +718,6 @@ class HttpAgentLlmClient(
         val parsed = runCatching { json.parseToJsonElement(raw) }.getOrNull() as? JsonObject
             ?: return sanitizeReason(raw)
         val errorObj = parsed["error"] as? JsonObject
-        val formalErrorCode = extractJsonText(errorObj?.get("code"))
-            ?: extractJsonText(parsed["code"])
-        PlatformMediaProtocol.stableUserMessageForErrorCode(formalErrorCode)?.let { return it }
-
         val candidates = listOf(
             extractJsonText(errorObj?.get("message")),
             extractJsonText(errorObj?.get("detail")),

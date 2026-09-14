@@ -2,10 +2,6 @@ package cn.com.omnimind.bot.agent.tool.handlers
 
 import android.content.Context
 import cn.com.omnimind.baselib.llm.AssistantToolCall
-import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
-import cn.com.omnimind.baselib.llm.OfficialVlmOperationConfigStore
-import cn.com.omnimind.baselib.llm.SceneModelBindingStore
-import cn.com.omnimind.baselib.llm.SceneOperationConfigStore
 import cn.com.omnimind.baselib.runlog.InternalRunLogStore
 import cn.com.omnimind.bot.agent.AgentCallback
 import cn.com.omnimind.bot.agent.AgentExecutionEnvironment
@@ -18,7 +14,6 @@ import cn.com.omnimind.bot.omniflow.OmniFlowPluginRuntime
 import cn.com.omnimind.bot.omniflow.asOmniFlowModelClient
 import cn.com.omnimind.bot.runlog.firstNonBlank
 import cn.com.omnimind.bot.runlog.mapArg
-import cn.com.omnimind.bot.update.AppUpdateManager
 import cn.com.omnimind.bot.util.AndroidAutomationPermissionGate
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -87,15 +82,6 @@ class VlmToolHandler(context: Context) : ToolHandler {
             // PermissionRequired to project a permission_section card instead
             // of letting the model turn this into an assistant-only sentence.
             return helper.permissionRequiredResult(callback, permission.displayNames)
-        }
-        prepareOfficialModelRoute()?.let { message ->
-            persistFailure(runId, goal, "provider_unavailable", message)
-            return failedRunResult(
-                runId = runId,
-                goal = goal,
-                doneReason = "provider_unavailable",
-                message = message,
-            )
         }
         return try {
             val execution = OmniVlmPlugin.execute(
@@ -305,22 +291,6 @@ class VlmToolHandler(context: Context) : ToolHandler {
             }
         }
 
-    private suspend fun prepareOfficialModelRoute(): String? {
-        if (!SceneOperationConfigStore.getConfig().useOfficialService) return null
-        if (OfficialVlmOperationConfigStore.getConfig().isConfigured()) return null
-
-        runCatching { AppUpdateManager.checkNow(helper.context, force = true) }
-        if (OfficialVlmOperationConfigStore.getConfig().isConfigured()) return null
-
-        val binding = SceneModelBindingStore.getBinding(SceneOperationConfigStore.SCENE_ID)
-        val boundProviderReady = binding
-            ?.providerProfileId
-            ?.let(ModelProviderConfigStore::getProfile)
-            ?.isConfigured() == true
-        if (boundProviderReady || ModelProviderConfigStore.getConfig().isConfigured()) return null
-
-        return "小万官方内置模型暂不可用，请稍后重试或在模型场景中选择其他 Provider。"
-    }
 }
 
 /** Stable context envelope returned to the outer Agent after a VLM task. */

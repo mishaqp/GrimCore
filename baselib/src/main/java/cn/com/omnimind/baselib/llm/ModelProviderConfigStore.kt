@@ -128,6 +128,7 @@ object ModelProviderConfigStore {
         val deletedOfficialProfileIds = readDeletedOfficialProfileIds(mmkv)
         val storedProfilesRaw = mmkv.decodeString(KEY_PROVIDER_PROFILES)
         val decodedProfiles = hydrateProfileSecrets(decodeProfilesJson(storedProfilesRaw))
+            .filterNot(::isLegacyOmniMindPlatformProfile)
         val storedProfiles = readActiveProfiles(
             mmkv = mmkv,
             deletedOfficialProfileIds = deletedOfficialProfileIds,
@@ -140,12 +141,12 @@ object ModelProviderConfigStore {
         )
         if (current.isNotEmpty()) {
             ensureEditingProfile(mmkv, current)
-            return appendOfficialPlatformProfile(current)
+            return current
         }
         val created = defaultProfiles(deletedOfficialProfileIds)
         persistProfilesFromReadPath(mmkv, created)
         mmkv.encode(KEY_EDITING_PROFILE_ID, created.first().id)
-        return appendOfficialPlatformProfile(created)
+        return created
     }
 
     /** Read the Provider editor's existing catalog; never refresh on session startup. */
@@ -222,7 +223,7 @@ object ModelProviderConfigStore {
 
         val sanitized = buildList<ModelProviderProfile> {
             profiles
-                .filterNot { OmniOfficialProvider.isOfficialProfile(it.id) }
+                .filterNot(::isLegacyOmniMindPlatformProfile)
                 .filterNot { isDeletedOfficialProfile(it.id, deletedOfficialProfileIds) }
                 .forEach { profile ->
                     val existing = toList()
@@ -280,9 +281,6 @@ object ModelProviderConfigStore {
         wireApi: String = OpenAiWireApi.CHAT_COMPLETIONS,
     ): ModelProviderProfile {
         ModelProviderMigration.ensureMigrated()
-        require(!OmniOfficialProvider.isOfficialProfile(id)) {
-            "official platform provider is read only"
-        }
         val normalizedProtocolType = normalizeProtocolType(protocolType)
         val normalizedWireApi = resolveWireApiForSave(
             baseUrl = baseUrl,
@@ -351,9 +349,6 @@ object ModelProviderConfigStore {
         ModelProviderMigration.ensureMigrated()
         val mmkv = MMKV.defaultMMKV()
         val normalizedId = profileId.trim()
-        require(!OmniOfficialProvider.isOfficialProfile(normalizedId)) {
-            "official platform provider cannot be deleted"
-        }
         val deletedOfficialProfileIds = readDeletedOfficialProfileIds(mmkv)
         val current = readActiveProfiles(
             mmkv = mmkv,
@@ -615,12 +610,11 @@ object ModelProviderConfigStore {
         }
     }
 
-    private fun appendOfficialPlatformProfile(
-        profiles: List<ModelProviderProfile>
-    ): List<ModelProviderProfile> {
-        val official = PlatformAiProvisioner.officialProfileOrNull() ?: return profiles
-        return profiles.filterNot { it.id == official.id } + official
-    }
+    /** Old platform credentials must never be routable after the fork detaches from OmniMind. */
+    private fun isLegacyOmniMindPlatformProfile(profile: ModelProviderProfile): Boolean =
+        profile.id.trim() == "omnibot-official-ai" ||
+            profile.sourceType.trim() == "omnibot_official" ||
+            profile.baseUrl.contains(".omnimind.com.cn", ignoreCase = true)
 
     private fun normalizeSourceType(
         sourceType: String?,
@@ -978,7 +972,7 @@ object ModelProviderConfigStore {
     private fun readProfilesForUpdate(mmkv: MMKV): List<ModelProviderProfile> {
         return hydrateProfileSecrets(
             decodeProfilesJson(mmkv.decodeString(KEY_PROVIDER_PROFILES))
-        )
+        ).filterNot(::isLegacyOmniMindPlatformProfile)
     }
 
     private fun readActiveProfiles(
@@ -986,7 +980,10 @@ object ModelProviderConfigStore {
         deletedOfficialProfileIds: Set<String>,
         profiles: List<ModelProviderProfile>
     ): List<ModelProviderProfile> {
-        val activeProfiles = filterDeletedOfficialProfiles(profiles, deletedOfficialProfileIds)
+        val activeProfiles = filterDeletedOfficialProfiles(
+            profiles.filterNot(::isLegacyOmniMindPlatformProfile),
+            deletedOfficialProfileIds
+        )
         if (activeProfiles.size != profiles.size) {
             persistProfilesFromReadPath(mmkv, activeProfiles)
         }
