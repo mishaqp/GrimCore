@@ -2,6 +2,9 @@ name: Codex provider source snapshot
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - codex/grimcore-ru-phase1
   push:
     branches:
       - codex/codex-chatgpt-provider
