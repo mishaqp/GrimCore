@@ -258,6 +258,7 @@ class CodexChatGptAccountStatus {
     this.verificationUrl,
     this.userCode,
     this.loginId,
+    this.message,
   });
 
   final CodexChatGptAccountState state;
@@ -266,6 +267,7 @@ class CodexChatGptAccountStatus {
   final String? verificationUrl;
   final String? userCode;
   final String? loginId;
+  final String? message;
 
   bool get isWaiting => state == CodexChatGptAccountState.waiting;
 
@@ -297,6 +299,7 @@ class CodexChatGptAccountStatus {
       verificationUrl: allowedString('verificationUrl'),
       userCode: allowedString('userCode'),
       loginId: allowedString('loginId'),
+      message: allowedString('message'),
     );
   }
 
@@ -316,7 +319,7 @@ abstract final class CodexChatGptAccountService {
   }
 
   static Future<CodexChatGptAccountStatus> install() async {
-    await AgentRuntimeService.prepareAgent('codex-acp');
+    await AgentRuntimeService.prepareAgent('codex-acp', force: true);
     return refresh();
   }
 
@@ -398,7 +401,8 @@ if "CodexChatGptAccountStatus" not in page:
         "  String _selectedWireApi = 'chat_completions';\n"
         "  CodexChatGptAccountStatus _codexAccountStatus =\n"
         "      CodexChatGptAccountStatus.signedOut;\n"
-        "  bool _isCodexAccountBusy = false;\n\n"
+        "  bool _isCodexAccountBusy = false;\n"
+        "  bool _isCodexStatusRefreshing = false;\n\n"
         "  Timer? _autoSaveTimer;\n"
         "  Timer? _codexStatusTimer;\n",
         1,
@@ -646,7 +650,12 @@ if "CodexChatGptAccountStatus" not in page:
     _codexStatusTimer?.cancel();
     if (!_isCodexChatGpt || !_codexAccountStatus.isWaiting) return;
     _codexStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted || !_isCodexChatGpt || _isCodexAccountBusy) return;
+      if (!mounted ||
+          !_isCodexChatGpt ||
+          _isCodexAccountBusy ||
+          _isCodexStatusRefreshing) {
+        return;
+      }
       unawaited(_refreshCodexAccountStatus());
     });
   }
@@ -654,7 +663,12 @@ if "CodexChatGptAccountStatus" not in page:
   Future<void> _refreshCodexAccountStatus({
     bool showFailureToast = false,
   }) async {
-    if (!_isCodexChatGpt || _isCodexAccountBusy) return;
+    if (!_isCodexChatGpt ||
+        _isCodexAccountBusy ||
+        _isCodexStatusRefreshing) {
+      return;
+    }
+    _isCodexStatusRefreshing = true;
     try {
       final status = await CodexChatGptAccountService.refresh();
       if (!mounted || !_isCodexChatGpt) return;
@@ -673,6 +687,8 @@ if "CodexChatGptAccountStatus" not in page:
           type: ToastType.error,
         );
       }
+    } finally {
+      _isCodexStatusRefreshing = false;
     }
   }
 
@@ -741,7 +757,8 @@ if "CodexChatGptAccountStatus" not in page:
   Future<void> _openCodexVerificationUrl() async {
     final raw = _codexAccountStatus.verificationUrl;
     final uri = raw == null ? null : Uri.tryParse(raw);
-    if (uri == null || !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (uri == null ||
+        !await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         showToast(
           context.l10n.modelProviderCodexBrowserFailed,
@@ -767,8 +784,7 @@ if "CodexChatGptAccountStatus" not in page:
         context.l10n.modelProviderCodexExpired,
       CodexChatGptAccountState.cancelled =>
         context.l10n.modelProviderCodexCancelled,
-      CodexChatGptAccountState.error =>
-        context.l10n.modelProviderCodexError,
+      CodexChatGptAccountState.error => context.l10n.modelProviderCodexError,
     };
   }
 
@@ -778,6 +794,11 @@ if "CodexChatGptAccountStatus" not in page:
     final signedIn = status.state == CodexChatGptAccountState.signedIn;
     final notInstalled = status.state == CodexChatGptAccountState.notInstalled;
     final installing = status.state == CodexChatGptAccountState.installing;
+    final diagnosticMessage =
+        status.state == CodexChatGptAccountState.error ||
+            status.state == CodexChatGptAccountState.expired
+        ? status.message
+        : null;
     return Container(
       key: const Key('codex-chatgpt-account-card'),
       padding: const EdgeInsets.all(16),
@@ -822,6 +843,17 @@ if "CodexChatGptAccountStatus" not in page:
             context.l10n.modelProviderCodexDescription,
             style: TextStyle(color: _secondaryTextColor, fontSize: 12),
           ),
+          if (diagnosticMessage != null) ...[
+            const SizedBox(height: 12),
+            SelectableText(
+              diagnosticMessage,
+              key: const Key('codex-chatgpt-error-message'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 12,
+              ),
+            ),
+          ],
           if (waiting) ...[
             const SizedBox(height: 14),
             Text(
@@ -900,9 +932,8 @@ if "CodexChatGptAccountStatus" not in page:
                   onPressed: _isCodexAccountBusy
                       ? null
                       : () => _runCodexAccountAction(
-                          () => CodexChatGptAccountService.cancel(
-                            status.loginId,
-                          ),
+                          () =>
+                              CodexChatGptAccountService.cancel(status.loginId),
                           failureMessage:
                               context.l10n.modelProviderCodexStatusFailed,
                         ),
@@ -912,9 +943,8 @@ if "CodexChatGptAccountStatus" not in page:
                 TextButton(
                   onPressed: _isCodexAccountBusy
                       ? null
-                      : () => _refreshCodexAccountStatus(
-                          showFailureToast: true,
-                        ),
+                      : () =>
+                            _refreshCodexAccountStatus(showFailureToast: true),
                   child: Text(context.l10n.modelProviderCodexCheckStatus),
                 ),
               if (signedIn)
@@ -1232,6 +1262,7 @@ void main() {
     final status = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{});
     expect(status.state, CodexChatGptAccountState.signedOut);
     expect(status.authenticated, isFalse);
+    expect(status.message, isNull);
   });
 
   test('device flow exposes only URL, code and opaque login id', () {
@@ -1247,19 +1278,34 @@ void main() {
     expect(status.verificationUrl, 'https://auth.openai.com/codex/device');
     expect(status.userCode, 'ABCD-EFGH');
     expect(status.loginId, 'opaque-id');
+    expect(status.message, isNull);
     expect(status.toString(), isNot(contains('must-not-be-projected')));
     expect(status.toString(), isNot(contains('{secret}')));
+  });
+
+  test('safe native diagnostic remains available for the error card', () {
+    final status = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{
+      'state': 'error',
+      'message': 'device code login is not enabled for this Codex server',
+    });
+    expect(status.state, CodexChatGptAccountState.error);
+    expect(
+      status.message,
+      'device code login is not enabled for this Codex server',
+    );
   });
 
   test('expired and authenticated statuses remain distinct', () {
     final expired = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{
       'state': 'expired',
+      'message': 'Device code expired. Start sign-in again.',
     });
     final signedIn = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{
       'state': 'signed_in',
       'authenticated': true,
     });
     expect(expired.state, CodexChatGptAccountState.expired);
+    expect(expired.message, isNotEmpty);
     expect(signedIn.state, CodexChatGptAccountState.signedIn);
     expect(signedIn.authenticated, isTrue);
   });

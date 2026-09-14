@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Small idempotent corrections for the generated account backend and UI."""
 from pathlib import Path
-import re
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -27,33 +26,6 @@ for source in (
         ),
     )
 
-
-def fix_account_manager(value: str) -> str:
-    value = re.sub(
-        r"; echo \\\\$\? >\$\{quote\(EXIT_PATH\)\}\)",
-        "; echo ${'$'}? >${quote(EXIT_PATH)})",
-        value,
-        count=1,
-    )
-    value = re.sub(
-        r"(?m)^\s*echo \\\\$!\s*$",
-        "            echo ${'$'}!",
-        value,
-        count=1,
-    )
-    value = re.sub(
-        r'(?m)^\s*private const val PATH_PREFIX = .+$',
-        r'        private const val PATH_PREFIX = "PATH=\"/root/.npm-global/bin:\$PATH\"; export PATH;"',
-        value,
-        count=1,
-    )
-    return value
-
-
-patch(
-    "app/src/main/java/cn/com/omnimind/bot/agent/runtime/CodexChatGptAccountManager.kt",
-    fix_account_manager,
-)
 
 
 def fix_provider_type_popup(value: str) -> str:
@@ -161,7 +133,7 @@ patch(
     "app/build.gradle.kts",
     lambda value: value.replace(
         "// 0.1.0-grim.3 -> 10003",
-        "// 0.1.0-grim.4 -> 10004",
+        "// 0.1.0-grim.5 -> 10005",
     ),
 )
 

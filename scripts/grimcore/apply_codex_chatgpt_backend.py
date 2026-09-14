@@ -435,7 +435,7 @@ if "isChatGptAccount(input)" not in harness:
         val provider = input.provider
         if (isChatGptAccount(input)) {
             return AgentProviderMapping(
-                environment = mapOf("CODEX_HOME" to AgentRuntimeDefaults.CODEX_HOME),
+                environment = mapOf("CODEX_HOME" to CODEX_CHATGPT_HOME),
                 codexModel = input.model?.trim()?.takeIf(String::isNotEmpty),
             )
         }
@@ -507,8 +507,32 @@ write(ACCOUNT_MANAGER, r'''package cn.com.omnimind.bot.agent.runtime
 
 import android.content.Context
 import com.ai.assistance.operit.terminal.TerminalManager
+import com.ai.assistance.operit.terminal.isExpectedHiddenExecReaderTermination
+import com.ai.assistance.operit.terminal.terminateHiddenExecProcess
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import java.nio.charset.StandardCharsets
 import java.util.UUID
+
+internal const val CODEX_CHATGPT_HOME = "/root/.codex-chatgpt"
+internal const val CODEX_DEVICE_LOGIN_COMMAND = "exec codex login --device-auth"
+
+internal fun buildCodexDeviceLoginShellCommand(): String =
+    "PATH=\"/root/.npm-global/bin:\$PATH\"; export PATH; " +
+        "unset OPENAI_API_KEY OPENAI_BASE_URL; " +
+        "mkdir -p '$CODEX_CHATGPT_HOME' && chmod 700 '$CODEX_CHATGPT_HOME' && " +
+        CODEX_DEVICE_LOGIN_COMMAND
+
+private val CODEX_ANSI = Regex("\\u001B\\[[;?0-9]*[ -/]*[@-~]")
 
 internal data class CodexDeviceFlowPrompt(
     val verificationUrl: String,
@@ -516,14 +540,18 @@ internal data class CodexDeviceFlowPrompt(
 )
 
 internal object CodexDeviceFlowParser {
-    private val ansi = Regex("\\u001B\\[[;?0-9]*[ -/]*[@-~]")
     private val url = Regex("https://[^\\s]+/codex/device")
     private val codeAfterPrompt = Regex(
         "(?is)one-time code.{0,180}?\\n\\s*([A-Z0-9][A-Z0-9-]{3,31})\\s*(?:\\n|$)"
     )
+    private val secretAssignment = Regex(
+        "(?i)\\b(?:access_token|refresh_token|id_token|api[_-]?key)\\s*[:=]"
+    )
+    private val bearerSecret = Regex("(?i)\\bBearer\\s+[A-Za-z0-9._~+/=-]+")
+    private val openAiKey = Regex("\\bsk-[A-Za-z0-9_-]{8,}\\b")
 
     fun parse(raw: String): CodexDeviceFlowPrompt? {
-        val clean = ansi.replace(raw, "")
+        val clean = CODEX_ANSI.replace(raw, "")
         val verificationUrl = url.find(clean)?.value?.trimEnd('.', ',', ';') ?: return null
         val userCode = codeAfterPrompt.find(clean)?.groupValues?.getOrNull(1)
             ?.trim()
@@ -533,17 +561,41 @@ internal object CodexDeviceFlowParser {
     }
 
     fun safeError(raw: String): String {
-        val clean = ansi.replace(raw, "")
+        val clean = CODEX_ANSI.replace(raw, "")
             .lineSequence()
             .map(String::trim)
             .filter(String::isNotEmpty)
-            .filterNot { it.contains("token", ignoreCase = true) }
-            .filterNot { it.contains("authorization", ignoreCase = true) }
+            .filterNot { secretAssignment.containsMatchIn(it) }
             .filterNot { it.contains("auth.json", ignoreCase = true) }
+            .map { bearerSecret.replace(it, "Bearer [redacted]") }
+            .map { openAiKey.replace(it, "[redacted]") }
+            .toList()
+            .takeLast(8)
             .joinToString(" ")
-            .take(320)
+            .takeLast(320)
         return clean.ifBlank { "Codex authentication failed." }
     }
+}
+
+internal fun isChatGptLoginStatus(exitCode: Int, raw: String): Boolean =
+    exitCode == 0 && CODEX_ANSI.replace(raw, "").lineSequence().any {
+        it.trim().equals("Logged in using ChatGPT", ignoreCase = true)
+    }
+
+internal class BoundedCodexLoginOutput(
+    private val maxChars: Int = 16_384,
+) {
+    private val buffer = StringBuilder()
+
+    @Synchronized
+    fun appendLine(line: String) {
+        buffer.append(line.take(2_048)).append('\n')
+        val overflow = buffer.length - maxChars
+        if (overflow > 0) buffer.delete(0, overflow)
+    }
+
+    @Synchronized
+    fun snapshot(): String = buffer.toString()
 }
 
 /**
@@ -556,45 +608,59 @@ internal class CodexChatGptAccountManager(
 ) {
     private val appContext = context.applicationContext
     private val terminal by lazy { TerminalManager.getInstance(appContext) }
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val accountMutex = Mutex()
+    private var activeLogin: ActiveLogin? = null
 
-    suspend fun handle(method: String, args: Map<String, Any?>): Map<String, Any?> = when (method) {
-        "account/read" -> readStatus()
-        "account/login/start" -> startLogin(args)
-        "account/login/cancel" -> cancelLogin(args)
-        "account/logout" -> logout()
-        else -> throw IllegalArgumentException("Unsupported local Codex account method: $method")
+    suspend fun handle(
+        method: String,
+        args: Map<String, Any?>,
+    ): Map<String, Any?> = accountMutex.withLock {
+        when (method) {
+            "account/read" -> readStatus()
+            "account/login/start" -> startLogin(args)
+            "account/login/cancel" -> cancelLogin(args)
+            "account/logout" -> logout()
+            else -> throw IllegalArgumentException(
+                "Unsupported local Codex account method: $method"
+            )
+        }
     }
 
     private suspend fun readStatus(): Map<String, Any?> {
         if (!isInstalled()) return status("not_installed", installed = false)
-        val metadata = readMetadata()
-        if (metadata.state == "waiting") {
-            val output = runSafe("cat ${quote(LOG_PATH)} 2>/dev/null || true", "codex-login-read")
-            CodexDeviceFlowParser.parse(output)?.let { prompt ->
-                if (metadata.startedAt > 0 && nowSeconds() - metadata.startedAt >= LOGIN_TIMEOUT_SECONDS) {
-                    terminate(metadata.pid)
-                    writeMetadata(LoginMetadata(state = "expired"))
-                    return status("expired", message = "Device code expired. Start sign-in again.")
-                }
-                if (metadata.pid > 0 && isProcessAlive(metadata.pid)) {
-                    return status(
-                        state = "waiting",
-                        verificationUrl = prompt.verificationUrl,
-                        userCode = prompt.userCode,
-                        loginId = metadata.loginId,
-                    )
-                }
+
+        activeLogin?.let { login ->
+            if (nowSeconds() - login.startedAt >= LOGIN_TIMEOUT_SECONDS) {
+                stopActiveLogin(login)
+                writeMetadata(LoginMetadata(state = "expired"))
+                return status(
+                    state = "expired",
+                    message = "Device code expired. Start sign-in again.",
+                )
             }
+            if (login.process.isAlive) {
+                return waitingStatus(login)
+            }
+            return finishExitedLogin(login)
         }
+
+        val metadata = readMetadata()
         val result = execute("codex login status", "codex-login-status", STATUS_TIMEOUT_MS)
-        if (result.first == 0 && isSignedIn(result.second)) {
+        if (isChatGptLoginStatus(result.first, result.second)) {
             writeMetadata(LoginMetadata(state = "signed_in"))
             return status("signed_in", authenticated = true)
         }
+
         return when (metadata.state) {
             "cancelled" -> status("cancelled")
-            "expired" -> status("expired")
+            "expired" -> status("expired", message = metadata.message)
             "error" -> status("error", message = metadata.message)
+            "waiting" -> {
+                val message = "Sign-in was interrupted. Start sign-in again."
+                writeMetadata(LoginMetadata(state = "error", message = message))
+                status("error", message = message)
+            }
             else -> status("signed_out")
         }
     }
@@ -606,33 +672,60 @@ internal class CodexChatGptAccountManager(
         }
         if (!isInstalled()) return status("not_installed", installed = false)
         readStatus().takeIf { it["authenticated"] == true }?.let { return it }
+
         cancelCurrentLogin(markCancelled = false)
         val loginId = UUID.randomUUID().toString()
-        val command = """
-            mkdir -p ${quote(AgentRuntimeDefaults.CODEX_HOME)}
-            chmod 700 ${quote(AgentRuntimeDefaults.CODEX_HOME)}
-            rm -f ${quote(LOG_PATH)}
-            (CODEX_HOME=${quote(AgentRuntimeDefaults.CODEX_HOME)} codex login --device-auth >${quote(LOG_PATH)} 2>&1; echo \\$? >${quote(EXIT_PATH)}) </dev/null >/dev/null 2>&1 &
-            echo \\$!
-        """.trimIndent()
-        val result = execute(command, "codex-login-start", START_TIMEOUT_MS)
-        val pid = result.second.lineSequence().map(String::trim)
-            .firstOrNull { it.toLongOrNull() != null }?.toLongOrNull() ?: 0L
-        if (result.first != 0 || pid <= 0) {
-            val message = CodexDeviceFlowParser.safeError(result.second)
+        val output = BoundedCodexLoginOutput()
+        val process = try {
+            terminal.startLongLivedAlpineProcess(
+                command = buildCodexDeviceLoginShellCommand(),
+                executorKey = "codex-login-$loginId",
+                extraEnvironment = mapOf(
+                    "CODEX_HOME" to CODEX_CHATGPT_HOME,
+                    "OMNIBOT_HEADLESS" to "1",
+                    "OMNIBOT_DISABLE_PROOT_LINK2SYMLINK" to "1",
+                ),
+                redirectErrorStream = true,
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            val message = CodexDeviceFlowParser.safeError(error.message.orEmpty())
             writeMetadata(LoginMetadata(state = "error", message = message))
             return status("error", message = message)
         }
-        val metadata = LoginMetadata(
-            state = "waiting",
+
+        val readerJob = scope.launch {
+            try {
+                process.inputStream
+                    .bufferedReader(StandardCharsets.UTF_8)
+                    .useLines { lines -> lines.forEach(output::appendLine) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                if (!isExpectedHiddenExecReaderTermination(error)) {
+                    output.appendLine(error.message ?: "Codex output reader failed.")
+                }
+            }
+        }
+        val login = ActiveLogin(
             loginId = loginId,
-            pid = pid,
+            process = process,
+            readerJob = readerJob,
+            output = output,
             startedAt = nowSeconds(),
         )
-        writeMetadata(metadata)
-        repeat(30) {
-            val output = runSafe("cat ${quote(LOG_PATH)} 2>/dev/null || true", "codex-login-prompt")
-            CodexDeviceFlowParser.parse(output)?.let { prompt ->
+        activeLogin = login
+        writeMetadata(
+            LoginMetadata(
+                state = "waiting",
+                loginId = loginId,
+                startedAt = login.startedAt,
+            )
+        )
+
+        repeat(LOGIN_PROMPT_POLLS) {
+            CodexDeviceFlowParser.parse(output.snapshot())?.let { prompt ->
                 return status(
                     state = "waiting",
                     verificationUrl = prompt.verificationUrl,
@@ -640,22 +733,16 @@ internal class CodexChatGptAccountManager(
                     loginId = loginId,
                 )
             }
-            if (!isProcessAlive(pid)) {
-                val final = readStatus()
-                if (final["authenticated"] == true) return final
-                val message = CodexDeviceFlowParser.safeError(output)
-                writeMetadata(LoginMetadata(state = "error", message = message))
-                return status("error", message = message)
-            }
-            delay(200)
+            if (!process.isAlive) return finishExitedLogin(login)
+            delay(LOGIN_PROMPT_POLL_MS)
         }
         return status("waiting", loginId = loginId)
     }
 
     private suspend fun cancelLogin(args: Map<String, Any?>): Map<String, Any?> {
         val requested = args["loginId"]?.toString()?.trim().orEmpty()
-        val current = readMetadata()
-        if (requested.isNotEmpty() && current.loginId.isNotEmpty() && requested != current.loginId) {
+        val currentLoginId = activeLogin?.loginId ?: readMetadata().loginId
+        if (requested.isNotEmpty() && currentLoginId.isNotEmpty() && requested != currentLoginId) {
             return status("cancelled")
         }
         cancelCurrentLogin(markCancelled = true)
@@ -663,41 +750,83 @@ internal class CodexChatGptAccountManager(
     }
 
     private suspend fun logout(): Map<String, Any?> {
-        cancelCurrentLogin(markCancelled = false)
+        stopActiveLogin()
         if (!isInstalled()) return status("not_installed", installed = false)
+
         val result = execute("codex logout", "codex-logout", LOGOUT_TIMEOUT_MS)
-        clearTransientFiles()
         return if (result.first == 0) {
+            writeMetadata(LoginMetadata(state = "signed_out"))
             status("signed_out")
         } else {
-            status("error", message = CodexDeviceFlowParser.safeError(result.second))
+            val message = CodexDeviceFlowParser.safeError(result.second)
+            writeMetadata(LoginMetadata(state = "error", message = message))
+            status("error", message = message)
         }
     }
 
-    private suspend fun cancelCurrentLogin(markCancelled: Boolean) {
-        val metadata = readMetadata()
-        terminate(metadata.pid)
-        clearTransientFiles()
-        writeMetadata(LoginMetadata(state = if (markCancelled) "cancelled" else "signed_out"))
+    private fun waitingStatus(login: ActiveLogin): Map<String, Any?> {
+        val prompt = CodexDeviceFlowParser.parse(login.output.snapshot())
+        return status(
+            state = "waiting",
+            verificationUrl = prompt?.verificationUrl,
+            userCode = prompt?.userCode,
+            loginId = login.loginId,
+        )
     }
 
-    private suspend fun terminate(pid: Long) {
-        if (pid <= 0) return
-        runSafe("kill $pid 2>/dev/null || true", "codex-login-cancel")
+    private suspend fun finishExitedLogin(login: ActiveLogin): Map<String, Any?> {
+        drainReader(login)
+        if (activeLogin === login) activeLogin = null
+
+        val result = execute("codex login status", "codex-login-status", STATUS_TIMEOUT_MS)
+        if (isChatGptLoginStatus(result.first, result.second)) {
+            writeMetadata(LoginMetadata(state = "signed_in"))
+            return status("signed_in", authenticated = true)
+        }
+
+        val message = CodexDeviceFlowParser.safeError(
+            listOf(login.output.snapshot(), result.second)
+                .filter(String::isNotBlank)
+                .joinToString("\n")
+        )
+        writeMetadata(LoginMetadata(state = "error", message = message))
+        return status("error", message = message)
+    }
+
+    private suspend fun cancelCurrentLogin(markCancelled: Boolean) {
+        stopActiveLogin()
+        writeMetadata(
+            LoginMetadata(state = if (markCancelled) "cancelled" else "signed_out")
+        )
+    }
+
+    private suspend fun stopActiveLogin(expected: ActiveLogin? = null) {
+        val login = activeLogin ?: return
+        if (expected != null && activeLogin !== expected) return
+        activeLogin = null
+        withContext(Dispatchers.IO) {
+            terminateHiddenExecProcess(login.process)
+        }
+        drainReader(login)
+    }
+
+    private suspend fun drainReader(login: ActiveLogin) {
+        val drained = withTimeoutOrNull(READER_DRAIN_TIMEOUT_MS) {
+            login.readerJob.join()
+            true
+        } ?: false
+        if (!drained) {
+            runCatching { login.process.inputStream.close() }
+            login.readerJob.cancel()
+        }
     }
 
     private suspend fun isInstalled(): Boolean =
-        execute("command -v codex >/dev/null 2>&1", "codex-install-status", STATUS_TIMEOUT_MS).first == 0
-
-    private suspend fun isProcessAlive(pid: Long): Boolean =
-        pid > 0 && execute("kill -0 $pid 2>/dev/null", "codex-login-alive", STATUS_TIMEOUT_MS).first == 0
-
-    private fun isSignedIn(output: String): Boolean {
-        val normalized = output.lowercase()
-        return normalized.contains("logged in") ||
-            normalized.contains("signed in") ||
-            normalized.contains("chatgpt") && !normalized.contains("not logged")
-    }
+        execute(
+            "command -v codex >/dev/null 2>&1 && command -v codex-acp >/dev/null 2>&1",
+            "codex-install-status",
+            STATUS_TIMEOUT_MS,
+        ).first == 0
 
     private fun status(
         state: String,
@@ -721,7 +850,12 @@ internal class CodexChatGptAccountManager(
     }
 
     private suspend fun execute(command: String, key: String, timeoutMs: Long): Pair<Int, String> {
-        val wrapped = "$PATH_PREFIX CODEX_HOME=${quote(AgentRuntimeDefaults.CODEX_HOME)} $command"
+        val wrapped = "$PATH_PREFIX " +
+            "unset OPENAI_API_KEY OPENAI_BASE_URL; " +
+            "export CODEX_HOME=${quote(CODEX_CHATGPT_HOME)}; " +
+            "mkdir -p ${quote(CODEX_CHATGPT_HOME)}; " +
+            "chmod 700 ${quote(CODEX_CHATGPT_HOME)}; " +
+            command
         val result = terminal.executeHiddenCommand(
             command = wrapped,
             executorKey = key,
@@ -733,10 +867,6 @@ internal class CodexChatGptAccountManager(
     private suspend fun runSafe(command: String, key: String): String =
         runCatching { execute(command, key, STATUS_TIMEOUT_MS).second }.getOrDefault("")
 
-    private suspend fun clearTransientFiles() {
-        runSafe("rm -f ${quote(LOG_PATH)} ${quote(EXIT_PATH)}", "codex-login-cleanup")
-    }
-
     private suspend fun readMetadata(): LoginMetadata {
         val raw = runSafe("cat ${quote(META_PATH)} 2>/dev/null || true", "codex-login-meta-read")
         val values = raw.lineSequence().mapNotNull { line ->
@@ -746,7 +876,6 @@ internal class CodexChatGptAccountManager(
         return LoginMetadata(
             state = values["state"].orEmpty().ifBlank { "signed_out" },
             loginId = values["login_id"].orEmpty(),
-            pid = values["pid"]?.toLongOrNull() ?: 0L,
             startedAt = values["started_at"]?.toLongOrNull() ?: 0L,
             message = values["message"].orEmpty().take(320),
         )
@@ -757,35 +886,41 @@ internal class CodexChatGptAccountManager(
         val content = buildString {
             append("state=").append(metadata.state).append('\n')
             append("login_id=").append(metadata.loginId).append('\n')
-            append("pid=").append(metadata.pid).append('\n')
             append("started_at=").append(metadata.startedAt).append('\n')
             append("message=").append(safeMessage).append('\n')
         }
-        val command = "mkdir -p ${quote(AgentRuntimeDefaults.CODEX_HOME)}; " +
-            "printf %s ${quote(content)} > ${quote(META_PATH)}; chmod 600 ${quote(META_PATH)}"
+        val command = "printf %s ${quote(content)} > ${quote(META_PATH)}; " +
+            "chmod 600 ${quote(META_PATH)}"
         runSafe(command, "codex-login-meta-write")
     }
 
     private fun quote(value: String): String = "'" + value.replace("'", "'\\''") + "'"
     private fun nowSeconds(): Long = System.currentTimeMillis() / 1000L
 
+    private data class ActiveLogin(
+        val loginId: String,
+        val process: Process,
+        val readerJob: Job,
+        val output: BoundedCodexLoginOutput,
+        val startedAt: Long,
+    )
+
     private data class LoginMetadata(
         val state: String,
         val loginId: String = "",
-        val pid: Long = 0L,
         val startedAt: Long = 0L,
         val message: String = "",
     )
 
     private companion object {
-        private const val PATH_PREFIX = "PATH=\"/root/.npm-global/bin:\\$PATH\"; export PATH;"
+        private const val PATH_PREFIX = "PATH=\"/root/.npm-global/bin:\$PATH\"; export PATH;"
         private const val LOGIN_TIMEOUT_SECONDS = 15L * 60L
+        private const val LOGIN_PROMPT_POLLS = 30
+        private const val LOGIN_PROMPT_POLL_MS = 200L
+        private const val READER_DRAIN_TIMEOUT_MS = 1_000L
         private const val STATUS_TIMEOUT_MS = 15_000L
-        private const val START_TIMEOUT_MS = 10_000L
         private const val LOGOUT_TIMEOUT_MS = 30_000L
-        private const val META_PATH = "${AgentRuntimeDefaults.CODEX_HOME}/.grimcore-login-state"
-        private const val LOG_PATH = "${AgentRuntimeDefaults.CODEX_HOME}/.grimcore-login-output"
-        private const val EXIT_PATH = "${AgentRuntimeDefaults.CODEX_HOME}/.grimcore-login-exit"
+        private const val META_PATH = "/root/.codex-chatgpt/.grimcore-login-state"
     }
 }
 ''')
@@ -918,7 +1053,7 @@ for agent in agents:
         environment = agent.setdefault("environment", {})
         environment.pop("OPENAI_API_KEY", None)
         environment.pop("OPENAI_BASE_URL", None)
-        environment["CODEX_HOME"] = "/root/.codex"
+        environment["CODEX_HOME"] = "/root/.codex-chatgpt"
         models = agent.setdefault("models", [])
         if "gpt-5.3-codex-spark" not in models:
             models.append("gpt-5.3-codex-spark")
@@ -930,8 +1065,8 @@ write(AGENTS, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 # Monotonic installable build for the existing package.
 GRADLE = "app/build.gradle.kts"
 gradle = read(GRADLE)
-gradle = gradle.replace("versionCode = 10003", "versionCode = 10004", 1)
-gradle = gradle.replace('versionName = "0.1.0-grim.3"', 'versionName = "0.1.0-grim.4"', 1)
+gradle = gradle.replace("versionCode = 10003", "versionCode = 10005", 1)
+gradle = gradle.replace('versionName = "0.1.0-grim.3"', 'versionName = "0.1.0-grim.5"', 1)
 write(GRADLE, gradle)
 
 # Pure JVM contract tests: no device, network, account, or token fixtures.
@@ -961,12 +1096,48 @@ class CodexChatGptAccountContractTest {
     }
 
     @Test
-    fun malformedOrCredentialLikeOutputIsNotExposed() {
+    fun credentialLikeOutputIsRedactedButUsefulAuthorizationErrorsRemain() {
         assertNull(CodexDeviceFlowParser.parse("access_token=secret"))
-        val safe = CodexDeviceFlowParser.safeError("access_token=secret\nauth.json contains token\nnetwork failed")
+        val safe = CodexDeviceFlowParser.safeError(
+            """
+            access_token=secret
+            auth.json contains token
+            device code login is not enabled for this Codex server
+            network failed with Bearer abc.def.ghi and sk-secretvalue
+            """.trimIndent()
+        )
         assertFalse(safe.contains("secret"))
         assertFalse(safe.contains("auth.json"))
+        assertFalse(safe.contains("abc.def.ghi"))
+        assertTrue(safe.contains("device code login is not enabled"))
         assertTrue(safe.contains("network failed"))
+    }
+
+    @Test
+    fun chatGptStatusDoesNotAcceptLegacyApiKeyLogin() {
+        assertTrue(isChatGptLoginStatus(0, "Logged in using ChatGPT\n"))
+        assertFalse(isChatGptLoginStatus(0, "Logged in using an API key - sk-***\n"))
+        assertFalse(isChatGptLoginStatus(1, "Logged in using ChatGPT\n"))
+    }
+
+    @Test
+    fun deviceLoginIsForegroundAndHasNoGuestPidProtocol() {
+        assertEquals("exec codex login --device-auth", CODEX_DEVICE_LOGIN_COMMAND)
+        val shellCommand = buildCodexDeviceLoginShellCommand()
+        assertTrue(shellCommand.endsWith(CODEX_DEVICE_LOGIN_COMMAND))
+        assertFalse(shellCommand.contains("\$!"))
+        assertFalse(shellCommand.contains("\$?"))
+        assertFalse(Regex("(^|[;\\s])&([;\\s]|\$)").containsMatchIn(shellCommand))
+        assertFalse(shellCommand.contains(">"))
+    }
+
+    @Test
+    fun loginOutputIsBoundedAndKeepsTheLatestDiagnostic() {
+        val output = BoundedCodexLoginOutput(maxChars = 64)
+        repeat(20) { index -> output.appendLine("line-$index") }
+        assertTrue(output.snapshot().length <= 64)
+        assertTrue(output.snapshot().contains("line-19"))
+        assertFalse(output.snapshot().contains("line-0\n"))
     }
 
     @Test
@@ -981,6 +1152,18 @@ class CodexChatGptAccountContractTest {
         assertEquals("", credentials.apiKey)
         assertTrue(credentials.customHeaders.isEmpty())
         assertEquals("codex_acp", credentials.protocolType)
+
+        val mapping = CodexConfigAdapter.map(
+            AgentProviderMappingInput(
+                agentId = AcpAgentProfileStore.CODEX_AGENT_ID,
+                provider = credentials,
+                model = "gpt-5.3-codex-spark",
+                harnessAdapter = AcpHarnessAdapters.codex,
+            )
+        )
+        assertEquals(CODEX_CHATGPT_HOME, mapping.environment["CODEX_HOME"])
+        assertFalse(mapping.environment.containsKey("OPENAI_API_KEY"))
+        assertFalse(mapping.environment.containsKey("OPENAI_BASE_URL"))
     }
 }
 ''')

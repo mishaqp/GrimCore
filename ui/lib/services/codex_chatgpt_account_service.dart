@@ -19,6 +19,7 @@ class CodexChatGptAccountStatus {
     this.verificationUrl,
     this.userCode,
     this.loginId,
+    this.message,
   });
 
   final CodexChatGptAccountState state;
@@ -27,6 +28,7 @@ class CodexChatGptAccountStatus {
   final String? verificationUrl;
   final String? userCode;
   final String? loginId;
+  final String? message;
 
   bool get isWaiting => state == CodexChatGptAccountState.waiting;
 
@@ -58,6 +60,7 @@ class CodexChatGptAccountStatus {
       verificationUrl: allowedString('verificationUrl'),
       userCode: allowedString('userCode'),
       loginId: allowedString('loginId'),
+      message: allowedString('message'),
     );
   }
 
@@ -77,7 +80,7 @@ abstract final class CodexChatGptAccountService {
   }
 
   static Future<CodexChatGptAccountStatus> install() async {
-    await AgentRuntimeService.prepareAgent('codex-acp');
+    await AgentRuntimeService.prepareAgent('codex-acp', force: true);
     return refresh();
   }
 

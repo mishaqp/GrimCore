@@ -199,6 +199,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   CodexChatGptAccountStatus _codexAccountStatus =
       CodexChatGptAccountStatus.signedOut;
   bool _isCodexAccountBusy = false;
+  bool _isCodexStatusRefreshing = false;
 
   Timer? _autoSaveTimer;
   Timer? _codexStatusTimer;
@@ -1871,7 +1872,12 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     _codexStatusTimer?.cancel();
     if (!_isCodexChatGpt || !_codexAccountStatus.isWaiting) return;
     _codexStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (!mounted || !_isCodexChatGpt || _isCodexAccountBusy) return;
+      if (!mounted ||
+          !_isCodexChatGpt ||
+          _isCodexAccountBusy ||
+          _isCodexStatusRefreshing) {
+        return;
+      }
       unawaited(_refreshCodexAccountStatus());
     });
   }
@@ -1879,7 +1885,12 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
   Future<void> _refreshCodexAccountStatus({
     bool showFailureToast = false,
   }) async {
-    if (!_isCodexChatGpt || _isCodexAccountBusy) return;
+    if (!_isCodexChatGpt ||
+        _isCodexAccountBusy ||
+        _isCodexStatusRefreshing) {
+      return;
+    }
+    _isCodexStatusRefreshing = true;
     try {
       final status = await CodexChatGptAccountService.refresh();
       if (!mounted || !_isCodexChatGpt) return;
@@ -1898,6 +1909,8 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
           type: ToastType.error,
         );
       }
+    } finally {
+      _isCodexStatusRefreshing = false;
     }
   }
 
@@ -2003,6 +2016,11 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     final signedIn = status.state == CodexChatGptAccountState.signedIn;
     final notInstalled = status.state == CodexChatGptAccountState.notInstalled;
     final installing = status.state == CodexChatGptAccountState.installing;
+    final diagnosticMessage =
+        status.state == CodexChatGptAccountState.error ||
+            status.state == CodexChatGptAccountState.expired
+        ? status.message
+        : null;
     return Container(
       key: const Key('codex-chatgpt-account-card'),
       padding: const EdgeInsets.all(16),
@@ -2047,6 +2065,17 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
             context.l10n.modelProviderCodexDescription,
             style: TextStyle(color: _secondaryTextColor, fontSize: 12),
           ),
+          if (diagnosticMessage != null) ...[
+            const SizedBox(height: 12),
+            SelectableText(
+              diagnosticMessage,
+              key: const Key('codex-chatgpt-error-message'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 12,
+              ),
+            ),
+          ],
           if (waiting) ...[
             const SizedBox(height: 14),
             Text(

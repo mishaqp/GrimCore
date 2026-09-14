@@ -137,7 +137,7 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
         val provider = input.provider
         if (isChatGptAccount(input)) {
             return AgentProviderMapping(
-                environment = mapOf("CODEX_HOME" to AgentRuntimeDefaults.CODEX_HOME),
+                environment = mapOf("CODEX_HOME" to CODEX_CHATGPT_HOME),
                 codexModel = input.model?.trim()?.takeIf(String::isNotEmpty),
             )
         }

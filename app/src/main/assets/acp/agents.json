@@ -78,7 +78,7 @@
         "preparationRevision": "codex-acp-1.10.0-message-completion-1-title-model-1"
       },
       "environment": {
-        "CODEX_HOME": "/root/.codex"
+        "CODEX_HOME": "/root/.codex-chatgpt"
       },
       "models": [
         "gpt-5.3-codex-spark"
