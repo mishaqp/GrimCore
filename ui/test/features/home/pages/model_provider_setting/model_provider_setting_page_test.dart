@@ -633,10 +633,6 @@ void main() {
     tester,
   ) async {
     tester.view.devicePixelRatio = 1.0;
-  testWidgets('provider menu exposes builtin providers and protocols', (
-    tester,
-  ) async {
-    tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = const Size(360, 600);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
