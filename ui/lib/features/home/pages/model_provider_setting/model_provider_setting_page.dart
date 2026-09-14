@@ -22,7 +22,7 @@ import 'package:ui/widgets/provider_vendor_icon.dart';
 import 'package:ui/widgets/settings_section_title.dart';
 
 const double _kProviderSwitchPopupMaxHeight = 320;
-const double _kProviderTypePopupMaxHeight = 420;
+const double _kProviderTypePopupMaxHeight = 320;
 const double _kProviderTypePopupMinWidth = 200;
 const double _kProviderTypePopupHorizontalMargin = 16;
 const double _kProviderTypePopupTextFontSize = 13;
@@ -4302,6 +4302,7 @@ class _ProviderTypePopupEntryState extends State<_ProviderTypePopupEntry> {
     final isDark = context.isDarkTheme;
     final selected = option.value == widget.selectedValue;
     return Padding(
+      key: ValueKey<String>('provider-protocol-option-${option.value}'),
       padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
       child: InkWell(
         onTap: () => Navigator.of(context).pop(option.value),
@@ -4359,12 +4360,12 @@ class _ProviderTypePopupEntryState extends State<_ProviderTypePopupEntry> {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: dynamicMaxHeight),
         child: Scrollbar(
-          child: ListView(
+          child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            children: List<Widget>.generate(
-              widget.options.length,
-              (index) => _buildProtocolTile(widget.options[index]),
-            ),
+            itemCount: widget.options.length,
+            itemBuilder: (context, index) {
+              return _buildProtocolTile(widget.options[index]);
+            },
           ),
         ),
       ),

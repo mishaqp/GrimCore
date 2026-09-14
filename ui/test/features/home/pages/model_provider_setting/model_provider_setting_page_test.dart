@@ -633,7 +633,11 @@ void main() {
     tester,
   ) async {
     tester.view.devicePixelRatio = 1.0;
-    tester.view.physicalSize = const Size(360, 800);
+  testWidgets('provider menu exposes builtin providers and protocols', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(360, 600);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
 
@@ -668,13 +672,39 @@ void main() {
       find.byKey(const Key('provider-protocol-type-menu')),
     );
     expect(menuRect.width, greaterThanOrEqualTo(200));
-    expect(find.text('DeepSeek'), findsOneWidget);
-    expect(find.text('Mimo'), findsOneWidget);
-    expect(find.text('Kimi'), findsOneWidget);
-    expect(find.text('MiniMax'), findsOneWidget);
-    expect(find.text('阿里百炼'), findsOneWidget);
-    expect(find.text('OpenAI'), findsAtLeastNWidgets(1));
-    expect(find.text('Anthropic'), findsOneWidget);
+    final menuScrollable = find.descendant(
+      of: find.byKey(const Key('provider-protocol-type-menu')),
+      matching: find.byType(Scrollable),
+    );
+    expect(menuScrollable, findsOneWidget);
+
+    const expectedOptions = <String, String>{
+      'codex_chatgpt': 'Codex (ChatGPT)',
+      'deepseek': 'DeepSeek',
+      'mimo': 'Mimo',
+      'moonshot': 'Kimi',
+      'minimax': 'MiniMax',
+      'bailian': '阿里百炼',
+      'openai_compatible': 'OpenAI',
+      'anthropic': 'Anthropic',
+    };
+    for (final option in expectedOptions.entries) {
+      final optionFinder = find.byKey(
+        ValueKey<String>('provider-protocol-option-${option.key}'),
+      );
+      await tester.scrollUntilVisible(
+        optionFinder,
+        48,
+        scrollable: menuScrollable,
+        maxScrolls: 20,
+      );
+      await tester.pumpAndSettle();
+      expect(optionFinder, findsOneWidget);
+      expect(
+        find.descendant(of: optionFinder, matching: find.text(option.value)),
+        findsOneWidget,
+      );
+    }
     expect(tester.takeException(), isNull);
   });
 

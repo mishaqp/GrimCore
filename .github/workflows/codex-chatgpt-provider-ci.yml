@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   JAVA_VERSION: '21'
@@ -28,17 +28,27 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      - name: Checkout feature branch
+      - name: Checkout triggering revision
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: codex/codex-chatgpt-provider
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
-      - name: Apply source patches
+      - name: Verify committed provider sources
+        shell: bash
         run: |
+          set -euo pipefail
           python3 scripts/grimcore/apply_codex_chatgpt_backend.py
           python3 scripts/grimcore/fix_codex_chatgpt_backend.py
           python3 scripts/grimcore/apply_codex_chatgpt_ui.py
+          git diff --check
+          if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
+            echo "::error::Codex provider sources are stale; commit generated changes before CI."
+            git status --short
+            git diff --stat
+            exit 1
+          fi
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -51,19 +61,28 @@ jobs:
         working-directory: ui
         run: flutter pub get --enforce-lockfile
 
-      - name: Format and generate localization
+      - name: Verify formatting and generated localization
         working-directory: ui
+        shell: bash
         run: |
-          dart format \
+          set -euo pipefail
+          dart format --output=none --set-exit-if-changed \
             lib/services/model_provider_config_service.dart \
             lib/services/agent_runtime_service.dart \
             lib/services/codex_chatgpt_account_service.dart \
             lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart \
             test/services/codex_chatgpt_account_service_test.dart \
-            test/services/model_provider_codex_profile_test.dart
+            test/services/model_provider_codex_profile_test.dart \
+            test/features/home/pages/model_provider_setting/model_provider_setting_page_test.dart
           flutter gen-l10n
+          if [[ -n "$(git status --porcelain --untracked-files=all)" ]]; then
+            echo "::error::Formatting or generated localization is stale; commit it before CI."
+            git status --short
+            git diff --stat
+            exit 1
+          fi
 
-      - name: Validate generated diff
+      - name: Validate provider source invariants
         run: |
           git diff --check
           python3 -m json.tool app/src/main/assets/acp/agents.json >/dev/null
@@ -72,37 +91,6 @@ jobs:
           python3 -m json.tool ui/lib/l10n/app_zh.arb >/dev/null
           grep -R --line-number 'gpt-5.3-codex-spark' \
             baselib app/src/main ui/lib ui/test
-
-      - name: Commit generated provider sources
-        id: source
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet; then
-            git add \
-              app/build.gradle.kts \
-              app/src/main/assets/acp/agents.json \
-              app/src/main/java/cn/com/omnimind/bot/agent/runtime \
-              app/src/main/java/cn/com/omnimind/bot/manager/AssistsCoreManager.kt \
-              app/src/test/java/cn/com/omnimind/bot/agent/runtime \
-              baselib/src/main/java/cn/com/omnimind/baselib/llm \
-              baselib/src/test/java/cn/com/omnimind/baselib/llm \
-              ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart \
-              ui/lib/services/agent_runtime_service.dart \
-              ui/lib/services/codex_chatgpt_account_service.dart \
-              ui/lib/services/model_provider_config_service.dart \
-              ui/lib/l10n/app_en.arb \
-              ui/lib/l10n/app_ru.arb \
-              ui/lib/l10n/app_zh.arb \
-              ui/lib/l10n/generated \
-              ui/test/services/codex_chatgpt_account_service_test.dart \
-              ui/test/services/model_provider_codex_profile_test.dart
-            git commit -m "feat: add Codex ChatGPT provider UI"
-            git push origin HEAD:codex/codex-chatgpt-provider
-          fi
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -152,6 +140,13 @@ jobs:
           python3 scripts/grimcore/check_no_secrets.py
           for file in scripts/grimcore/*.sh; do bash -n "$file"; done
 
+      - name: Provider menu regression
+        working-directory: ui
+        run: >-
+          flutter test
+          test/features/home/pages/model_provider_setting/model_provider_setting_page_test.dart
+          --plain-name "provider menu exposes builtin providers and protocols"
+
       - name: Flutter test
         working-directory: ui
         run: flutter test
@@ -180,14 +175,14 @@ jobs:
           SHA256=$(sha256sum "$APK" | awk '{print $1}')
           SIZE=$(stat -c '%s' "$APK")
           printf 'source_sha=%s\nsize_bytes=%s\nsha256=%s\n' \
-            "${{ steps.source.outputs.sha }}" "$SIZE" "$SHA256" | tee codex-chatgpt-apk.txt
+            "${GITHUB_SHA}" "$SIZE" "$SHA256" | tee codex-chatgpt-apk.txt
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
           echo "size=$SIZE" >> "$GITHUB_OUTPUT"
 
       - name: Upload ARM64 debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: GrimCore-${{ steps.source.outputs.sha }}-codex-chatgpt-arm64-v8a-debug
+          name: GrimCore-${{ github.sha }}-attempt-${{ github.run_attempt }}-codex-chatgpt-arm64-v8a-debug
           path: |
             app/build/outputs/apk/developStandard/debug/app-develop-standard-debug.apk
             codex-chatgpt-apk.txt

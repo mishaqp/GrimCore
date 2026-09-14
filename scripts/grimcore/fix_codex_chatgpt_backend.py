@@ -57,30 +57,68 @@ patch(
 
 
 def fix_provider_type_popup(value: str) -> str:
-    max_height_constant = "const double _kProviderTypePopupMaxHeight = 420;"
-    if max_height_constant not in value:
-        anchor = "const double _kProviderSwitchPopupMaxHeight = 320;\n"
-        if anchor not in value:
+    switch_height = "const double _kProviderSwitchPopupMaxHeight = 320;\n"
+    protocol_height_420 = "const double _kProviderTypePopupMaxHeight = 420;\n"
+    protocol_height_320 = "const double _kProviderTypePopupMaxHeight = 320;\n"
+    if protocol_height_420 in value:
+        value = value.replace(protocol_height_420, protocol_height_320, 1)
+    elif protocol_height_320 not in value:
+        if switch_height not in value:
             raise RuntimeError("provider page: popup height constant anchor changed")
         value = value.replace(
-            anchor,
-            f"{anchor}{max_height_constant}\n",
+            switch_height,
+            switch_height + protocol_height_320,
             1,
         )
 
-    old_height = (
+    shared_height = (
         "final estimatedHeight = (_kProviderTypeOptions.length * 48 + 24)\n"
         "        .clamp(120.0, _kProviderSwitchPopupMaxHeight)\n"
     )
-    new_height = (
+    dedicated_height = (
         "final estimatedHeight = (_kProviderTypeOptions.length * 48 + 24)\n"
         "        .clamp(120.0, _kProviderTypePopupMaxHeight)\n"
     )
-    if old_height in value:
-        value = value.replace(old_height, new_height, 1)
-    elif new_height not in value:
+    if shared_height in value:
+        value = value.replace(shared_height, dedicated_height, 1)
+    elif dedicated_height not in value:
         raise RuntimeError("provider page: protocol popup height anchor changed")
 
+    state_marker = (
+        "class _ProviderTypePopupEntryState "
+        "extends State<_ProviderTypePopupEntry> {"
+    )
+    head, separator, state = value.partition(state_marker)
+    if not separator:
+        raise RuntimeError("provider page: provider popup state anchor changed")
+
+    stable_key = (
+        "      key: ValueKey<String>("
+        "'provider-protocol-option-${option.value}'),\n"
+    )
+    tile_anchor = (
+        "    return Padding(\n"
+        "      padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),\n"
+    )
+    if stable_key not in state:
+        if tile_anchor not in state:
+            raise RuntimeError("provider page: provider option tile anchor changed")
+        state = state.replace(
+            tile_anchor,
+            "    return Padding(\n" + stable_key
+            + "      padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),\n",
+            1,
+        )
+
+    lazy = (
+        "          child: ListView.builder(\n"
+        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+        "            itemCount: widget.options.length,\n"
+        "            itemBuilder: (context, index) {\n"
+        "              return _buildProtocolTile(widget.options[index]);\n"
+        "            },\n"
+        "          ),\n"
+    )
     eager = (
         "          child: ListView(\n"
         "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
@@ -90,39 +128,29 @@ def fix_provider_type_popup(value: str) -> str:
         "            ),\n"
         "          ),\n"
     )
-    if eager in value:
-        return value
-
-    lazy_variants = (
-        (
-            "          child: ListView.builder(\n"
-            "            cacheExtent: widget.estimatedHeight,\n"
-            "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
-            "            itemCount: widget.options.length,\n"
-            "            itemBuilder: (context, index) {\n"
-            "              return _buildProtocolTile(widget.options[index]);\n"
-            "            },\n"
-            "          ),\n"
-        ),
-        (
-            "          child: ListView.builder(\n"
-            "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
-            "            itemCount: widget.options.length,\n"
-            "            itemBuilder: (context, index) {\n"
-            "              return _buildProtocolTile(widget.options[index]);\n"
-            "            },\n"
-            "          ),\n"
-        ),
+    cached = (
+        "          child: ListView.builder(\n"
+        "            cacheExtent: widget.estimatedHeight,\n"
+        "            padding: const EdgeInsets.symmetric(vertical: 8),\n"
+        "            itemCount: widget.options.length,\n"
+        "            itemBuilder: (context, index) {\n"
+        "              return _buildProtocolTile(widget.options[index]);\n"
+        "            },\n"
+        "          ),\n"
     )
-    for lazy in lazy_variants:
-        if lazy in value:
-            return value.replace(lazy, eager, 1)
-    raise RuntimeError("provider page: provider popup ListView anchor changed")
+    if lazy not in state:
+        for previous in (eager, cached):
+            if previous in state:
+                state = state.replace(previous, lazy, 1)
+                break
+        else:
+            raise RuntimeError("provider page: provider popup list anchor changed")
+    return head + separator + state
 
 
-# The catalog remains height-limited and scrollable, but its short list is built
-# eagerly. Its own 420 px ceiling lets all eight protocols fit on a phone-sized
-# 800 px test viewport without enlarging the separate Provider switch popup.
+# Keep the protocol menu compact and scrollable as its catalog grows. Stable
+# value keys let tests and accessibility locate an off-screen option after a
+# real scroll instead of coupling correctness to a fixed popup height.
 patch(
     "ui/lib/features/home/pages/model_provider_setting/model_provider_setting_page.dart",
     fix_provider_type_popup,
