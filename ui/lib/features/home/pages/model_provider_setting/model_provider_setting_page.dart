@@ -2016,11 +2016,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     final signedIn = status.state == CodexChatGptAccountState.signedIn;
     final notInstalled = status.state == CodexChatGptAccountState.notInstalled;
     final installing = status.state == CodexChatGptAccountState.installing;
-    final diagnosticMessage =
-        status.state == CodexChatGptAccountState.error ||
-        status.state == CodexChatGptAccountState.expired
-        ? status.message
-        : null;
+    final diagnosticMessage = status.message;
     return Container(
       key: const Key('codex-chatgpt-account-card'),
       padding: const EdgeInsets.all(16),
