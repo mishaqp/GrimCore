@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - codex/codex-chatgpt-provider
-  pull_request:
-    branches:
-      - codex/grimcore-ru-phase1
   workflow_dispatch:
 
 concurrency:
@@ -38,7 +35,9 @@ jobs:
           ref: codex/codex-chatgpt-provider
 
       - name: Apply backend patch
-        run: python3 scripts/grimcore/apply_codex_chatgpt_backend.py
+        run: |
+          python3 scripts/grimcore/apply_codex_chatgpt_backend.py
+          python3 scripts/grimcore/fix_codex_chatgpt_backend.py
 
       - name: Validate generated diff
         run: |
@@ -63,7 +62,7 @@ jobs:
               app/src/test/java/cn/com/omnimind/bot/agent/runtime \
               baselib/src/main/java/cn/com/omnimind/baselib/llm \
               baselib/src/test/java/cn/com/omnimind/baselib/llm
-            git commit -m "feat: add Codex ChatGPT account backend"
+            git commit -m "fix: harden Codex ChatGPT account backend"
             git push origin HEAD:codex/codex-chatgpt-provider
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
