@@ -2018,7 +2018,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
     final installing = status.state == CodexChatGptAccountState.installing;
     final diagnosticMessage =
         status.state == CodexChatGptAccountState.error ||
-            status.state == CodexChatGptAccountState.expired
+        status.state == CodexChatGptAccountState.expired
         ? status.message
         : null;
     return Container(

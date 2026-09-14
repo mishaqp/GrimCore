@@ -796,7 +796,7 @@ if "CodexChatGptAccountStatus" not in page:
     final installing = status.state == CodexChatGptAccountState.installing;
     final diagnosticMessage =
         status.state == CodexChatGptAccountState.error ||
-            status.state == CodexChatGptAccountState.expired
+        status.state == CodexChatGptAccountState.expired
         ? status.message
         : null;
     return Container(
