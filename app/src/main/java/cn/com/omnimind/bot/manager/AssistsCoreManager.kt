@@ -25,6 +25,8 @@ import cn.com.omnimind.baselib.llm.ModelProviderConfig
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.ReasoningEffort
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
+import cn.com.omnimind.baselib.llm.ModelProviderAuthMode
+import cn.com.omnimind.baselib.llm.isCodexChatGptAccount
 import cn.com.omnimind.baselib.llm.ModelSceneRegistry
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.ProviderCustomHeaderUtils
@@ -345,7 +347,9 @@ class AssistsCoreManager(private val context: Context) {
             "readOnly" to readOnly,
             "ready" to ready,
             "statusText" to statusText,
-            "configured" to isConfigured(),
+            "configured" to (isConfigured() || isCodexChatGptAccount()),
+            "authMode" to ModelProviderAuthMode.fromSourceType(providerType),
+            "acpOnly" to isCodexChatGptAccount(),
             "wireApi" to wireApi,
         )
     }
@@ -363,7 +367,9 @@ class AssistsCoreManager(private val context: Context) {
             "readOnly" to readOnly,
             "ready" to ready,
             "statusText" to statusText,
-            "configured" to isConfigured(),
+            "configured" to (isConfigured() || isCodexChatGptAccount()),
+            "authMode" to ModelProviderAuthMode.fromSourceType(sourceType),
+            "acpOnly" to isCodexChatGptAccount(),
             "protocolType" to protocolType,
             "wireApi" to wireApi,
             "revision" to revision,
@@ -1417,8 +1423,17 @@ class AssistsCoreManager(private val context: Context) {
         val clearApiKey = call.argument<Boolean>("clearApiKey") == true
         val replaceCustomHeaders = call.argument<Boolean>("replaceCustomHeaders") == true
         val clearCustomHeaders = call.argument<Boolean>("clearCustomHeaders") == true
-        val sourceType = call.argument<String>("sourceType")?.trim()
-        val protocolType = call.argument<String>("protocolType")?.trim() ?: "openai_compatible"
+        val authMode = call.argument<String>("authMode")?.trim()?.lowercase()
+        val sourceType = if (authMode == ModelProviderAuthMode.CODEX_CHATGPT) {
+            ModelProviderAuthMode.CODEX_CHATGPT
+        } else {
+            call.argument<String>("sourceType")?.trim()
+        }
+        val protocolType = if (authMode == ModelProviderAuthMode.CODEX_CHATGPT) {
+            "codex_acp"
+        } else {
+            call.argument<String>("protocolType")?.trim() ?: "openai_compatible"
+        }
         val wireApi = call.argument<String>("wireApi")?.trim().orEmpty()
 
         workJob.launch {

@@ -2,6 +2,20 @@ package cn.com.omnimind.baselib.llm
 
 import com.google.gson.annotations.SerializedName
 
+object ModelProviderAuthMode {
+    const val API_KEY = "api_key"
+    const val CODEX_CHATGPT = "codex_chatgpt"
+
+    fun fromSourceType(sourceType: String?): String =
+        if (sourceType?.trim()?.lowercase() == CODEX_CHATGPT) {
+            CODEX_CHATGPT
+        } else {
+            API_KEY
+        }
+}
+
+const val CODEX_CHATGPT_MODEL_ID = "gpt-5.3-codex-spark"
+
 data class ModelProviderConfig(
     val id: String = "",
     val name: String = "",
@@ -16,6 +30,8 @@ data class ModelProviderConfig(
     val wireApi: String = OpenAiWireApi.CHAT_COMPLETIONS,
 ) {
     fun isConfigured(): Boolean = baseUrl.isNotBlank()
+    fun isCodexChatGptAccount(): Boolean =
+        ModelProviderAuthMode.fromSourceType(providerType) == ModelProviderAuthMode.CODEX_CHATGPT
 }
 
 data class ModelProviderProfile(
@@ -33,6 +49,8 @@ data class ModelProviderProfile(
     val revision: Long = 0L,
 ) {
     fun isConfigured(): Boolean = baseUrl.isNotBlank()
+    fun isCodexChatGptAccount(): Boolean =
+        ModelProviderAuthMode.fromSourceType(sourceType) == ModelProviderAuthMode.CODEX_CHATGPT
 }
 
 /**

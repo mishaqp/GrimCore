@@ -1,8 +1,11 @@
 package cn.com.omnimind.bot.agent.runtime
 
+import cn.com.omnimind.baselib.llm.CODEX_CHATGPT_MODEL_ID
+import cn.com.omnimind.baselib.llm.ModelProviderAuthMode
 import cn.com.omnimind.baselib.llm.ModelProviderConfigStore
 import cn.com.omnimind.baselib.llm.ModelProviderProfile
 import cn.com.omnimind.baselib.llm.SceneModelBindingStore
+import cn.com.omnimind.baselib.llm.isCodexChatGptAccount
 
 /**
  * Read-only view of the Provider and model selected for Dispatch execution.
@@ -27,6 +30,17 @@ internal object AgentDispatchConfiguration {
     }.getOrNull()
 
     fun providerCredentials(): AgentProviderCredentials? = providerProfile()?.let { profile ->
+        if (profile.isCodexChatGptAccount()) {
+            return@let AgentProviderCredentials(
+                baseUrl = "",
+                apiKey = "",
+                wireApi = profile.wireApi,
+                customHeaders = emptyMap(),
+                protocolType = "codex_acp",
+                authMode = ModelProviderAuthMode.CODEX_CHATGPT,
+                supportsNamespaceTools = false,
+            ).normalized()
+        }
         val apiKey = resolveAgentProviderApiKey(profile) ?: return@let null
         AgentProviderCredentials(
             baseUrl = profile.baseUrl,
@@ -34,22 +48,29 @@ internal object AgentDispatchConfiguration {
             wireApi = profile.wireApi,
             customHeaders = profile.customHeaders,
             protocolType = profile.protocolType,
+            authMode = ModelProviderAuthMode.API_KEY,
             supportsNamespaceTools = false,
         ).normalized()
     }
 
     fun modelId(): String? = runCatching {
         val binding = SceneModelBindingStore.getBinding(DISPATCH_SCENE_ID)
-        binding?.let {
+        val profile = binding?.let {
             resolveAgentProviderProfile(
                 boundProviderProfileId = it.providerProfileId,
                 configuredProfile = ModelProviderConfigStore.getProfile(it.providerProfileId),
             )
-        }?.takeIf { it.baseUrl.isNotBlank() }
-            ?: return@runCatching null
+        } ?: providerProfile() ?: return@runCatching null
+        if (profile.isCodexChatGptAccount()) {
+            return@runCatching binding?.modelId
+                ?.trim()
+                ?.takeIf(String::isNotEmpty)
+                ?: CODEX_CHATGPT_MODEL_ID
+        }
+        if (profile.baseUrl.isBlank()) return@runCatching null
         resolveSharedAgentModel(
-            boundProviderProfileId = binding.providerProfileId,
-            boundModel = binding.modelId,
+            boundProviderProfileId = binding?.providerProfileId,
+            boundModel = binding?.modelId,
         )
     }.getOrNull()
 }

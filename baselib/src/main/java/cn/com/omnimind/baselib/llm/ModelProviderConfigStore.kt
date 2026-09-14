@@ -315,20 +315,23 @@ object ModelProviderConfigStore {
         )
         val existingProfile = current.getOrNull(currentIndex)
         val nextRevision = (existingProfile?.revision ?: 0L) + 1L
+        val resolvedSourceType = resolveSourceTypeForSave(
+            requestedSourceType = sourceType,
+            profileId = normalizedId,
+            baseUrl = baseUrl,
+            existingSourceType = current.getOrNull(currentIndex)?.sourceType
+        )
+        val isCodexChatGptAccount =
+            resolvedSourceType == ModelProviderAuthMode.CODEX_CHATGPT
         val nextProfile = ModelProviderProfile(
             id = normalizedId,
             name = sanitizedName,
-            baseUrl = normalizedBaseUrl,
-            apiKey = apiKey.trim(),
-            customHeaders = normalizedCustomHeaders,
-            sourceType = resolveSourceTypeForSave(
-                requestedSourceType = sourceType,
-                profileId = normalizedId,
-                baseUrl = baseUrl,
-                existingSourceType = current.getOrNull(currentIndex)?.sourceType
-            ),
-            protocolType = normalizedProtocolType,
-            wireApi = normalizedWireApi,
+            baseUrl = if (isCodexChatGptAccount) "" else normalizedBaseUrl,
+            apiKey = if (isCodexChatGptAccount) "" else apiKey.trim(),
+            customHeaders = if (isCodexChatGptAccount) emptyMap() else normalizedCustomHeaders,
+            sourceType = resolvedSourceType,
+            protocolType = if (isCodexChatGptAccount) "codex_acp" else normalizedProtocolType,
+            wireApi = if (isCodexChatGptAccount) OpenAiWireApi.RESPONSES else normalizedWireApi,
             revision = nextRevision,
         )
 
@@ -621,6 +624,10 @@ object ModelProviderConfigStore {
         profileId: String?,
         baseUrl: String?
     ): String {
+        val normalizedSourceType = sourceType?.trim()?.lowercase().orEmpty()
+        if (normalizedSourceType == ModelProviderAuthMode.CODEX_CHATGPT) {
+            return ModelProviderAuthMode.CODEX_CHATGPT
+        }
         return OfficialProviderRegistry.normalizeSourceType(
             sourceType = sourceType,
             profileId = profileId,
@@ -668,6 +675,9 @@ object ModelProviderConfigStore {
         existingSourceType: String?
     ): String {
         val normalizedRequested = requestedSourceType?.trim()?.lowercase().orEmpty()
+        if (normalizedRequested == ModelProviderAuthMode.CODEX_CHATGPT) {
+            return ModelProviderAuthMode.CODEX_CHATGPT
+        }
         if (normalizedRequested == "custom") {
             return "custom"
         }
@@ -1060,6 +1070,16 @@ object ModelProviderConfigStore {
     }
 
     private fun enforceCredentialTransport(profile: ModelProviderProfile): ModelProviderProfile {
+        if (profile.isCodexChatGptAccount()) {
+            return profile.copy(
+                baseUrl = "",
+                apiKey = "",
+                customHeaders = emptyMap(),
+                sourceType = ModelProviderAuthMode.CODEX_CHATGPT,
+                protocolType = "codex_acp",
+                wireApi = OpenAiWireApi.RESPONSES,
+            )
+        }
         val endpoint = stripDirectRequestUrlMarker(profile.baseUrl)
         val safeMetadata = try {
             ContentEndpointSecurity.requireSafe(

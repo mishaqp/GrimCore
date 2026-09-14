@@ -2,6 +2,7 @@ package cn.com.omnimind.bot.agent.runtime
 
 import cn.com.omnimind.baselib.llm.ProviderModelOption
 import cn.com.omnimind.baselib.llm.OpenAiWireApi
+import cn.com.omnimind.baselib.llm.ModelProviderAuthMode
 import com.google.gson.JsonParser
 import cn.com.omnimind.bot.plugin.official.agentweb.DEEPSEEK_HARNESS_API_KEY_ENV
 import cn.com.omnimind.bot.plugin.official.agentweb.buildDeepSeekProviderPatch
@@ -42,10 +43,21 @@ internal object DeepSeekHarnessConfigAdapter : AgentConfigAdapter {
 }
 
 internal object CodexConfigAdapter : AgentConfigAdapter {
+    private fun isChatGptAccount(input: AgentProviderMappingInput): Boolean =
+        input.provider?.authMode == ModelProviderAuthMode.CODEX_CHATGPT
+
     override suspend fun readConfig(
         input: AgentProviderMappingInput,
         access: AgentConfigFileAccess,
     ): Map<String, Any?> {
+        if (isChatGptAccount(input)) {
+            return linkedMapOf(
+                "agentId" to input.agentId,
+                "kind" to "codex_chatgpt",
+                "model" to input.model.orEmpty(),
+                "authMode" to ModelProviderAuthMode.CODEX_CHATGPT,
+            )
+        }
         val configToml = access.read(
             CODEX_CONFIG_TOML_PATH,
             "codex-agent-config-read",
@@ -64,6 +76,7 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
                 ?: extractTomlString(configToml, "base_url").orEmpty()),
             "model" to input.model.orEmpty(),
             "apiKey" to extractOpenAiApiKey(authJson).orEmpty(),
+            "authMode" to ModelProviderAuthMode.API_KEY,
         )
     }
 
@@ -72,6 +85,7 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
         args: Map<String, Any?>,
         providerModels: List<ProviderModelOption>,
     ): List<AgentConfigWrite> {
+        if (isChatGptAccount(input)) return emptyList()
         val baseUrl = args.agentConfigStringValue("baseUrl")
             ?: throw IllegalArgumentException("Base URL is required.")
         val model = args.agentConfigStringValue("model")
@@ -84,9 +98,6 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
         ) ?: throw IllegalArgumentException(
             "Model must be selected from the current Provider /models response."
         )
-        // The complete Codex surface consists of three files and is emitted
-        // by launchConfigWrites. This marker lets the manager use the same
-        // adapter-owned path without a profile-id switch.
         val provider = input.provider ?: throw IllegalArgumentException(
             "Provider settings are required for Codex configuration."
         )
@@ -124,6 +135,12 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
 
     override fun map(input: AgentProviderMappingInput): AgentProviderMapping {
         val provider = input.provider
+        if (isChatGptAccount(input)) {
+            return AgentProviderMapping(
+                environment = mapOf("CODEX_HOME" to AgentRuntimeDefaults.CODEX_HOME),
+                codexModel = input.model?.trim()?.takeIf(String::isNotEmpty),
+            )
+        }
         require(provider?.protocolType != "anthropic") {
             "Codex requires an OpenAI Responses-compatible endpoint; the current Provider is configured as Anthropic."
         }
@@ -140,11 +157,6 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
         return AgentProviderMapping(
             environment = environment,
             codexModel = input.model?.trim()?.takeIf { it.isNotEmpty() },
-            // Current Codex ACP (1.1.x) removed the legacy Chat Completions
-            // wire and rejects `wire_api = "chat"` during every request.
-            // The shared Provider may still use Chat Completions for the app
-            // and DSH, but Codex must receive its own official Responses
-            // transport setting.
             codexWireApi = provider?.let { OpenAiWireApi.RESPONSES },
             codexBaseUrl = provider?.baseUrl?.let(::normalizeCodexBaseUrl),
             codexEnvHttpHeaders = headerBindings?.envHttpHeaders.orEmpty(),
@@ -157,6 +169,7 @@ internal object CodexConfigAdapter : AgentConfigAdapter {
         providerModels: List<ProviderModelOption>,
         existingConfig: String,
     ): List<AgentConfigWrite> {
+        if (isChatGptAccount(input)) return emptyList()
         val provider = input.provider ?: return emptyList()
         val model = mapping.codexModel ?: return emptyList()
         return listOf(
