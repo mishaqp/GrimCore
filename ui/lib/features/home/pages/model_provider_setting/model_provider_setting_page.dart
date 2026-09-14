@@ -22,6 +22,7 @@ import 'package:ui/widgets/provider_vendor_icon.dart';
 import 'package:ui/widgets/settings_section_title.dart';
 
 const double _kProviderSwitchPopupMaxHeight = 320;
+const double _kProviderTypePopupMaxHeight = 420;
 const double _kProviderTypePopupMinWidth = 200;
 const double _kProviderTypePopupHorizontalMargin = 16;
 const double _kProviderTypePopupTextFontSize = 13;
@@ -1744,7 +1745,7 @@ class _ModelProviderSettingPageState extends State<ModelProviderSettingPage> {
         .clamp(_kProviderTypePopupMinWidth, availablePopupWidth)
         .toDouble();
     final estimatedHeight = (_kProviderTypeOptions.length * 48 + 24)
-        .clamp(120.0, _kProviderSwitchPopupMaxHeight)
+        .clamp(120.0, _kProviderTypePopupMaxHeight)
         .toDouble();
     final position = PopupMenuAnchorPosition.fromAnchorRect(
       anchorRect: anchorRect,
