@@ -280,14 +280,16 @@ class CodexChatGptAccountStatus {
       'expired' => CodexChatGptAccountState.expired,
       'cancelled' => CodexChatGptAccountState.cancelled,
       'error' => CodexChatGptAccountState.error,
-      _ => source['authenticated'] == true
-          ? CodexChatGptAccountState.signedIn
-          : CodexChatGptAccountState.signedOut,
+      _ =>
+        source['authenticated'] == true
+            ? CodexChatGptAccountState.signedIn
+            : CodexChatGptAccountState.signedOut,
     };
     String? allowedString(String key) {
       final value = source[key]?.toString().trim() ?? '';
       return value.isEmpty ? null : value;
     }
+
     return CodexChatGptAccountStatus(
       state: state,
       installed: source['installed'] != false,
@@ -1250,15 +1252,13 @@ void main() {
   });
 
   test('expired and authenticated statuses remain distinct', () {
-    final expired = CodexChatGptAccountStatus.fromMap(
-      const <String, dynamic>{'state': 'expired'},
-    );
-    final signedIn = CodexChatGptAccountStatus.fromMap(
-      const <String, dynamic>{
-        'state': 'signed_in',
-        'authenticated': true,
-      },
-    );
+    final expired = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{
+      'state': 'expired',
+    });
+    final signedIn = CodexChatGptAccountStatus.fromMap(const <String, dynamic>{
+      'state': 'signed_in',
+      'authenticated': true,
+    });
     expect(expired.state, CodexChatGptAccountState.expired);
     expect(signedIn.state, CodexChatGptAccountState.signedIn);
     expect(signedIn.authenticated, isTrue);
